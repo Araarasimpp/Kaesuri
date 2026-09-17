@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Kaesuri</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="stacked">Correo</ion-label>
+    <ion-input type="email" [(ngModel)]="email" placeholder="correo@ejemplo.com"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-label position="stacked">Contraseña</ion-label>
+    <ion-input type="password" [(ngModel)]="password"></ion-input>
+  </ion-item>
+
+  <ion-text color="danger" *ngIf="errorMsg">
+    <p>{{ errorMsg }}</p>
+  </ion-text>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="onLogin()" [disabled]="loading">
+    {{ loading ? 'Ingresando...' : 'Ingresar' }}
+  </ion-button>
+
+  <ion-button expand="block" fill="clear" routerLink="/auth/registro">
+    ¿No tienes cuenta? Regístrate
+  </ion-button>
+</ion-content>
