@@ -1,0 +1,7 @@
+{
+  "name": "kaesuri",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
