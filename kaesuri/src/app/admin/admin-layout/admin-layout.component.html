@@ -1,0 +1,40 @@
+<div class="shell" [class.collapsed]="collapsed">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">K</span>
+      <span class="brand-name" *ngIf="!collapsed">Kaesuri</span>
+    </div>
+
+    <button class="collapse-btn" (click)="toggleCollapse()" aria-label="Contraer menú">
+      <ion-icon [name]="collapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"></ion-icon>
+    </button>
+
+    <nav class="menu">
+      <a
+        *ngFor="let item of menuItems"
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/admin' }"
+        class="menu-item"
+      >
+        <ion-icon [name]="item.icon"></ion-icon>
+        <span *ngIf="!collapsed">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="footer-btn" (click)="toggleTheme()">
+        <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+        <span *ngIf="!collapsed">{{ theme.isDark() ? 'Modo claro' : 'Modo oscuro' }}</span>
+      </button>
+      <button class="footer-btn" (click)="logout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span *ngIf="!collapsed">Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

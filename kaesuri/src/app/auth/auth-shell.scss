@@ -1,0 +1,163 @@
+// src/app/auth/auth-shell.scss
+// Estilos compartidos entre login.page y registro.page
+
+.auth-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--k-paper);
+}
+
+.auth-panel-left {
+  position: relative;
+  flex: 0 0 42%;
+  background: var(--k-ink);
+  color: var(--k-paper);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px 64px;
+  overflow: hidden;
+}
+
+.wave-divider {
+  position: absolute;
+  top: 0;
+  right: -45px;
+  width: 90px;
+  height: 100%;
+}
+
+.brand-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--k-amber);
+}
+
+.auth-headline {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  max-width: 320px;
+}
+
+.auth-subhead {
+  font-size: 15px;
+  color: rgba(247, 247, 245, 0.65);
+  margin: 0;
+}
+
+.crate-mark {
+  position: absolute;
+  left: 64px;
+  bottom: 56px;
+  width: 120px;
+  height: 120px;
+  opacity: 0.5;
+}
+
+.auth-panel-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-card-header {
+  margin-bottom: 28px;
+}
+
+.auth-card-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-card-header .accent {
+  color: var(--k-amber);
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--k-text-soft);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  font-size: 14px;
+  font-family: var(--k-font);
+  box-sizing: border-box;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--k-amber);
+}
+
+.error-msg {
+  color: var(--k-coral);
+  font-size: 13px;
+  margin: 4px 0 12px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--k-ink);
+  color: var(--k-paper);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.switch-link {
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--k-text-soft);
+  text-align: center;
+}
+
+.switch-link a {
+  color: var(--k-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .auth-panel-left {
+    display: none;
+  }
+  .auth-panel-right {
+    flex: 1;
+  }
+}

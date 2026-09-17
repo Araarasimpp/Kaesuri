@@ -1,0 +1,61 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <p class="eyebrow">Resumen de hoy</p>
+    <h1>Panel general</h1>
+  </header>
+
+  <ng-container *ngIf="!loading; else cargando">
+    <section class="hero-stat">
+      <p class="hero-label">Ventas de hoy</p>
+      <p class="hero-number">{{ formatoMoneda(ventasHoy) }}</p>
+    </section>
+
+    <section class="kpi-row">
+      <div class="kpi-card">
+        <p class="kpi-value">{{ pedidosPendientes }}</p>
+        <p class="kpi-label">Pedidos pendientes</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-value accent-teal">{{ pedidosEntregadosHoy }}</p>
+        <p class="kpi-label">Entregados hoy</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-value accent-coral">{{ productosStockBajo.length }}</p>
+        <p class="kpi-label">Productos con stock bajo</p>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <h2>Pedidos recientes</h2>
+        <div class="list" *ngIf="pedidosRecientes.length; else vacioPedidos">
+          <div class="row" *ngFor="let p of pedidosRecientes">
+            <span class="row-title">{{ p.cliente_nombre }}</span>
+            <span class="row-estado" [attr.data-estado]="p.estado">{{ etiquetaEstado(p.estado) }}</span>
+            <span class="row-valor">{{ formatoMoneda(p.total) }}</span>
+          </div>
+        </div>
+        <ng-template #vacioPedidos>
+          <p class="vacio">Todavía no hay pedidos registrados.</p>
+        </ng-template>
+      </div>
+
+      <div class="panel">
+        <h2>Stock bajo</h2>
+        <div class="list" *ngIf="productosStockBajo.length; else vacioStock">
+          <div class="row" *ngFor="let prod of productosStockBajo">
+            <span class="row-title">{{ prod.nombre }}</span>
+            <span class="row-valor accent-coral">{{ prod.stock }} unidades</span>
+          </div>
+        </div>
+        <ng-template #vacioStock>
+          <p class="vacio">Ningún producto está bajo de stock. Buen trabajo.</p>
+        </ng-template>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-template #cargando>
+    <p class="vacio">Cargando reporte...</p>
+  </ng-template>
+</div>

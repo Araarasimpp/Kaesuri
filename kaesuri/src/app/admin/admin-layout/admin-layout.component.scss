@@ -1,0 +1,139 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--k-bg);
+}
+
+.sidebar {
+  position: relative;
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--k-sidebar-bg);
+  color: var(--k-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  transition: width 0.2s ease;
+}
+
+.shell.collapsed .sidebar {
+  width: 76px;
+  padding: 24px 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 24px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--k-amber);
+  color: var(--k-ink);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-weight: 600;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.collapse-btn {
+  position: absolute;
+  top: 28px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--k-amber);
+  color: var(--k-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--k-sidebar-text-soft);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.menu-item ion-icon {
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.menu-item:hover {
+  background: var(--k-sidebar-bg-alt);
+  color: var(--k-sidebar-text);
+}
+
+.menu-item.active {
+  background: var(--k-sidebar-bg-alt);
+  color: var(--k-sidebar-text);
+  box-shadow: inset 3px 0 0 var(--k-amber);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(247, 247, 245, 0.1);
+}
+
+.footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--k-sidebar-text-soft);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.footer-btn:hover {
+  background: var(--k-sidebar-bg-alt);
+  color: var(--k-sidebar-text);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  background: var(--k-bg);
+  color: var(--k-text);
+}

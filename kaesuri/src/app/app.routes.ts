@@ -14,11 +14,11 @@ export const routes: Routes = [
     path: 'auth/registro',
     loadComponent: () => import('./auth/registro/registro.page').then((m) => m.RegistroPage),
   },
-  // Se van agregando aquí a medida que arman cada módulo:
-  // {
-  //   path: 'admin',
-  //   loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES),
-  // },
+  
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
    {
     path: 'vendedor',
     loadChildren: () => import('./vendedor/vendedor.routes').then((m) => m.VENDEDOR_ROUTES),

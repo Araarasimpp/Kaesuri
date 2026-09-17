@@ -1,0 +1,45 @@
+// src/theme/kaesuri-theme.scss
+// Importar una sola vez desde src/global.scss:  @import './theme/kaesuri-theme.scss';
+
+:root {
+  // Paleta base
+  --k-ink: #12151c;
+  --k-ink-soft: #232838;
+  --k-paper: #f7f7f5;
+  --k-paper-alt: #ecebe7;
+  --k-amber: #e8a33d;
+  --k-teal: #2f8f82;
+  --k-coral: #d65f5f;
+
+  // Tipografía
+  --k-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  // Tema claro (por defecto)
+  --k-bg: var(--k-paper);
+  --k-bg-alt: var(--k-paper-alt);
+  --k-text: var(--k-ink);
+  --k-text-soft: rgba(18, 21, 28, 0.6);
+  --k-card-bg: #ffffff;
+  --k-border: rgba(18, 21, 28, 0.1);
+
+  // El sidebar siempre es oscuro, sin importar el tema del contenido
+  --k-sidebar-bg: var(--k-ink);
+  --k-sidebar-bg-alt: var(--k-ink-soft);
+  --k-sidebar-text: var(--k-paper);
+  --k-sidebar-text-soft: rgba(247, 247, 245, 0.6);
+}
+
+body.dark {
+  --k-bg: var(--k-ink);
+  --k-bg-alt: var(--k-ink-soft);
+  --k-text: var(--k-paper);
+  --k-text-soft: rgba(247, 247, 245, 0.65);
+  --k-card-bg: var(--k-ink-soft);
+  --k-border: rgba(247, 247, 245, 0.12);
+}
+
+body {
+  font-family: var(--k-font);
+  background: var(--k-bg);
+  color: var(--k-text);
+}

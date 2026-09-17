@@ -1,0 +1,145 @@
+.dashboard {
+  padding: 32px 40px 48px;
+  max-width: 920px;
+}
+
+.dashboard-header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  color: var(--k-text-soft);
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.hero-stat {
+  margin-bottom: 32px;
+}
+
+.hero-label {
+  font-size: 14px;
+  color: var(--k-text-soft);
+  margin: 0 0 4px;
+}
+
+.hero-number {
+  font-size: 48px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-amber);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.kpi-card {
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: var(--k-card-bg);
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 2px;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: var(--k-text-soft);
+  margin: 0;
+}
+
+.accent-teal {
+  color: var(--k-teal);
+}
+
+.accent-coral {
+  color: var(--k-coral);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.panel h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--k-border);
+  font-size: 14px;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-valor {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.row-estado {
+  font-size: 12px;
+  color: var(--k-text-soft);
+}
+
+.row-estado[data-estado='entregado'] {
+  color: var(--k-teal);
+}
+
+.row-estado[data-estado='cancelado'] {
+  color: var(--k-coral);
+}
+
+.vacio {
+  color: var(--k-text-soft);
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+  .split {
+    grid-template-columns: 1fr;
+  }
+}

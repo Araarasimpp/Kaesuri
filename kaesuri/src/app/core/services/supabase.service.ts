@@ -7,6 +7,7 @@ export type UserRole = 'admin' | 'vendedor' | 'domiciliario';
 export interface Profile {
   id: string;
   nombre: string;
+  email?: string;
   telefono?: string;
   role: UserRole;
 }
@@ -24,11 +25,11 @@ export class SupabaseService {
     return this.client.auth.signInWithPassword({ email, password });
   }
 
-  async register(email: string, password: string, nombre: string) {
+  async register(email: string, password: string, nombre: string, telefono?: string) {
     return this.client.auth.signUp({
       email,
       password,
-      options: { data: { nombre } },
+      options: { data: { nombre, telefono } },
     });
   }
 
@@ -42,8 +43,6 @@ export class SupabaseService {
     return data.user;
   }
 
-  // Trae y cachea el profile (con el rol) del usuario logueado.
-  // El RoleGuard depende de esto para decidir si deja pasar a una ruta.
   async getCurrentProfile(): Promise<Profile | null> {
     if (this.currentProfile) return this.currentProfile;
 
@@ -52,7 +51,7 @@ export class SupabaseService {
 
     const { data, error } = await this.client
       .from('profiles')
-      .select('id, nombre, telefono, role')
+      .select('id, nombre, email, telefono, role')
       .eq('id', user.id)
       .single();
 
