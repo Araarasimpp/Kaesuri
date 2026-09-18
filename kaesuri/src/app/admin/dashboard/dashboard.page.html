@@ -6,8 +6,14 @@
 
   <ng-container *ngIf="!loading; else cargando">
     <section class="hero-stat">
-      <p class="hero-label">Ventas de hoy</p>
-      <p class="hero-number">{{ formatoMoneda(ventasHoy) }}</p>
+      <div class="hero-block">
+        <p class="hero-label">Ventas de hoy</p>
+        <p class="hero-number">{{ formatoMoneda(ventasHoy) }}</p>
+      </div>
+      <div class="hero-block">
+        <p class="hero-label">Ganancia de hoy</p>
+        <p class="hero-number accent-teal">{{ formatoMoneda(gananciaHoy) }}</p>
+      </div>
     </section>
 
     <section class="kpi-row">

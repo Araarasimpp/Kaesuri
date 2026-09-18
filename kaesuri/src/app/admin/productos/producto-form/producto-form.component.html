@@ -1,0 +1,69 @@
+<div class="modal-backdrop" (click)="onCerrar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <h2>{{ esEdicion ? 'Editar producto' : 'Nuevo producto' }}</h2>
+      <button class="close-btn" (click)="onCerrar()">✕</button>
+    </header>
+
+    <div class="modal-body">
+      <div class="imagen-uploader">
+        <label class="imagen-preview" [class.empty]="!previewUrl">
+          <img *ngIf="previewUrl" [src]="previewUrl" alt="Vista previa" />
+          <span *ngIf="!previewUrl">Subir foto</span>
+          <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" hidden />
+        </label>
+      </div>
+
+      <div class="fields-grid">
+        <div class="field">
+          <label>Nombre *</label>
+          <input type="text" [(ngModel)]="form.nombre" placeholder="Camiseta básica" />
+        </div>
+
+        <div class="field">
+          <label>SKU *</label>
+          <input type="text" [(ngModel)]="form.sku" placeholder="CAM-001" />
+        </div>
+
+        <div class="field">
+          <label>Categoría</label>
+          <input type="text" [(ngModel)]="form.categoria" placeholder="Ropa" />
+        </div>
+
+        <div class="field">
+          <label>Stock</label>
+          <input type="number" [(ngModel)]="form.stock" min="0" />
+        </div>
+
+        <div class="field">
+          <label>Precio de venta *</label>
+          <input type="number" [(ngModel)]="form.precio" min="0" />
+        </div>
+
+        <div class="field">
+          <label>Costo</label>
+          <input type="number" [(ngModel)]="form.costo" min="0" placeholder="Opcional" />
+        </div>
+
+        <div class="field field-full">
+          <label>Descripción</label>
+          <textarea [(ngModel)]="form.descripcion" rows="2"></textarea>
+        </div>
+      </div>
+
+      <p class="hint">
+        El costo es opcional, pero sin él el panel de ganancias no puede calcular el margen real
+        de este producto.
+      </p>
+
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+    </div>
+
+    <footer class="modal-footer">
+      <button class="btn-secondary" (click)="onCerrar()">Cancelar</button>
+      <button class="btn-primary" (click)="onGuardar()" [disabled]="guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </footer>
+  </div>
+</div>

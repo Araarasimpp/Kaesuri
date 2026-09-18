@@ -20,6 +20,8 @@ h1 {
 }
 
 .hero-stat {
+  display: flex;
+  gap: 48px;
   margin-bottom: 32px;
 }
 
@@ -30,12 +32,16 @@ h1 {
 }
 
 .hero-number {
-  font-size: 48px;
+  font-size: 40px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--k-amber);
   margin: 0;
   line-height: 1.1;
+}
+
+.hero-number.accent-teal {
+  color: var(--k-teal);
 }
 
 .kpi-row {

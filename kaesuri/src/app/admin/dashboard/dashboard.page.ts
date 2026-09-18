@@ -27,6 +27,7 @@ export class DashboardPage implements OnInit {
   loading = true;
 
   ventasHoy = 0;
+  gananciaHoy = 0;
   pedidosPendientes = 0;
   pedidosEntregadosHoy = 0;
   productosStockBajo: ProductoBajo[] = [];
@@ -44,13 +45,14 @@ export class DashboardPage implements OnInit {
     const inicioHoy = new Date();
     inicioHoy.setHours(0, 0, 0, 0);
 
-    const [ventasHoyRes, pendientesRes, entregadosHoyRes, stockBajoRes, recientesRes] =
+    const [ventasHoyRes, gananciaRes, pendientesRes, entregadosHoyRes, stockBajoRes, recientesRes] =
       await Promise.all([
         this.supabase.client
           .from('pedidos')
           .select('total')
           .gte('created_at', inicioHoy.toISOString())
           .neq('estado', 'cancelado'),
+        this.supabase.client.rpc('ganancias_hoy'),
         this.supabase.client
           .from('pedidos')
           .select('id', { count: 'exact', head: true })
@@ -77,6 +79,7 @@ export class DashboardPage implements OnInit {
       (sum, p) => sum + Number(p.total ?? 0),
       0
     );
+    this.gananciaHoy = Number(gananciaRes.data ?? 0);
     this.pedidosPendientes = pendientesRes.count ?? 0;
     this.pedidosEntregadosHoy = entregadosHoyRes.count ?? 0;
     this.productosStockBajo = (stockBajoRes.data ?? []) as ProductoBajo[];

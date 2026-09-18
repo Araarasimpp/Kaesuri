@@ -1,0 +1,106 @@
+<div class="productos-page">
+  <header class="page-header">
+    <div>
+      <h1>Productos</h1>
+    </div>
+    <div class="header-actions">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar por nombre o SKU..."
+        />
+      </div>
+      <button class="btn-primary" (click)="abrirNuevo()">+ Nuevo producto</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="tab === 'activos'" (click)="cambiarTab('activos')">
+      Activos
+    </button>
+    <button class="tab" [class.active]="tab === 'todos'" (click)="cambiarTab('todos')">
+      Todos los productos
+    </button>
+  </div>
+
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <table *ngIf="filtrados.length; else vacio">
+        <thead>
+          <tr>
+            <th class="col-check"></th>
+            <th>Nombre</th>
+            <th>SKU</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Disponible</th>
+            <th>Estado</th>
+            <th class="col-check"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of paginados">
+            <td class="col-check">
+              <input
+                type="checkbox"
+                [checked]="seleccionados.has(p.id)"
+                (change)="toggleSeleccion(p.id)"
+              />
+            </td>
+            <td>
+              <div class="nombre-cell">
+                <span class="avatar" [class.tiene-foto]="p.imagen_url">
+                  <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" />
+                  <ng-container *ngIf="!p.imagen_url">{{ inicial(p.nombre) }}</ng-container>
+                </span>
+                <span>{{ p.nombre }}</span>
+              </div>
+            </td>
+            <td class="text-soft">{{ p.sku }}</td>
+            <td class="text-soft">{{ p.categoria || '—' }}</td>
+            <td>{{ formatoMoneda(p.precio) }}</td>
+            <td>{{ p.stock }}</td>
+            <td>
+              <span class="badge" [ngClass]="estadoStock(p.stock).clase">
+                {{ estadoStock(p.stock).texto }}
+              </span>
+            </td>
+            <td class="col-check menu-cell">
+              <button class="menu-btn" (click)="toggleMenu(p.id)">⋯</button>
+              <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
+                <button (click)="abrirEditar(p)">Editar</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #vacio>
+        <p class="empty-msg">No hay productos que coincidan con la búsqueda.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando productos...</p>
+    </ng-template>
+
+    <footer class="table-footer" *ngIf="filtrados.length">
+      <span class="text-soft">
+        Mostrando {{ paginados.length }} de {{ filtrados.length }} productos
+      </span>
+      <div class="pager">
+        <button (click)="irAPagina(-1)" [disabled]="paginaActual === 1">←</button>
+        <span>{{ paginaActual }} / {{ totalPaginas }}</span>
+        <button (click)="irAPagina(1)" [disabled]="paginaActual === totalPaginas">→</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<app-producto-form
+  *ngIf="modalAbierto"
+  [producto]="productoEditando"
+  (cerrar)="cerrarModal()"
+  (guardado)="onGuardado()"
+></app-producto-form>

@@ -5,10 +5,12 @@ export interface Producto {
   id: string;
   nombre: string;
   sku: string;
-  descripcion?: string;
+  descripcion: string | null;
   precio: number;
+  costo: number | null;
+  imagen_url: string | null;
   stock: number;
-  categoria?: string;
+  categoria: string | null;
 }
 
 export interface PedidoItem {
@@ -33,7 +35,6 @@ export interface Pedido {
   items?: PedidoItem[];
 }
 
-// Payload que espera la función RPC crear_pedido()
 export interface CrearPedidoPayload {
   p_cliente_nombre: string;
   p_cliente_telefono?: string;
