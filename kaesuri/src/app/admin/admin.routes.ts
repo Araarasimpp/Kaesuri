@@ -25,10 +25,10 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./usuarios/usuarios.page').then((m) => m.UsuariosPage),
       },
-      // {
-      //   path: 'pedidos',
-      //   loadComponent: () => import('./pedidos/pedidos.page').then((m) => m.PedidosPage),
-      // },
+      {
+        path: 'pedidos',
+        loadComponent: () => import('./pedidos/pedidos.page').then((m) => m.PedidosPage),
+      },
     ],
   },
 ];
