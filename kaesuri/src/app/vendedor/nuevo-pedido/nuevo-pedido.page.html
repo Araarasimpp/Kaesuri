@@ -1,0 +1,126 @@
+<div class="pedido-page">
+  <header class="page-header">
+    <h1>Nuevo pedido</h1>
+  </header>
+
+  <div class="layout">
+    <!-- Columna izquierda: selector de productos -->
+    <section class="panel">
+      <h2>Productos</h2>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="busquedaProducto"
+        placeholder="Buscar producto por nombre o SKU..."
+      />
+
+      <div class="producto-lista" *ngIf="!loadingProductos; else cargandoProd">
+        <div
+          class="producto-item"
+          *ngFor="let p of productosFiltrados"
+          (click)="agregarProducto(p)"
+        >
+          <div class="producto-info">
+            <span class="producto-nombre">{{ p.nombre }}</span>
+            <span class="producto-meta">{{ p.sku }} · Stock: {{ p.stock }}</span>
+          </div>
+          <span class="producto-precio">{{ formatoMoneda(p.precio) }}</span>
+        </div>
+
+        <p class="empty-msg" *ngIf="!productosFiltrados.length">
+          No hay productos disponibles con ese criterio.
+        </p>
+      </div>
+
+      <ng-template #cargandoProd>
+        <p class="empty-msg">Cargando productos...</p>
+      </ng-template>
+    </section>
+
+    <!-- Columna derecha: carrito + datos del cliente -->
+    <section class="panel">
+      <h2>Carrito</h2>
+
+      <div class="carrito" *ngIf="carrito.length; else carritoVacio">
+        <div class="carrito-item" *ngFor="let item of carrito">
+          <div class="carrito-info">
+            <span class="producto-nombre">{{ item.producto.nombre }}</span>
+            <span class="producto-meta">
+              {{ formatoMoneda(item.producto.precio) }} c/u
+            </span>
+          </div>
+          <div class="cantidad-control">
+            <button (click)="decrementar(item)">−</button>
+            <span>{{ item.cantidad }}</span>
+            <button (click)="incrementar(item)" [disabled]="item.cantidad >= item.producto.stock">
+              +
+            </button>
+          </div>
+          <span class="carrito-subtotal">
+            {{ formatoMoneda(item.cantidad * item.producto.precio) }}
+          </span>
+        </div>
+      </div>
+
+      <ng-template #carritoVacio>
+        <p class="empty-msg">Toca un producto de la izquierda para agregarlo.</p>
+      </ng-template>
+
+      <div class="divider"></div>
+
+      <h2>Datos del cliente</h2>
+
+      <div class="field">
+        <label>Nombre *</label>
+        <input type="text" [(ngModel)]="clienteNombre" />
+      </div>
+
+      <div class="fields-row">
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="tel" [(ngModel)]="clienteTelefono" />
+        </div>
+        <div class="field">
+          <label>Barrio</label>
+          <input type="text" [(ngModel)]="barrio" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dirección *</label>
+        <input type="text" [(ngModel)]="direccion" />
+      </div>
+
+      <div class="field">
+        <label>Valor del domicilio</label>
+        <input type="number" [(ngModel)]="valorDomicilio" min="0" />
+      </div>
+
+      <div class="field">
+        <label>Observaciones</label>
+        <textarea [(ngModel)]="observaciones" rows="2"></textarea>
+      </div>
+
+      <div class="totales">
+        <div class="totales-linea">
+          <span>Subtotal</span>
+          <span>{{ formatoMoneda(subtotal) }}</span>
+        </div>
+        <div class="totales-linea">
+          <span>Domicilio</span>
+          <span>{{ formatoMoneda(valorDomicilio || 0) }}</span>
+        </div>
+        <div class="totales-linea total">
+          <span>Total</span>
+          <span>{{ formatoMoneda(total) }}</span>
+        </div>
+      </div>
+
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+      <button class="btn-primary" (click)="onCrearPedido()" [disabled]="guardando">
+        {{ guardando ? 'Creando pedido...' : 'Crear pedido' }}
+      </button>
+    </section>
+  </div>
+</div>

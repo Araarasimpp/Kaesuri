@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../core/services/supabase.service';
 
@@ -33,7 +33,7 @@ export class DashboardPage implements OnInit {
   productosStockBajo: ProductoBajo[] = [];
   pedidosRecientes: PedidoResumen[] = [];
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
     await this.cargarReporte();
@@ -86,6 +86,7 @@ export class DashboardPage implements OnInit {
     this.pedidosRecientes = (recientesRes.data ?? []) as PedidoResumen[];
 
     this.loading = false;
+    this.cdr.detectChanges();
   }
 
   formatoMoneda(valor: number): string {

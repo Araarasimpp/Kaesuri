@@ -1,111 +1,114 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-} from '@ionic/angular';
-import { SupabaseService, Profile, UserRole } from '../../core/services/supabase.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { SupabaseService, UserRole } from '../../core/services/supabase.service';
+
+interface UsuarioFila {
+  id: string;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+  role: UserRole;
+}
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonSelect,
-    IonSelectOption,
-    IonSpinner,
-  ],
-  template: `
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Usuarios</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
-      <ion-spinner *ngIf="loading"></ion-spinner>
-
-      <ion-list *ngIf="!loading">
-        <ion-item *ngFor="let u of usuarios">
-          <ion-label>
-            <h2>{{ u.nombre }}</h2>
-            <p *ngIf="u.id === miId">(Tú)</p>
-          </ion-label>
-          <ion-select
-            [(ngModel)]="u.role"
-            (ionChange)="cambiarRol(u)"
-            interface="popover"
-            [disabled]="u.id === miId"
-          >
-            <ion-select-option value="admin">Admin</ion-select-option>
-            <ion-select-option value="vendedor">Vendedor</ion-select-option>
-            <ion-select-option value="domiciliario">Domiciliario</ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-list>
-    </ion-content>
-  `,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './usuarios.page.html',
+  styleUrls: ['./usuarios.page.scss'],
 })
-export class UsuariosPage implements OnInit {
-  usuarios: Profile[] = [];
+export class UsuariosPage implements OnInit, OnDestroy {
   loading = true;
+  usuarios: UsuarioFila[] = [];
+  busqueda = '';
   miId: string | null = null;
+  guardandoId: string | null = null;
 
-  constructor(private supabase: SupabaseService) {}
+  private canal: RealtimeChannel | null = null;
 
-  async ngOnInit() {
+  readonly roles: { valor: UserRole; etiqueta: string }[] = [
+    { valor: 'admin', etiqueta: 'Admin' },
+    { valor: 'vendedor', etiqueta: 'Vendedor' },
+    { valor: 'domiciliario', etiqueta: 'Domiciliario' },
+  ];
+
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
+
+  async ngOnInit(): Promise<void> {
     const user = await this.supabase.getCurrentUser();
     this.miId = user?.id ?? null;
     await this.cargarUsuarios();
+    this.suscribirRealtime();
   }
 
-  async cargarUsuarios() {
+  ngOnDestroy(): void {
+    if (this.canal) {
+      this.supabase.client.removeChannel(this.canal);
+    }
+  }
+
+  private suscribirRealtime(): void {
+    this.canal = this.supabase.client
+      .channel('usuarios-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          this.cargarUsuarios();
+        }
+      )
+      .subscribe();
+  }
+
+  async cargarUsuarios(): Promise<void> {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('id, nombre, telefono, role')
+      .select('id, nombre, email, telefono, role')
       .order('nombre');
 
     if (!error && data) {
-      this.usuarios = data as Profile[];
+      this.usuarios = data as UsuarioFila[];
     }
     this.loading = false;
+    this.cdr.detectChanges();
   }
 
-  async cambiarRol(usuario: Profile) {
-    if (usuario.id === this.miId) {
-      // No debería llegar aquí porque el select está deshabilitado,
-      // pero se valida igual por si acaso.
-      await this.cargarUsuarios();
-      return;
-    }
+  get filtrados(): UsuarioFila[] {
+    if (!this.busqueda.trim()) return this.usuarios;
+    const q = this.busqueda.trim().toLowerCase();
+    return this.usuarios.filter(
+      (u) =>
+        u.nombre.toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q)
+    );
+  }
 
+  async cambiarRol(usuario: UsuarioFila, nuevoRol: UserRole): Promise<void> {
+    if (usuario.id === this.miId || nuevoRol === usuario.role) return;
+
+    this.guardandoId = usuario.id;
     const { error } = await this.supabase.client
       .from('profiles')
-      .update({ role: usuario.role })
+      .update({ role: nuevoRol })
       .eq('id', usuario.id);
 
+    this.guardandoId = null;
+
     if (error) {
-      console.error('Error actualizando rol:', error.message);
-      // Si falla (ej: perdió conexión), volvemos a cargar para no mostrar
-      // un rol que en realidad no se guardó
       await this.cargarUsuarios();
+    } else {
+      this.cdr.detectChanges();
     }
+  }
+
+  etiquetaRol(role: UserRole): string {
+    return this.roles.find((r) => r.valor === role)?.etiqueta ?? role;
+  }
+
+  inicial(nombre: string): string {
+    return nombre.charAt(0).toUpperCase();
   }
 }

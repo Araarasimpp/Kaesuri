@@ -10,11 +10,11 @@ export const VENDEDOR_ROUTES: Routes = [
     loadComponent: () =>
       import('./inicio/inicio.page').then((m) => m.InicioPage),
   },
-  // Más adelante aquí va la pantalla de crear pedido:
-  // {
-  //   path: 'nuevo-pedido',
-  //   canActivate: [RoleGuard],
-  //   data: { roles: ['vendedor', 'admin'] },
-  //   loadComponent: () => import('./nuevo-pedido/nuevo-pedido.page').then((m) => m.NuevoPedidoPage),
-  // },
+  {
+    path: 'nuevo-pedido',
+    canActivate: [RoleGuard],
+    data: { roles: ['vendedor', 'admin'] },
+    loadComponent: () =>
+      import('./nuevo-pedido/nuevo-pedido.page').then((m) => m.NuevoPedidoPage),
+  },
 ];

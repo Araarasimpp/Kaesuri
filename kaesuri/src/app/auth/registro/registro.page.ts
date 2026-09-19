@@ -1,4 +1,4 @@
-import { Component, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -22,7 +22,7 @@ export class RegistroPage {
   constructor(
     private supabase: SupabaseService,
     private router: Router,
-    private zone: NgZone
+    private cdr: ChangeDetectorRef
   ) {}
 
   async onRegistrar() {
@@ -46,20 +46,17 @@ export class RegistroPage {
       this.telefono || undefined
     );
 
-    // Los eventos de auth de Supabase a veces resuelven fuera de la zona de
-    // Angular, así que forzamos que el cambio de estado se note en la vista.
-    this.zone.run(() => {
-      this.loading = false;
+    this.loading = false;
 
-      if (error) {
-        this.errorMsg =
-          error.message === 'User already registered'
-            ? 'Ya existe una cuenta con ese correo.'
-            : 'No se pudo crear la cuenta. Intenta de nuevo.';
-        return;
-      }
+    if (error) {
+      this.errorMsg =
+        error.message === 'User already registered'
+          ? 'Ya existe una cuenta con ese correo.'
+          : 'No se pudo crear la cuenta. Intenta de nuevo.';
+      this.cdr.detectChanges();
+      return;
+    }
 
-      this.router.navigate(['/auth/login'], { queryParams: { registrado: '1' } });
-    });
+    this.router.navigate(['/auth/login'], { queryParams: { registrado: '1' } });
   }
 }

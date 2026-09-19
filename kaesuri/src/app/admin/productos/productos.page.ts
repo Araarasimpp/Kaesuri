@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ProductoFormComponent } from './producto-form/producto-form.component';
 import { Producto } from '../../shared/models/models';
@@ -14,7 +15,7 @@ type TabFiltro = 'activos' | 'todos';
   templateUrl: './productos.page.html',
   styleUrls: ['./productos.page.scss'],
 })
-export class ProductosPage implements OnInit {
+export class ProductosPage implements OnInit, OnDestroy {
   loading = true;
   productos: Producto[] = [];
   busqueda = '';
@@ -28,30 +29,53 @@ export class ProductosPage implements OnInit {
   productoEditando: Producto | null = null;
   menuAbiertoId: string | null = null;
 
-  constructor(private supabase: SupabaseService) {}
+  private canal: RealtimeChannel | null = null;
+
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
     await this.cargarProductos();
+    this.suscribirRealtime();
+  }
+
+  ngOnDestroy(): void {
+    if (this.canal) {
+      this.supabase.client.removeChannel(this.canal);
+    }
+  }
+
+  private suscribirRealtime(): void {
+    this.canal = this.supabase.client
+      .channel('productos-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'productos' },
+        () => {
+          this.cargarProductos();
+        }
+      )
+      .subscribe();
   }
 
   async cargarProductos(): Promise<void> {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('productos')
-      .select('id, nombre, sku, descripcion, categoria, precio, costo, stock, imagen_url')
+      .select('id, nombre, sku, descripcion, categoria, precio, costo, stock, imagen_url, activo')
       .order('nombre');
 
     if (!error && data) {
       this.productos = data as Producto[];
     }
     this.loading = false;
+    this.cdr.detectChanges();
   }
 
   get filtrados(): Producto[] {
     let lista = this.productos;
 
     if (this.tab === 'activos') {
-      lista = lista.filter((p) => p.stock > 0);
+      lista = lista.filter((p) => p.activo);
     }
 
     if (this.busqueda.trim()) {
@@ -115,6 +139,41 @@ export class ProductosPage implements OnInit {
   async onGuardado(): Promise<void> {
     this.modalAbierto = false;
     await this.cargarProductos();
+  }
+
+  async eliminarProducto(producto: Producto): Promise<void> {
+    this.menuAbiertoId = null;
+
+    const confirmado = confirm(
+      `¿Eliminar "${producto.nombre}"? No aparecerá más en el catálogo, pero se conserva en pedidos anteriores.`
+    );
+    if (!confirmado) return;
+
+    const { error } = await this.supabase.client
+      .from('productos')
+      .update({ activo: false })
+      .eq('id', producto.id);
+
+    if (!error) {
+      await this.cargarProductos();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  async reactivarProducto(producto: Producto): Promise<void> {
+    this.menuAbiertoId = null;
+
+    const { error } = await this.supabase.client
+      .from('productos')
+      .update({ activo: true })
+      .eq('id', producto.id);
+
+    if (!error) {
+      await this.cargarProductos();
+    } else {
+      this.cdr.detectChanges();
+    }
   }
 
   estadoStock(stock: number): { texto: string; clase: string } {

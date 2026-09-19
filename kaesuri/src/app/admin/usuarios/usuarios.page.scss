@@ -1,4 +1,4 @@
-.pedidos-page {
+.usuarios-page {
   padding: 32px 40px 48px;
 }
 
@@ -17,14 +17,8 @@
   margin: 0;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .search-box input {
-  width: 240px;
+  width: 260px;
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid var(--k-border);
@@ -37,45 +31,6 @@
 .search-box input:focus {
   outline: none;
   border-color: var(--k-amber);
-}
-
-.btn-primary {
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  background: var(--k-ink);
-  color: var(--k-paper);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--k-border);
-  flex-wrap: wrap;
-}
-
-.tab {
-  padding: 10px 4px;
-  margin-right: 24px;
-  border: none;
-  background: none;
-  color: var(--k-text-soft);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
-
-.tab.active {
-  color: var(--k-text);
-  font-weight: 600;
-  border-bottom-color: var(--k-amber);
 }
 
 .table-card {
@@ -104,7 +59,6 @@ tbody td {
   padding: 12px 16px;
   font-size: 14px;
   border-bottom: 1px solid var(--k-border);
-  white-space: nowrap;
 }
 
 tbody tr:last-child td {
@@ -115,48 +69,56 @@ tbody tr:last-child td {
   color: var(--k-text-soft);
 }
 
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+.nombre-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
 }
 
-.estado-ok {
-  background: rgba(47, 143, 130, 0.12);
-  color: var(--k-teal);
-}
-
-.estado-bajo {
-  background: rgba(232, 163, 61, 0.15);
-  color: var(--k-amber);
-}
-
-.estado-agotado {
-  background: rgba(214, 95, 95, 0.12);
-  color: var(--k-coral);
-}
-
-.estado-info {
-  background: rgba(18, 21, 28, 0.08);
-  color: var(--k-text-soft);
-}
-
-.domiciliario-select {
-  padding: 7px 10px;
+.avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
+  background: var(--k-bg-alt);
+  color: var(--k-text-soft);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tag-tu {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--k-amber);
+  background: rgba(232, 163, 61, 0.15);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.rol-select {
+  padding: 8px 12px;
+  border-radius: 9px;
   border: 1px solid var(--k-border);
   background: var(--k-bg-alt);
   color: var(--k-text);
   font-size: 13px;
   font-family: var(--k-font);
+  font-weight: 500;
   cursor: pointer;
 }
 
-.domiciliario-select:disabled {
+.rol-select:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.rol-select:focus {
+  outline: none;
+  border-color: var(--k-amber);
 }
 
 .empty-msg {
@@ -169,6 +131,6 @@ tbody tr:last-child td {
 
 @media (max-width: 720px) {
   .search-box input {
-    width: 160px;
+    width: 180px;
   }
 }

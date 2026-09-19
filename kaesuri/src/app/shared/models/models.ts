@@ -11,6 +11,7 @@ export interface Producto {
   imagen_url: string | null;
   stock: number;
   categoria: string | null;
+  activo: boolean;
 }
 
 export interface PedidoItem {
@@ -23,15 +24,19 @@ export interface PedidoItem {
 
 export interface Pedido {
   id: string;
+  numero: number;
   vendedor_id: string;
-  domiciliario_id?: string;
+  domiciliario_id?: string | null;
   cliente_nombre: string;
-  cliente_telefono?: string;
+  cliente_telefono?: string | null;
   direccion: string;
+  barrio?: string | null;
+  valor_domicilio: number;
+  observaciones?: string | null;
   estado: EstadoPedido;
   total: number;
   created_at: string;
-  entregado_at?: string;
+  entregado_at?: string | null;
   items?: PedidoItem[];
 }
 
@@ -39,6 +44,9 @@ export interface CrearPedidoPayload {
   p_cliente_nombre: string;
   p_cliente_telefono?: string;
   p_direccion: string;
+  p_barrio?: string;
+  p_valor_domicilio: number;
+  p_observaciones?: string;
   p_items: {
     producto_id: string;
     cantidad: number;

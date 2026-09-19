@@ -1,0 +1,75 @@
+<div class="pedidos-page">
+  <header class="page-header">
+    <h1>Pedidos</h1>
+    <div class="header-actions">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por cliente..." />
+      </div>
+      <a class="btn-primary" routerLink="/admin/pedidos/nuevo">+ Nuevo pedido</a>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button
+      class="tab"
+      *ngFor="let e of estados"
+      [class.active]="filtroEstado === e.valor"
+      (click)="filtroEstado = e.valor"
+    >
+      {{ e.etiqueta }}
+    </button>
+  </div>
+
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <table *ngIf="filtrados.length; else vacio">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th>Barrio</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Domiciliario</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of filtrados">
+            <td class="text-soft">#{{ p.numero }}</td>
+            <td>{{ p.cliente_nombre }}</td>
+            <td class="text-soft">{{ p.cliente_telefono || '—' }}</td>
+            <td class="text-soft">{{ p.barrio || '—' }}</td>
+            <td>{{ formatoMoneda(p.total) }}</td>
+            <td>
+              <span class="badge" [ngClass]="claseEstado(p.estado)">
+                {{ etiquetaEstado(p.estado) }}
+              </span>
+            </td>
+            <td>
+              <select
+                class="domiciliario-select"
+                [ngModel]="p.domiciliario_id"
+                (ngModelChange)="asignarDomiciliario(p, $event)"
+                [disabled]="guardandoId === p.id"
+              >
+                <option [ngValue]="null">Sin asignar</option>
+                <option *ngFor="let d of domiciliarios" [ngValue]="d.id">{{ d.nombre }}</option>
+              </select>
+            </td>
+            <td class="text-soft">{{ formatoFecha(p.created_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #vacio>
+        <p class="empty-msg">No hay pedidos que coincidan.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando pedidos...</p>
+    </ng-template>
+  </div>
+</div>

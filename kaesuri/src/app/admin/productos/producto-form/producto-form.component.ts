@@ -135,6 +135,7 @@ export class ProductoFormComponent implements OnChanges {
       costo: null,
       stock: 0,
       imagen_url: null,
+      activo: true,
     };
   }
 }

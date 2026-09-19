@@ -1,0 +1,62 @@
+<div class="usuarios-page">
+  <header class="page-header">
+    <div>
+      <h1>Usuarios</h1>
+    </div>
+    <div class="header-actions">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar por nombre o correo..."
+        />
+      </div>
+    </div>
+  </header>
+
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <table *ngIf="filtrados.length; else vacio">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of filtrados">
+            <td>
+              <div class="nombre-cell">
+                <span class="avatar">{{ inicial(u.nombre) }}</span>
+                <span>{{ u.nombre }}</span>
+                <span class="tag-tu" *ngIf="u.id === miId">Tú</span>
+              </div>
+            </td>
+            <td class="text-soft">{{ u.email || '—' }}</td>
+            <td class="text-soft">{{ u.telefono || '—' }}</td>
+            <td>
+              <select
+                class="rol-select"
+                [ngModel]="u.role"
+                (ngModelChange)="cambiarRol(u, $event)"
+                [disabled]="u.id === miId || guardandoId === u.id"
+              >
+                <option *ngFor="let r of roles" [value]="r.valor">{{ r.etiqueta }}</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #vacio>
+        <p class="empty-msg">No hay usuarios que coincidan con la búsqueda.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando usuarios...</p>
+    </ng-template>
+  </div>
+</div>

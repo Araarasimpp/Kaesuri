@@ -62,14 +62,17 @@
             <td>{{ formatoMoneda(p.precio) }}</td>
             <td>{{ p.stock }}</td>
             <td>
-              <span class="badge" [ngClass]="estadoStock(p.stock).clase">
+              <span class="badge" [ngClass]="estadoStock(p.stock).clase" *ngIf="p.activo">
                 {{ estadoStock(p.stock).texto }}
               </span>
+              <span class="badge estado-archivado" *ngIf="!p.activo">Archivado</span>
             </td>
             <td class="col-check menu-cell">
               <button class="menu-btn" (click)="toggleMenu(p.id)">⋯</button>
               <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
                 <button (click)="abrirEditar(p)">Editar</button>
+                <button *ngIf="p.activo" class="danger" (click)="eliminarProducto(p)">Eliminar</button>
+                <button *ngIf="!p.activo" (click)="reactivarProducto(p)">Reactivar</button>
               </div>
             </td>
           </tr>
