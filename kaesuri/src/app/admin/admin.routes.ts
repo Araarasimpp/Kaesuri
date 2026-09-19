@@ -38,6 +38,11 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.NuevoPedidoPage
           ),
       },
+      {
+        path: 'cuadres',
+        loadComponent: () =>
+          import('./cuadres/cuadres.page').then((m) => m.AdminCuadresPage),
+      },
     ],
   },
 ];

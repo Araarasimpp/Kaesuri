@@ -52,6 +52,38 @@
   white-space: nowrap;
 }
 
+.btn-secondary {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.filtro-rotulo {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  font-size: 13px;
+  font-family: var(--k-font);
+  cursor: pointer;
+}
+
+.col-check {
+  width: 32px;
+}
+
 .tabs {
   display: flex;
   gap: 4px;

@@ -1,0 +1,42 @@
+<div class="modal-backdrop" (click)="onCerrar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <h2>Entregar pedido #{{ pedido.numero }}</h2>
+      <button class="close-btn" (click)="onCerrar()">✕</button>
+    </header>
+
+    <div class="modal-body">
+      <p class="resumen">
+        <span>{{ pedido.cliente_nombre }}</span>
+        <span class="monto">{{ pedido.total | number }}</span>
+      </p>
+
+      <label class="metodo-opcion" [class.selected]="metodoPago === 'efectivo'">
+        <input type="radio" name="metodo" value="efectivo" [(ngModel)]="metodoPago" />
+        <span>Efectivo</span>
+      </label>
+
+      <label class="metodo-opcion" [class.selected]="metodoPago === 'transferencia'">
+        <input type="radio" name="metodo" value="transferencia" [(ngModel)]="metodoPago" />
+        <span>Transferencia</span>
+      </label>
+
+      <div class="comprobante-uploader" *ngIf="metodoPago === 'transferencia'">
+        <label class="comprobante-preview" [class.empty]="!previewComprobante">
+          <img *ngIf="previewComprobante" [src]="previewComprobante" alt="Comprobante" />
+          <span *ngIf="!previewComprobante">Toca para subir foto del comprobante</span>
+          <input type="file" accept="image/*" capture="environment" (change)="onArchivoSeleccionado($event)" hidden />
+        </label>
+      </div>
+
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+    </div>
+
+    <footer class="modal-footer">
+      <button class="btn-secondary" (click)="onCerrar()">Cancelar</button>
+      <button class="btn-primary" (click)="onConfirmar()" [disabled]="guardando">
+        {{ guardando ? 'Confirmando...' : 'Confirmar entrega' }}
+      </button>
+    </footer>
+  </div>
+</div>

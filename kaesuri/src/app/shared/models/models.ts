@@ -1,5 +1,6 @@
 export type UserRole = 'admin' | 'vendedor' | 'domiciliario';
 export type EstadoPedido = 'pendiente' | 'en_ruta' | 'entregado' | 'cancelado';
+export type MetodoPago = 'efectivo' | 'transferencia';
 
 export interface Producto {
   id: string;
@@ -35,9 +36,30 @@ export interface Pedido {
   observaciones?: string | null;
   estado: EstadoPedido;
   total: number;
+  metodo_pago?: MetodoPago | null;
+  comprobante_url?: string | null;
+  rotulo_impreso_at?: string | null;
+  cuadre_id?: string | null;
   created_at: string;
   entregado_at?: string | null;
   items?: PedidoItem[];
+}
+
+export type EstadoCuadre = 'pendiente' | 'confirmado';
+
+export interface Cuadre {
+  id: string;
+  domiciliario_id: string;
+  fecha: string;
+  cantidad_pedidos: number;
+  total_domicilios: number;
+  total_efectivo: number;
+  total_transferencia: number;
+  total_general: number;
+  estado: EstadoCuadre;
+  cerrado_at: string;
+  confirmado_at?: string | null;
+  confirmado_por?: string | null;
 }
 
 export interface CrearPedidoPayload {

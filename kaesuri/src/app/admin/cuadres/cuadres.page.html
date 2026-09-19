@@ -1,0 +1,62 @@
+<div class="cuadres-admin-page">
+  <header class="page-header">
+    <h1>Cuadres</h1>
+    <select class="filtro" [(ngModel)]="filtro">
+      <option value="pendiente">Pendientes ({{ pendientesCount }})</option>
+      <option value="confirmado">Confirmados</option>
+      <option value="todos">Todos</option>
+    </select>
+  </header>
+
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <table *ngIf="filtrados.length; else vacio">
+        <thead>
+          <tr>
+            <th>Domiciliario</th>
+            <th>Fecha</th>
+            <th>Pedidos</th>
+            <th>Efectivo a recibir</th>
+            <th>Transferencias</th>
+            <th>Total general</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filtrados">
+            <td>{{ nombreDomiciliario(c.domiciliario_id) }}</td>
+            <td class="text-soft">{{ formatoFecha(c.fecha) }}</td>
+            <td class="text-soft">{{ c.cantidad_pedidos }}</td>
+            <td>{{ formatoMoneda(c.total_efectivo) }}</td>
+            <td class="text-soft">{{ formatoMoneda(c.total_transferencia) }}</td>
+            <td>{{ formatoMoneda(c.total_general) }}</td>
+            <td>
+              <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
+                {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn-confirmar"
+                *ngIf="c.estado === 'pendiente'"
+                (click)="confirmarCuadre(c)"
+                [disabled]="confirmandoId === c.id"
+              >
+                {{ confirmandoId === c.id ? 'Confirmando...' : 'Completado' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #vacio>
+        <p class="empty-msg">No hay cuadres en este filtro.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando cuadres...</p>
+    </ng-template>
+  </div>
+</div>

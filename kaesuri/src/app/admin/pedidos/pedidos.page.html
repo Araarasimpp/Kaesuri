@@ -5,6 +5,19 @@
       <div class="search-box">
         <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por cliente..." />
       </div>
+      <select class="filtro-rotulo" [(ngModel)]="filtroRotulo">
+        <option value="todos">Rótulo: todos</option>
+        <option value="pendiente">Rótulo: pendiente</option>
+        <option value="impreso">Rótulo: impreso</option>
+      </select>
+      <button
+        class="btn-secondary"
+        *ngIf="seleccionados.size"
+        (click)="imprimirRotulos()"
+        [disabled]="imprimiendo"
+      >
+        {{ imprimiendo ? 'Preparando...' : 'Imprimir rótulos (' + seleccionados.size + ')' }}
+      </button>
       <a class="btn-primary" routerLink="/admin/pedidos/nuevo">+ Nuevo pedido</a>
     </div>
   </header>
@@ -25,19 +38,36 @@
       <table *ngIf="filtrados.length; else vacio">
         <thead>
           <tr>
+            <th class="col-check">
+              <input
+                type="checkbox"
+                [checked]="seleccionados.size === filtrados.length"
+                (change)="toggleSeleccionarTodos()"
+              />
+            </th>
             <th>#</th>
+            <th>Vendedor</th>
             <th>Cliente</th>
             <th>Teléfono</th>
             <th>Barrio</th>
             <th>Total</th>
             <th>Estado</th>
             <th>Domiciliario</th>
+            <th>Rótulo</th>
             <th>Fecha</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let p of filtrados">
+            <td class="col-check">
+              <input
+                type="checkbox"
+                [checked]="seleccionados.has(p.id)"
+                (change)="toggleSeleccion(p.id)"
+              />
+            </td>
             <td class="text-soft">#{{ p.numero }}</td>
+            <td class="text-soft">{{ nombreVendedor(p.vendedor_id) }}</td>
             <td>{{ p.cliente_nombre }}</td>
             <td class="text-soft">{{ p.cliente_telefono || '—' }}</td>
             <td class="text-soft">{{ p.barrio || '—' }}</td>
@@ -57,6 +87,11 @@
                 <option [ngValue]="null">Sin asignar</option>
                 <option *ngFor="let d of domiciliarios" [ngValue]="d.id">{{ d.nombre }}</option>
               </select>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="p.rotulo_impreso_at ? 'estado-ok' : 'estado-bajo'">
+                {{ p.rotulo_impreso_at ? 'Impreso' : 'Pendiente' }}
+              </span>
             </td>
             <td class="text-soft">{{ formatoFecha(p.created_at) }}</td>
           </tr>
