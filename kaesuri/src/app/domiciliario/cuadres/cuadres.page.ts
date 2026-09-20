@@ -28,6 +28,7 @@ export class CuadresPage implements OnInit {
   loading = true;
   pedidosHoy: PedidoSinCuadrar[] = [];
   historial: Cuadre[] = [];
+  diasExpandidos = new Set<string>();
   cerrando = false;
   errorMsg = '';
 
@@ -129,6 +130,46 @@ export class CuadresPage implements OnInit {
 
   get totalCuadre(): number {
     return this.totalEfectivo - this.totalDomicilios;
+  }
+
+  get porDia(): {
+    fecha: string;
+    cuadres: Cuadre[];
+    cantidadPedidos: number;
+    totalDomicilios: number;
+    totalEfectivo: number;
+    totalTransferencia: number;
+    totalAEntregar: number;
+    todoConfirmado: boolean;
+  }[] {
+    const grupos = new Map<string, Cuadre[]>();
+
+    for (const c of this.historial) {
+      const lista = grupos.get(c.fecha) ?? [];
+      lista.push(c);
+      grupos.set(c.fecha, lista);
+    }
+
+    return Array.from(grupos.entries())
+      .map(([fecha, cuadres]) => ({
+        fecha,
+        cuadres,
+        cantidadPedidos: cuadres.reduce((s, c) => s + c.cantidad_pedidos, 0),
+        totalDomicilios: cuadres.reduce((s, c) => s + c.total_domicilios, 0),
+        totalEfectivo: cuadres.reduce((s, c) => s + c.total_efectivo, 0),
+        totalTransferencia: cuadres.reduce((s, c) => s + c.total_transferencia, 0),
+        totalAEntregar: cuadres.reduce((s, c) => s + c.total_a_entregar, 0),
+        todoConfirmado: cuadres.every((c) => c.estado === 'confirmado'),
+      }))
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  }
+
+  toggleDia(fecha: string): void {
+    if (this.diasExpandidos.has(fecha)) {
+      this.diasExpandidos.delete(fecha);
+    } else {
+      this.diasExpandidos.add(fecha);
+    }
   }
 
   async cerrarCuadre(): Promise<void> {

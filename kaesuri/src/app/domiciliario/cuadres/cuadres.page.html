@@ -75,18 +75,41 @@
     </section>
 
     <section class="bloque">
-      <h2>Historial</h2>
+      <h2>Totales por día</h2>
 
-      <div class="lista" *ngIf="historial.length; else vacioHist">
-        <div class="fila-historial" *ngFor="let c of historial">
-          <div class="fila-info">
-            <span class="cliente">{{ formatoFecha(c.fecha) }}</span>
-            <span class="pedidos-count">{{ c.cantidad_pedidos }} pedidos</span>
+      <div class="lista" *ngIf="porDia.length; else vacioHist">
+        <div class="dia-grupo" *ngFor="let dia of porDia">
+          <div class="dia-header" (click)="toggleDia(dia.fecha)">
+            <div class="fila-info">
+              <span class="cliente">{{ formatoFecha(dia.fecha) }}</span>
+              <span class="pedidos-count">
+                {{ dia.cantidadPedidos }} pedidos
+                <ng-container *ngIf="dia.cuadres.length > 1"> · {{ dia.cuadres.length }} cierres</ng-container>
+              </span>
+            </div>
+            <span class="badge" [class.confirmado]="dia.todoConfirmado">
+              {{ dia.todoConfirmado ? 'Confirmado' : 'Pendiente' }}
+            </span>
+            <span class="monto-total">{{ formatoMoneda(dia.totalAEntregar) }}</span>
           </div>
-          <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
-            {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
-          </span>
-          <span class="monto-total">{{ formatoMoneda(c.total_a_entregar) }}</span>
+
+          <div class="dia-detalle" *ngIf="diasExpandidos.has(dia.fecha)">
+            <div class="detalle-resumen">
+              <span>Efectivo: {{ formatoMoneda(dia.totalEfectivo) }}</span>
+              <span>Transferencia: {{ formatoMoneda(dia.totalTransferencia) }}</span>
+              <span>Domicilios: {{ formatoMoneda(dia.totalDomicilios) }}</span>
+            </div>
+            <div class="fila-historial" *ngFor="let c of dia.cuadres">
+              <div class="fila-info">
+                <span class="cliente">Cierre {{ c.cerrado_at | date: 'shortTime' }}</span>
+                <span class="pedidos-count">{{ c.cantidad_pedidos }} pedidos</span>
+              </div>
+              <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
+                {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
+              </span>
+              <span class="monto-total">{{ formatoMoneda(c.total_a_entregar) }}</span>
+            </div>
+          </div>
         </div>
       </div>
 

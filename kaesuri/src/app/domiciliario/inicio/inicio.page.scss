@@ -1,112 +1,116 @@
 .domiciliario-page {
-  padding: 24px 20px 48px;
-  max-width: 520px;
+  padding: 20px 16px 40px;
+  max-width: 480px;
   margin: 0 auto;
 }
 
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.page-header h1 {
-  font-size: 22px;
+.domiciliario-page h1 {
+  font-size: 20px;
   font-weight: 700;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.link-cuadres {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--k-amber);
-  text-decoration: none;
-}
-
-.logout-btn {
-  border: none;
-  background: none;
-  color: var(--k-text-soft);
-  font-size: 14px;
-  cursor: pointer;
+  margin: 0 0 16px;
 }
 
 .lista {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .pedido-card {
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 18px;
 }
 
-.pedido-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.numero {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--k-text-soft);
-}
-
-.total {
+.pedido-titulo {
   font-size: 17px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--k-amber);
+  margin: 0 0 12px;
 }
 
-.cliente {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 4px;
-}
-
-.direccion {
+.datos p {
   font-size: 14px;
-  color: var(--k-text-soft);
-  margin: 0 0 4px;
+  margin: 4px 0;
 }
 
-.telefono {
-  margin: 0 0 4px;
-}
-
-.telefono a {
-  font-size: 14px;
+.link-telefono {
   color: var(--k-teal);
-  text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
-.observaciones {
+.link-direccion {
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.observacion {
+  color: var(--k-coral);
+  font-weight: 600;
+}
+
+.divider {
+  height: 1px;
+  background: var(--k-border);
+  margin: 14px 0;
+}
+
+.productos p {
   font-size: 13px;
   color: var(--k-text-soft);
-  background: var(--k-bg-alt);
-  padding: 8px 10px;
-  border-radius: 8px;
-  margin: 8px 0 0;
+  margin: 4px 0;
+}
+
+.acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.accion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.accion ion-icon {
+  font-size: 20px;
+}
+
+.accion:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.accion-llamar {
+  background: #2563eb;
+}
+
+.accion-whatsapp {
+  background: #16a34a;
+}
+
+.accion-navegar {
+  background: var(--k-amber);
+  color: var(--k-ink);
 }
 
 .btn-entregar {
   width: 100%;
-  margin-top: 14px;
-  padding: 12px;
+  padding: 13px;
   border-radius: 10px;
   border: none;
   background: var(--k-ink);

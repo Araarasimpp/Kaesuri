@@ -4,16 +4,42 @@
   <ng-container *ngIf="!loading; else cargando">
     <div class="lista" *ngIf="pedidos.length; else vacio">
       <div class="pedido-card" *ngFor="let p of pedidos">
-        <div class="pedido-top">
-          <span class="numero">#{{ p.numero }}</span>
-          <span class="total">{{ formatoMoneda(p.total) }}</span>
+        <h2 class="pedido-titulo">Pedido #{{ p.numero }} - {{ formatoMoneda(p.total) }}</h2>
+
+        <div class="datos">
+          <p><strong>Cliente:</strong> {{ p.cliente_nombre }}</p>
+          <p *ngIf="p.cliente_telefono">
+            <strong>Teléfono:</strong>
+            <span class="link-telefono" (click)="llamar(p)">{{ p.cliente_telefono }}</span>
+          </p>
+          <p><strong>Dirección:</strong> <span class="link-direccion" (click)="navegar(p)">{{ p.direccion }}</span></p>
+          <p *ngIf="p.barrio"><strong>Barrio:</strong> {{ p.barrio }}</p>
+          <p><strong>Domicilio:</strong> {{ formatoMoneda(p.valor_domicilio) }}</p>
+          <p *ngIf="p.observaciones">
+            <strong>Observaciones:</strong> <span class="observacion">{{ p.observaciones }}</span>
+          </p>
         </div>
-        <p class="cliente">{{ p.cliente_nombre }}</p>
-        <p class="direccion">{{ p.direccion }}<span *ngIf="p.barrio"> · {{ p.barrio }}</span></p>
-        <p class="telefono" *ngIf="p.cliente_telefono">
-          <a [href]="'tel:' + p.cliente_telefono">{{ p.cliente_telefono }}</a>
-        </p>
-        <p class="observaciones" *ngIf="p.observaciones">{{ p.observaciones }}</p>
+
+        <div class="divider"></div>
+
+        <div class="productos">
+          <p *ngFor="let linea of p.productos.split('\n')">{{ linea }}</p>
+        </div>
+
+        <div class="acciones">
+          <button class="accion accion-llamar" (click)="llamar(p)" [disabled]="!p.cliente_telefono">
+            <ion-icon name="call-outline"></ion-icon>
+            <span>Llamar</span>
+          </button>
+          <button class="accion accion-whatsapp" (click)="whatsapp(p)" [disabled]="!p.cliente_telefono">
+            <ion-icon name="logo-whatsapp"></ion-icon>
+            <span>WhatsApp</span>
+          </button>
+          <button class="accion accion-navegar" (click)="navegar(p)">
+            <ion-icon name="navigate-outline"></ion-icon>
+            <span>Navegar</span>
+          </button>
+        </div>
 
         <button class="btn-entregar" (click)="abrirEntrega(p)">Marcar entregado</button>
       </div>

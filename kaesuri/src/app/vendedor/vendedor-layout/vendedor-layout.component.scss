@@ -1,8 +1,9 @@
 .layout {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--k-bg);
+  overflow: hidden;
 }
 
 .topbar {
@@ -30,6 +31,8 @@
 
 .content {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 76px;
 }
 
