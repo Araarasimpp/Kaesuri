@@ -1,7 +1,7 @@
 <div class="layout">
-  <header class="topbar">
-    <span class="brand">Kaesuri</span>
-  </header>
+  <button class="theme-toggle" (click)="toggleTheme()">
+    <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+  </button>
 
   <main class="content">
     <router-outlet></router-outlet>
@@ -21,7 +21,7 @@
       <span class="dot"></span>
     </a>
     <button class="pill-action" (click)="logout()">
-      <ion-icon name="person-outline"></ion-icon>
+      <ion-icon name="log-out-outline"></ion-icon>
     </button>
   </nav>
 </div>

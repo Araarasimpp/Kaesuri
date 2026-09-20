@@ -29,6 +29,7 @@ export class NuevoPedidoPage implements OnInit {
   direccion = '';
   barrio = '';
   valorDomicilio: number = 0;
+  comision: number = 0;
   observaciones = '';
 
   guardando = false;
@@ -108,7 +109,7 @@ export class NuevoPedidoPage implements OnInit {
   }
 
   get total(): number {
-    return this.subtotal + (Number(this.valorDomicilio) || 0);
+    return this.subtotal + (Number(this.valorDomicilio) || 0) + (Number(this.comision) || 0);
   }
 
   async onCrearPedido(): Promise<void> {
@@ -138,6 +139,7 @@ export class NuevoPedidoPage implements OnInit {
       p_direccion: this.direccion,
       p_barrio: this.barrio || null,
       p_valor_domicilio: Number(this.valorDomicilio) || 0,
+      p_comision: Number(this.comision) || 0,
       p_observaciones: this.observaciones || null,
       p_items: items,
     });

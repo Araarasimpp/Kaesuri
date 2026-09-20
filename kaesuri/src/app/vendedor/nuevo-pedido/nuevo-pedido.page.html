@@ -91,9 +91,15 @@
         <input type="text" [(ngModel)]="direccion" />
       </div>
 
-      <div class="field">
-        <label>Valor del domicilio</label>
-        <input type="number" [(ngModel)]="valorDomicilio" min="0" />
+      <div class="fields-row">
+        <div class="field">
+          <label>Valor del domicilio</label>
+          <input type="number" [(ngModel)]="valorDomicilio" min="0" />
+        </div>
+        <div class="field">
+          <label>Tu comisión</label>
+          <input type="number" [(ngModel)]="comision" min="0" />
+        </div>
       </div>
 
       <div class="field">
@@ -109,6 +115,10 @@
         <div class="totales-linea">
           <span>Domicilio</span>
           <span>{{ formatoMoneda(valorDomicilio || 0) }}</span>
+        </div>
+        <div class="totales-linea">
+          <span>Tu comisión</span>
+          <span>{{ formatoMoneda(comision || 0) }}</span>
         </div>
         <div class="totales-linea total">
           <span>Total</span>

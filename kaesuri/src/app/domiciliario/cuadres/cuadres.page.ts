@@ -2,6 +2,13 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
+import {
+  hoyColombiaISO,
+  inicioDiaColombia,
+  finDiaColombia,
+  formatoHoraCO,
+  formatoFechaCO,
+} from '../../shared/fecha-colombia';
 
 interface PedidoSinCuadrar {
   id: string;
@@ -48,8 +55,8 @@ export class CuadresPage implements OnInit {
       return;
     }
 
-    const inicioHoy = new Date();
-    inicioHoy.setHours(0, 0, 0, 0);
+    const inicioHoy = inicioDiaColombia();
+    const finHoy = finDiaColombia();
 
     const [pedidosRes, cuadresRes] = await Promise.all([
       this.supabase.client
@@ -61,6 +68,7 @@ export class CuadresPage implements OnInit {
         .eq('estado', 'entregado')
         .is('cuadre_id', null)
         .gte('entregado_at', inicioHoy.toISOString())
+        .lte('entregado_at', finHoy.toISOString())
         .order('entregado_at', { ascending: false }),
       this.supabase.client
         .from('cuadres')
@@ -180,7 +188,9 @@ export class CuadresPage implements OnInit {
     if (!confirmado) return;
 
     this.cerrando = true;
-    const { error } = await this.supabase.client.rpc('cerrar_cuadre');
+    const { error } = await this.supabase.client.rpc('cerrar_cuadre', {
+      p_fecha: hoyColombiaISO(),
+    });
     this.cerrando = false;
 
     if (error) {
@@ -212,11 +222,11 @@ export class CuadresPage implements OnInit {
   }
 
   formatoHora(fecha: string): string {
-    return new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    return formatoHoraCO(fecha);
   }
 
   formatoFecha(fecha: string): string {
-    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-CO', {
+    return formatoFechaCO(fecha + 'T00:00:00-05:00', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

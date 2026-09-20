@@ -18,7 +18,15 @@ export class SupabaseService {
   private currentProfile: Profile | null = null;
 
   constructor() {
-    this.client = createClient(environment.supabaseUrl, environment.supabaseKey);
+    this.client = createClient(environment.supabaseUrl, environment.supabaseKey, {
+      auth: {
+        // La sesión se guarda en el dispositivo y se mantiene hasta que el
+        // usuario cierre sesión explícitamente (funciona igual en PC y móvil).
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    });
   }
 
   async login(email: string, password: string) {

@@ -2,6 +2,8 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
+
 
 interface PedidoResumen {
   id: string;
@@ -75,9 +77,7 @@ export class DashboardPage implements OnInit {
   async cargarReporte(): Promise<void> {
     this.loading = true;
 
-    const inicioHoy = new Date();
-    inicioHoy.setHours(0, 0, 0, 0);
-
+    const inicioHoy = inicioDiaColombia();
     const inicioSemana = new Date(inicioHoy);
     inicioSemana.setDate(inicioSemana.getDate() - 6);
 
@@ -169,7 +169,7 @@ export class DashboardPage implements OnInit {
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(inicioSemana);
       fecha.setDate(fecha.getDate() + i);
-      const key = fecha.toISOString().slice(0, 10);
+      const key = diaColombiaDe(fecha.toISOString());
       buckets.push({
         fecha: key,
         label: dias[fecha.getDay()],
@@ -179,7 +179,7 @@ export class DashboardPage implements OnInit {
     }
 
     for (const fila of filas) {
-      const key = new Date(fila.created_at).toISOString().slice(0, 10);
+      const key = diaColombiaDe(fila.created_at);
       const bucket = buckets.find((b) => b.fecha === key);
       if (bucket) bucket.monto += Number(fila.total ?? 0);
     }

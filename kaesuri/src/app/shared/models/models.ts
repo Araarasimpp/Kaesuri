@@ -33,6 +33,7 @@ export interface Pedido {
   direccion: string;
   barrio?: string | null;
   valor_domicilio: number;
+  comision: number;
   observaciones?: string | null;
   estado: EstadoPedido;
   total: number;
@@ -69,6 +70,7 @@ export interface CrearPedidoPayload {
   p_direccion: string;
   p_barrio?: string;
   p_valor_domicilio: number;
+  p_comision: number;
   p_observaciones?: string;
   p_items: {
     producto_id: string;

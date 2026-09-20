@@ -1,0 +1,56 @@
+<div class="inicio-vendedor">
+
+  <ng-container *ngIf="!loading; else cargando">
+    <section class="stats-grid">
+      <div class="stat-card destacada">
+        <span class="stat-label">Ventas de hoy</span>
+        <span class="stat-valor">{{ formatoMoneda(ventasHoy) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Comisión de hoy</span>
+        <span class="stat-valor">{{ formatoMoneda(comisionHoy) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">En ruta</span>
+        <span class="stat-valor">{{ pedidosEnRuta }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Entregados hoy</span>
+        <span class="stat-valor">{{ entregadosHoy }}</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Ventas de la semana</h2>
+      <div class="bar-chart">
+        <div class="bar-col" *ngFor="let b of ventasSemana">
+          <div class="bar-track">
+            <div class="bar-fill" [class.hoy]="b.esHoy" [style.height.%]="b.alturaPct"></div>
+          </div>
+          <span class="bar-label">{{ b.label }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Mis pedidos</h2>
+      <div class="pedido-row" *ngFor="let p of misPedidos">
+        <div class="pedido-info">
+          <span class="pedido-cliente">{{ p.cliente_nombre }}</span>
+          <span class="pedido-num">#{{ p.numero }}</span>
+        </div>
+        <span class="badge" [class.entregado]="p.estado === 'entregado'">
+          {{ etiquetaEstado(p.estado) }}
+        </span>
+        <span class="pedido-total">{{ formatoMoneda(p.total) }}</span>
+      </div>
+      <p class="empty-msg" *ngIf="!misPedidos.length">
+        Todavía no tienes pedidos en ruta ni entregados.
+      </p>
+    </section>
+  </ng-container>
+
+  <ng-template #cargando>
+    <p class="empty-msg">Cargando...</p>
+  </ng-template>
+</div>

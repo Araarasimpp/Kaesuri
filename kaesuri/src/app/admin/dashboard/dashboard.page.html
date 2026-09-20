@@ -119,5 +119,7 @@
     </section>
   </ng-container>
 
-  <p class="empty-inline" *ngIf="loading">Cargando reporte...</p>
+  <ng-template #cargando>
+    <p class="empty-inline">Cargando reporte...</p>
+  </ng-template>
 </div>

@@ -3,8 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'auth/login',
-    pathMatch: 'full',
+    loadComponent: () => import('./core/app-init/app-init.page').then((m) => m.AppInitPage),
   },
   {
     path: 'auth/login',
