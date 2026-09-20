@@ -141,3 +141,21 @@
   background: var(--k-bg);
   color: var(--k-text);
 }
+
+.pill-nav.mobile-only {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    display: none;
+  }
+
+  .pill-nav.mobile-only {
+    display: flex;
+  }
+
+  .content {
+    padding-bottom: 96px;
+  }
+}

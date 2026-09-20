@@ -9,7 +9,6 @@
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 14px 20px;
   background: var(--k-ink);
   color: var(--k-paper);
@@ -20,49 +19,9 @@
   font-weight: 700;
 }
 
-.logout-btn {
-  border: none;
-  background: none;
-  color: var(--k-paper);
-  font-size: 20px;
-  display: flex;
-  cursor: pointer;
-}
-
 .content {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 76px;
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  background: var(--k-ink);
-  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-  z-index: 50;
-}
-
-.bottom-nav a {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  color: rgba(247, 247, 245, 0.5);
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.bottom-nav a ion-icon {
-  font-size: 22px;
-}
-
-.bottom-nav a.active {
-  color: var(--k-amber);
+  padding-bottom: 96px;
 }

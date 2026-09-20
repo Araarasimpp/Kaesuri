@@ -9,6 +9,7 @@ import {
   cubeOutline,
   peopleOutline,
   walletOutline,
+  add,
   sunnyOutline,
   moonOutline,
   chevronBackOutline,
@@ -29,7 +30,7 @@ interface MenuItem {
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
   templateUrl: './admin-layout.component.html',
-  styleUrls: ['./admin-layout.component.scss'],
+  styleUrls: ['../../shared/pill-nav.scss', './admin-layout.component.scss'],
 })
 export class AdminLayoutComponent {
   collapsed = false;
@@ -53,6 +54,7 @@ export class AdminLayoutComponent {
       cubeOutline,
       peopleOutline,
       walletOutline,
+      add,
       sunnyOutline,
       moonOutline,
       chevronBackOutline,

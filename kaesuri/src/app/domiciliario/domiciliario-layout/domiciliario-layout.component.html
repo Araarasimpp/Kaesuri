@@ -1,27 +1,27 @@
 <div class="layout">
   <header class="topbar">
     <span class="brand">Kaesuri</span>
-    <button class="logout-btn" (click)="logout()">
-      <ion-icon name="log-out-outline"></ion-icon>
-    </button>
   </header>
 
   <main class="content">
     <router-outlet></router-outlet>
   </main>
 
-  <nav class="bottom-nav">
+  <nav class="pill-nav">
     <a
       routerLink="/domiciliario"
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }"
     >
       <ion-icon name="home-outline"></ion-icon>
-      <span>Mis entregas</span>
+      <span class="dot"></span>
     </a>
     <a routerLink="/domiciliario/cuadres" routerLinkActive="active">
       <ion-icon name="wallet-outline"></ion-icon>
-      <span>Cuadres</span>
+      <span class="dot"></span>
     </a>
+    <button class="pill-action" (click)="logout()">
+      <ion-icon name="person-outline"></ion-icon>
+    </button>
   </nav>
 </div>

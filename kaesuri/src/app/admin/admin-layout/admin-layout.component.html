@@ -37,4 +37,30 @@
   <main class="content">
     <router-outlet></router-outlet>
   </main>
+
+  <nav class="pill-nav mobile-only">
+    <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <ion-icon name="home-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+    <a routerLink="/admin/pedidos" routerLinkActive="active">
+      <ion-icon name="receipt-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+
+    <div class="pill-center">
+      <a routerLink="/admin/pedidos/nuevo" class="pill-action">
+        <ion-icon name="add"></ion-icon>
+      </a>
+    </div>
+
+    <a routerLink="/admin/productos" routerLinkActive="active">
+      <ion-icon name="cube-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+    <a routerLink="/admin/usuarios" routerLinkActive="active">
+      <ion-icon name="people-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+  </nav>
 </div>
