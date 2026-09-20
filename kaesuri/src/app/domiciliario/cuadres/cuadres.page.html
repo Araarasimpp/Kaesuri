@@ -1,60 +1,28 @@
 <div class="cuadres-page">
   <header class="page-header">
-    <a routerLink="/domiciliario" class="back-link">← Volver</a>
-    <h1>Cuadres</h1>
+    <h1>Cuadre</h1>
   </header>
 
   <ng-container *ngIf="!loading; else cargando">
     <section class="bloque">
-      <h2>Hoy (sin cerrar)</h2>
-
-      <div class="lista" *ngIf="pedidosHoy.length; else vacioHoy">
-        <div class="fila" *ngFor="let p of pedidosHoy">
-          <div class="fila-info">
-            <span class="numero">#{{ p.numero }}</span>
-            <span class="cliente">{{ p.cliente_nombre }}</span>
-          </div>
-          <span class="metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
-            {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
-          </span>
-          <button
-            class="ver-comprobante"
-            *ngIf="p.metodo_pago === 'transferencia'"
-            (click)="verComprobante(p)"
-          >
-            Ver foto
-          </button>
-          <div class="fila-montos">
-            <span class="monto-total">{{ formatoMoneda(p.total) }}</span>
-            <span class="monto-neto">− {{ formatoMoneda(p.valor_domicilio) }} domicilio</span>
-          </div>
+      <div class="stats-grid" *ngIf="pedidosHoy.length">
+        <div class="stat-card">
+          <span class="stat-label">Efectivo</span>
+          <span class="stat-valor">{{ formatoMoneda(totalEfectivo) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Transferencia</span>
+          <span class="stat-valor">{{ formatoMoneda(totalTransferencia) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Domicilio</span>
+          <span class="stat-valor">{{ formatoMoneda(totalDomicilios) }}</span>
+        </div>
+        <div class="stat-card destacada">
+          <span class="stat-label">Cuadre</span>
+          <span class="stat-valor">{{ formatoMoneda(totalCuadre) }}</span>
         </div>
       </div>
-
-      <ng-template #vacioHoy>
-        <p class="empty-msg">No has entregado pedidos hoy todavía.</p>
-      </ng-template>
-
-      <div class="resumen" *ngIf="pedidosHoy.length">
-        <div class="resumen-linea">
-          <span>Total entregado (con domicilios)</span>
-          <span>{{ formatoMoneda(totalGeneral) }}</span>
-        </div>
-        <div class="resumen-linea">
-          <span>Tus domicilios</span>
-          <span>{{ formatoMoneda(totalDomicilios) }}</span>
-        </div>
-        <div class="resumen-linea" *ngIf="totalTransferencia">
-          <span>Ya confirmado por transferencia</span>
-          <span>{{ formatoMoneda(totalTransferencia) }}</span>
-        </div>
-        <div class="resumen-linea destacada">
-          <span>A entregar en efectivo</span>
-          <span>{{ formatoMoneda(totalEfectivo) }}</span>
-        </div>
-      </div>
-
-      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
 
       <button
         class="btn-cerrar"
@@ -64,6 +32,46 @@
       >
         {{ cerrando ? 'Cerrando...' : 'Cerrar cuadre de hoy' }}
       </button>
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+      <div class="pedidos-lista">
+        <div class="pedido-card" *ngFor="let p of pedidosHoy">
+          <div class="pedido-card-header">
+            <span class="pedido-titulo">Pedido #{{ p.numero }} - {{ formatoHora(p.entregado_at) }}</span>
+          </div>
+          <p class="pedido-linea"><strong>Productos:</strong> {{ p.productos || '—' }}</p>
+          <p class="pedido-linea"><strong>Dirección:</strong> {{ p.direccion }}</p>
+          <p class="pedido-linea" *ngIf="p.barrio"><strong>Barrio:</strong> {{ p.barrio }}</p>
+          <button
+            class="ver-comprobante"
+            *ngIf="p.metodo_pago === 'transferencia'"
+            (click)="verComprobante(p)"
+          >
+            Ver comprobante
+          </button>
+
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <span class="mini-label">Efectivo</span>
+              <span class="mini-valor">{{ formatoMoneda(efectivoDe(p)) }}</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Transferencia</span>
+              <span class="mini-valor">{{ formatoMoneda(transferenciaDe(p)) }}</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Domicilio</span>
+              <span class="mini-valor">{{ formatoMoneda(p.valor_domicilio) }}</span>
+            </div>
+            <div class="mini-stat" [class.positivo]="cuadreDe(p) < 0" [class.negativo]="cuadreDe(p) >= 0">
+              <span class="mini-label">Cuadre</span>
+              <span class="mini-valor">{{ formatoMoneda(cuadreDe(p)) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="empty-msg" *ngIf="!pedidosHoy.length">No has entregado pedidos hoy todavía.</p>
     </section>
 
     <section class="bloque">
@@ -78,7 +86,7 @@
           <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
             {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
           </span>
-          <span class="monto-total">{{ formatoMoneda(c.total_general) }}</span>
+          <span class="monto-total">{{ formatoMoneda(c.total_a_entregar) }}</span>
         </div>
       </div>
 

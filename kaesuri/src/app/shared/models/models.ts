@@ -56,6 +56,7 @@ export interface Cuadre {
   total_efectivo: number;
   total_transferencia: number;
   total_general: number;
+  total_a_entregar: number;
   estado: EstadoCuadre;
   cerrado_at: string;
   confirmado_at?: string | null;

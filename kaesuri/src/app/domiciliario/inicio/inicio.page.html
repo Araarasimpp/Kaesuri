@@ -1,11 +1,5 @@
 <div class="domiciliario-page">
-  <header class="page-header">
-    <h1>Mis entregas</h1>
-    <div class="header-actions">
-      <a routerLink="/domiciliario/cuadres" class="link-cuadres">Cuadres</a>
-      <button class="logout-btn" (click)="logout()">Salir</button>
-    </div>
-  </header>
+  <h1>Mis entregas</h1>
 
   <ng-container *ngIf="!loading; else cargando">
     <div class="lista" *ngIf="pedidos.length; else vacio">

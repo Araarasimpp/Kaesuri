@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-inicio-vendedor',
@@ -9,39 +8,21 @@ import { SupabaseService } from '../../core/services/supabase.service';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="inicio-vendedor">
-      <header class="header">
-        <h1>Vendedor</h1>
-        <button class="logout-btn" (click)="logout()">Salir</button>
-      </header>
-
+      <h1>Hola</h1>
       <a routerLink="/vendedor/nuevo-pedido" class="btn-nuevo-pedido">+ Nuevo pedido</a>
-
       <p class="hint">Aquí más adelante va el listado de tus pedidos recientes.</p>
     </div>
   `,
   styles: [`
     .inicio-vendedor {
-      padding: 32px 24px;
+      padding: 24px 20px;
       max-width: 480px;
       margin: 0 auto;
     }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-    .header h1 {
+    h1 {
       font-size: 22px;
       font-weight: 700;
-      margin: 0;
-    }
-    .logout-btn {
-      border: none;
-      background: none;
-      color: var(--k-text-soft);
-      font-size: 14px;
-      cursor: pointer;
+      margin: 0 0 20px;
     }
     .btn-nuevo-pedido {
       display: block;
@@ -61,11 +42,4 @@ import { SupabaseService } from '../../core/services/supabase.service';
     }
   `],
 })
-export class InicioPage {
-  constructor(private supabase: SupabaseService, private router: Router) {}
-
-  async logout() {
-    await this.supabase.logout();
-    this.router.navigateByUrl('/auth/login');
-  }
-}
+export class InicioPage {}

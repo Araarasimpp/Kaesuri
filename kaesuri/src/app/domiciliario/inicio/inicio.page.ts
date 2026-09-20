@@ -1,6 +1,5 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EntregarPedidoComponent } from '../entregar-pedido/entregar-pedido.component';
@@ -19,7 +18,7 @@ interface PedidoRuta {
 @Component({
   selector: 'app-inicio-domiciliario',
   standalone: true,
-  imports: [CommonModule, RouterLink, EntregarPedidoComponent],
+  imports: [CommonModule, EntregarPedidoComponent],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
@@ -30,11 +29,7 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
 
   private canal: RealtimeChannel | null = null;
 
-  constructor(
-    private supabase: SupabaseService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
     await this.cargarPedidos();
@@ -93,11 +88,6 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
   async onEntregado(): Promise<void> {
     this.pedidoEntregando = null;
     await this.cargarPedidos();
-  }
-
-  async logout(): Promise<void> {
-    await this.supabase.logout();
-    this.router.navigateByUrl('/auth/login');
   }
 
   formatoMoneda(valor: number): string {

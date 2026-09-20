@@ -16,9 +16,10 @@
             <th>Domiciliario</th>
             <th>Fecha</th>
             <th>Pedidos</th>
-            <th>Efectivo a recibir</th>
-            <th>Transferencias</th>
-            <th>Total general</th>
+            <th>Efectivo</th>
+            <th>Transferencia</th>
+            <th>Domicilios</th>
+            <th>A entregar</th>
             <th>Estado</th>
             <th></th>
           </tr>
@@ -28,9 +29,10 @@
             <td>{{ nombreDomiciliario(c.domiciliario_id) }}</td>
             <td class="text-soft">{{ formatoFecha(c.fecha) }}</td>
             <td class="text-soft">{{ c.cantidad_pedidos }}</td>
-            <td>{{ formatoMoneda(c.total_efectivo) }}</td>
+            <td class="text-soft">{{ formatoMoneda(c.total_efectivo) }}</td>
             <td class="text-soft">{{ formatoMoneda(c.total_transferencia) }}</td>
-            <td>{{ formatoMoneda(c.total_general) }}</td>
+            <td class="text-soft">{{ formatoMoneda(c.total_domicilios) }}</td>
+            <td><strong>{{ formatoMoneda(c.total_a_entregar) }}</strong></td>
             <td>
               <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
                 {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
