@@ -11,7 +11,7 @@ import { EstadoPedido } from '../../shared/models/models';
 // "configuracion" con una sola fila.
 const NEGOCIO = {
   nombre: 'Variedades J Y B',
-  telefonos: '300 000 0000',
+  telefonos: '+57 310 742 5663',
   redes: '@kaesuri',
   garantia:
     'Todos nuestros productos cuentan con garantía. Guarda este documento ya que es el soporte para la garantía.',
