@@ -10,7 +10,7 @@ import { EstadoPedido } from '../../shared/models/models';
 // cambiarlos desde la app sin tocar código, se puede mover a una tabla
 // "configuracion" con una sola fila.
 const NEGOCIO = {
-  nombre: 'Kaesuri',
+  nombre: 'Variedades J Y B',
   telefonos: '300 000 0000',
   redes: '@kaesuri',
   garantia:
