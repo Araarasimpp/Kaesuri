@@ -3,9 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { Cuadre } from '../../shared/models/models';
+import { Cuadre, MetodoPago } from '../../shared/models/models';
+import { formatoFechaCO } from '../../shared/fecha-colombia';
 
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
+
+interface PedidoDelCuadre {
+  id: string;
+  numero: number;
+  cliente_nombre: string;
+  total: number;
+  valor_domicilio: number;
+  metodo_pago: MetodoPago | null;
+  comprobante_url: string | null;
+}
 
 @Component({
   selector: 'app-admin-cuadres',
@@ -20,6 +31,10 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   nombresPorId = new Map<string, string>();
   filtro: FiltroCuadre = 'pendiente';
   confirmandoId: string | null = null;
+
+  expandidoId: string | null = null;
+  pedidosPorCuadre = new Map<string, PedidoDelCuadre[]>();
+  cargandoDetalle = false;
 
   private canal: RealtimeChannel | null = null;
 
@@ -77,6 +92,49 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     return this.nombresPorId.get(id) ?? 'Desconocido';
   }
 
+  async toggleDetalle(cuadre: Cuadre): Promise<void> {
+    if (this.expandidoId === cuadre.id) {
+      this.expandidoId = null;
+      return;
+    }
+
+    this.expandidoId = cuadre.id;
+
+    if (!this.pedidosPorCuadre.has(cuadre.id)) {
+      this.cargandoDetalle = true;
+      this.cdr.detectChanges();
+
+      const { data, error } = await this.supabase.client
+        .from('pedidos')
+        .select('id, numero, cliente_nombre, total, valor_domicilio, metodo_pago, comprobante_url')
+        .eq('cuadre_id', cuadre.id)
+        .order('numero');
+
+      if (!error && data) {
+        this.pedidosPorCuadre.set(cuadre.id, data as PedidoDelCuadre[]);
+      }
+      this.cargandoDetalle = false;
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  pedidosDe(cuadreId: string): PedidoDelCuadre[] {
+    return this.pedidosPorCuadre.get(cuadreId) ?? [];
+  }
+
+  async verComprobante(pedido: PedidoDelCuadre): Promise<void> {
+    if (!pedido.comprobante_url) return;
+
+    const { data, error } = await this.supabase.client.storage
+      .from('comprobantes')
+      .createSignedUrl(pedido.comprobante_url, 60);
+
+    if (!error && data?.signedUrl) {
+      window.open(data.signedUrl, '_blank');
+    }
+  }
+
   async confirmarCuadre(cuadre: Cuadre): Promise<void> {
     this.confirmandoId = cuadre.id;
     const user = await this.supabase.getCurrentUser();
@@ -108,7 +166,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   formatoFecha(fecha: string): string {
-    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-CO', {
+    return formatoFechaCO(fecha + 'T00:00:00-05:00', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

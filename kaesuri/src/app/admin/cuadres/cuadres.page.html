@@ -10,47 +10,50 @@
 
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
-      <table *ngIf="filtrados.length; else vacio">
-        <thead>
-          <tr>
-            <th>Domiciliario</th>
-            <th>Fecha</th>
-            <th>Pedidos</th>
-            <th>Efectivo</th>
-            <th>Transferencia</th>
-            <th>Domicilios</th>
-            <th>A entregar</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let c of filtrados">
-            <td>{{ nombreDomiciliario(c.domiciliario_id) }}</td>
-            <td class="text-soft">{{ formatoFecha(c.fecha) }}</td>
-            <td class="text-soft">{{ c.cantidad_pedidos }}</td>
-            <td class="text-soft">{{ formatoMoneda(c.total_efectivo) }}</td>
-            <td class="text-soft">{{ formatoMoneda(c.total_transferencia) }}</td>
-            <td class="text-soft">{{ formatoMoneda(c.total_domicilios) }}</td>
-            <td><strong>{{ formatoMoneda(c.total_a_entregar) }}</strong></td>
-            <td>
-              <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
-                {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
+      <div class="lista" *ngIf="filtrados.length; else vacio">
+        <div class="cuadre-grupo" *ngFor="let c of filtrados">
+          <div class="cuadre-fila" (click)="toggleDetalle(c)">
+            <span class="col-dom">{{ nombreDomiciliario(c.domiciliario_id) }}</span>
+            <span class="col-fecha text-soft">{{ formatoFecha(c.fecha) }}</span>
+            <span class="col-pedidos text-soft">{{ c.cantidad_pedidos }} pedidos</span>
+            <span class="col-monto text-soft">Efectivo: {{ formatoMoneda(c.total_efectivo) }}</span>
+            <span class="col-monto text-soft">Transf: {{ formatoMoneda(c.total_transferencia) }}</span>
+            <span class="col-monto text-soft">Domicilios: {{ formatoMoneda(c.total_domicilios) }}</span>
+            <span class="col-entregar"><strong>{{ formatoMoneda(c.total_a_entregar) }}</strong></span>
+            <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
+              {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
+            </span>
+            <button
+              class="btn-confirmar"
+              *ngIf="c.estado === 'pendiente'"
+              (click)="$event.stopPropagation(); confirmarCuadre(c)"
+              [disabled]="confirmandoId === c.id"
+            >
+              {{ confirmandoId === c.id ? 'Confirmando...' : 'Completado' }}
+            </button>
+          </div>
+
+          <div class="cuadre-detalle" *ngIf="expandidoId === c.id">
+            <p class="detalle-cargando" *ngIf="cargandoDetalle">Cargando pedidos...</p>
+
+            <div class="pedido-detalle-row" *ngFor="let p of pedidosDe(c.id)">
+              <span class="pd-numero">#{{ p.numero }}</span>
+              <span class="pd-cliente">{{ p.cliente_nombre }}</span>
+              <span class="pd-metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
+                {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
               </span>
-            </td>
-            <td>
               <button
-                class="btn-confirmar"
-                *ngIf="c.estado === 'pendiente'"
-                (click)="confirmarCuadre(c)"
-                [disabled]="confirmandoId === c.id"
+                class="pd-comprobante"
+                *ngIf="p.metodo_pago === 'transferencia'"
+                (click)="verComprobante(p)"
               >
-                {{ confirmandoId === c.id ? 'Confirmando...' : 'Completado' }}
+                Ver comprobante
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <span class="pd-total">{{ formatoMoneda(p.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <ng-template #vacio>
         <p class="empty-msg">No hay cuadres en este filtro.</p>

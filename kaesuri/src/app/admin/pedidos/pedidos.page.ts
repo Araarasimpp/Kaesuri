@@ -5,14 +5,15 @@ import { RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
+import { ROTULO_LOGO_BASE64 } from '../rotulo-logo';
 
 // Datos del negocio para el rótulo. Edítalos aquí, o si más adelante quieres
 // cambiarlos desde la app sin tocar código, se puede mover a una tabla
 // "configuracion" con una sola fila.
 const NEGOCIO = {
-  nombre: 'Variedades J Y B',
-  telefonos: '+57 310 742 5663',
-  redes: '@kaesuri',
+  nombre: 'Variedades JYB',
+  telefonos: '300 000 0000',
+  redes: '@variedadesjyb',
   garantia:
     'Todos nuestros productos cuentan con garantía. Guarda este documento ya que es el soporte para la garantía.',
 };
@@ -151,6 +152,13 @@ export class PedidosPage implements OnInit, OnDestroy {
   }
 
   async asignarDomiciliario(pedido: PedidoFila, domiciliarioId: string): Promise<void> {
+    // Un pedido ya entregado (o cancelado) no se puede reasignar: eso
+    // rompería el cuadre y el historial de quién lo entregó de verdad.
+    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
+      await this.cargarPedidos();
+      return;
+    }
+
     this.guardandoId = pedido.id;
 
     const { error } = await this.supabase.client
@@ -243,7 +251,7 @@ export class PedidosPage implements OnInit, OnDestroy {
     await this.cargarPedidos();
   }
 
-  private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
+private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
     const rotulos = pedidos
       .map((p) => {
         const productos = items
@@ -259,12 +267,14 @@ export class PedidosPage implements OnInit, OnDestroy {
         return `
           <div class="rotulo">
             <div class="rotulo-header">
-              <div class="marca">${NEGOCIO.nombre}</div>
-              <div class="contacto">
-                <div>${NEGOCIO.telefonos}</div>
-                <div>${NEGOCIO.redes}</div>
+              <img class="marca-logo" src="${ROTULO_LOGO_BASE64}" alt="${NEGOCIO.nombre}" />
+              <div class="header-derecha">
+                <div class="fecha-box">${fechaStr}</div>
+                <div class="contacto">
+                  <div>${NEGOCIO.telefonos}</div>
+                  <div>${NEGOCIO.redes}</div>
+                </div>
               </div>
-              <div class="fecha-box">${fechaStr}</div>
             </div>
             <div class="valor-cobrar">
               <span>VALOR A COBRAR:</span>
@@ -299,10 +309,28 @@ export class PedidosPage implements OnInit, OnDestroy {
               margin: 0 auto 24px;
               page-break-after: always;
             }
-            .rotulo-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
-            .marca { font-size: 20px; font-weight: bold; }
-            .contacto { font-size: 11px; text-align: right; }
+            .rotulo-header { 
+              display: flex; 
+              justify-content: space-between; 
+              align-items: flex-start; /* Alinea el borde superior de la imagen y la fecha */
+              margin-bottom: 10px; 
+            }
+            /* Aumentado a 110px para mayor visibilidad */
+            .marca-logo { 
+              width: 100px; 
+              height: 80px; 
+              object-fit: contain; 
+            }
+            
+            .header-derecha { 
+              display: flex; 
+              flex-direction: column; 
+              align-items: flex-end; 
+              gap: 8px; 
+            }
             .fecha-box { border: 1px solid #000; padding: 4px 8px; font-size: 11px; }
+            .contacto { font-size: 11px; text-align: right; }
+            
             .valor-cobrar { border: 1px solid #000; padding: 8px; margin-bottom: 10px; font-size: 14px; display: flex; justify-content: space-between; }
             .datos { width: 100%; font-size: 13px; border-collapse: collapse; }
             .datos td { padding: 3px 0; vertical-align: top; }
@@ -313,7 +341,7 @@ export class PedidosPage implements OnInit, OnDestroy {
         <body>${rotulos}</body>
       </html>
     `;
-  }
+}
 
   formatoMoneda(valor: number): string {
     return valor.toLocaleString('es-CO', {

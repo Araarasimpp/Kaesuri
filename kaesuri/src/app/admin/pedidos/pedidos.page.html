@@ -80,6 +80,7 @@
             <td>
               <select
                 class="domiciliario-select"
+                *ngIf="p.estado !== 'entregado' && p.estado !== 'cancelado'; else domiciliarioFijo"
                 [ngModel]="p.domiciliario_id"
                 (ngModelChange)="asignarDomiciliario(p, $event)"
                 [disabled]="guardandoId === p.id"
@@ -87,6 +88,9 @@
                 <option [ngValue]="null">Sin asignar</option>
                 <option *ngFor="let d of domiciliarios" [ngValue]="d.id">{{ d.nombre }}</option>
               </select>
+              <ng-template #domiciliarioFijo>
+                <span class="text-soft">{{ nombreDomiciliario(p.domiciliario_id) }}</span>
+              </ng-template>
             </td>
             <td>
               <span class="badge" [ngClass]="p.rotulo_impreso_at ? 'estado-ok' : 'estado-bajo'">

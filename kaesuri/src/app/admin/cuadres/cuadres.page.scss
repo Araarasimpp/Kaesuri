@@ -1,5 +1,5 @@
 .cuadres-admin-page {
-  padding: 32px 40px 48px;
+  padding: 28px 32px 48px;
 }
 
 .page-header {
@@ -7,6 +7,8 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .page-header h1 {
@@ -33,44 +35,54 @@
   overflow: hidden;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+.lista {
+  display: flex;
+  flex-direction: column;
 }
 
-thead th {
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--k-text-soft);
-  padding: 14px 16px;
+.cuadre-grupo {
   border-bottom: 1px solid var(--k-border);
-  white-space: nowrap;
 }
 
-tbody td {
-  padding: 12px 16px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--k-border);
-  white-space: nowrap;
-}
-
-tbody tr:last-child td {
+.cuadre-grupo:last-child {
   border-bottom: none;
+}
+
+.cuadre-fila {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  cursor: pointer;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.cuadre-fila:hover {
+  background: var(--k-bg-alt);
+}
+
+.col-dom {
+  font-weight: 600;
+  min-width: 110px;
 }
 
 .text-soft {
   color: var(--k-text-soft);
 }
 
+.col-entregar {
+  font-size: 14px;
+}
+
 .badge {
-  display: inline-block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
   background: rgba(232, 163, 61, 0.15);
   color: var(--k-amber);
+  white-space: nowrap;
 }
 
 .badge.confirmado {
@@ -87,11 +99,76 @@ tbody tr:last-child td {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  margin-left: auto;
 }
 
 .btn-confirmar:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.cuadre-detalle {
+  background: var(--k-bg-alt);
+  padding: 6px 18px 14px;
+}
+
+.detalle-cargando {
+  font-size: 13px;
+  color: var(--k-text-soft);
+  margin: 8px 0;
+}
+
+.pedido-detalle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--k-border);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.pedido-detalle-row:last-child {
+  border-bottom: none;
+}
+
+.pd-numero {
+  color: var(--k-text-soft);
+  min-width: 40px;
+}
+
+.pd-cliente {
+  flex: 1;
+  min-width: 100px;
+}
+
+.pd-metodo {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(47, 143, 130, 0.12);
+  color: var(--k-teal);
+}
+
+.pd-metodo.transferencia {
+  background: rgba(232, 163, 61, 0.15);
+  color: var(--k-amber);
+}
+
+.pd-comprobante {
+  border: none;
+  background: none;
+  color: var(--k-teal);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pd-total {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .empty-msg {
@@ -100,4 +177,21 @@ tbody tr:last-child td {
   color: var(--k-text-soft);
   font-size: 14px;
   margin: 0;
+}
+
+@media (max-width: 720px) {
+  .cuadres-admin-page {
+    padding: 18px 14px 40px;
+  }
+
+  .cuadre-fila {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .btn-confirmar {
+    margin-left: 0;
+    margin-top: 6px;
+  }
 }

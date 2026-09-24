@@ -14,8 +14,7 @@ import {
   moonOutline,
   chevronBackOutline,
   chevronForwardOutline,
-  logOutOutline,
-} from 'ionicons/icons';
+  logOutOutline, cashOutline } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
@@ -48,19 +47,7 @@ export class AdminLayoutComponent {
     private supabase: SupabaseService,
     private router: Router
   ) {
-    addIcons({
-      homeOutline,
-      receiptOutline,
-      cubeOutline,
-      peopleOutline,
-      walletOutline,
-      add,
-      sunnyOutline,
-      moonOutline,
-      chevronBackOutline,
-      chevronForwardOutline,
-      logOutOutline,
-    });
+    addIcons({logOutOutline,homeOutline,receiptOutline,add,cashOutline,cubeOutline,peopleOutline,walletOutline,sunnyOutline,moonOutline,chevronBackOutline,chevronForwardOutline,});
   }
 
   toggleCollapse(): void {
