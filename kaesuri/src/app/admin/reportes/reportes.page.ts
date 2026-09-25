@@ -78,7 +78,7 @@ export class ReportesPage implements OnInit {
       this.supabase.client
         .from('pedidos')
         .select('id, vendedor_id, total, comision, created_at')
-        .neq('estado', 'cancelado')
+        .in('estado', ['en_ruta', 'entregado'])
         .gte('created_at', inicio.toISOString())
         .lte('created_at', fin.toISOString()),
       this.supabase.client.from('profiles').select('id, nombre'),

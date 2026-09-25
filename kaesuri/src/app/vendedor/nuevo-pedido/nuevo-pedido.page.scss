@@ -232,7 +232,55 @@
 }
 
 @media (max-width: 860px) {
+  .pedido-page {
+    padding: 20px 16px 40px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
   .layout {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .producto-lista {
+    max-height: 300px;
+  }
+
+  .fields-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .producto-item {
+    padding: 10px 6px;
+  }
+
+  .cantidad-control button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .carrito-item {
+    flex-wrap: wrap;
+  }
+
+  .carrito-subtotal {
+    min-width: auto;
+    margin-left: auto;
+  }
+
+  .btn-primary {
+    padding: 14px;
+    font-size: 16px;
   }
 }

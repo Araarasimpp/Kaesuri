@@ -110,6 +110,27 @@
   border-bottom-color: var(--k-amber);
 }
 
+.btn-cancelar {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--k-coral);
+  background: transparent;
+  color: var(--k-coral);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-cancelar:hover {
+  background: rgba(214, 95, 95, 0.1);
+}
+
+.btn-cancelar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .table-card {
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);

@@ -98,7 +98,7 @@ export class DashboardPage implements OnInit {
         .from('pedidos')
         .select('total')
         .gte('created_at', inicioHoy.toISOString())
-        .neq('estado', 'cancelado'),
+        .in('estado', ['en_ruta', 'entregado']),
       this.supabase.client.rpc('ganancias_hoy'),
       this.supabase.client
         .from('pedidos')
@@ -129,7 +129,7 @@ export class DashboardPage implements OnInit {
         .from('pedidos')
         .select('total, created_at')
         .gte('created_at', inicioSemana.toISOString())
-        .neq('estado', 'cancelado'),
+        .in('estado', ['en_ruta', 'entregado']),
       this.supabase.client
         .from('pedidos')
         .select('domiciliario_id')

@@ -151,6 +151,26 @@ export class PedidosPage implements OnInit, OnDestroy {
     return lista;
   }
 
+  async cancelarPedido(pedido: PedidoFila): Promise<void> {
+    const confirmado = confirm(`¿Cancelar el pedido #${pedido.numero}?`);
+    if (!confirmado) return;
+
+    this.guardandoId = pedido.id;
+
+    const { error } = await this.supabase.client
+      .from('pedidos')
+      .update({ estado: 'cancelado' })
+      .eq('id', pedido.id);
+
+    this.guardandoId = null;
+
+    if (!error) {
+      await this.cargarPedidos();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
   async asignarDomiciliario(pedido: PedidoFila, domiciliarioId: string): Promise<void> {
     // Un pedido ya entregado (o cancelado) no se puede reasignar: eso
     // rompería el cuadre y el historial de quién lo entregó de verdad.

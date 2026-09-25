@@ -98,6 +98,15 @@
               </span>
             </td>
             <td class="text-soft">{{ formatoFecha(p.created_at) }}</td>
+            <td>
+              <button
+                class="btn-cancelar"
+                *ngIf="p.estado !== 'entregado' && p.estado !== 'cancelado'"
+                (click)="cancelarPedido(p)"
+                [disabled]="guardandoId === p.id">
+                Cancelar
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>

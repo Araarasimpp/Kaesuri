@@ -66,7 +66,7 @@ export class InicioPage implements OnInit {
         .select('total, comision')
         .eq('vendedor_id', user.id)
         .gte('created_at', inicioHoy.toISOString())
-        .neq('estado', 'cancelado'),
+        .in('estado', ['en_ruta', 'entregado']),
       this.supabase.client
         .from('pedidos')
         .select('id', { count: 'exact', head: true })
@@ -83,7 +83,7 @@ export class InicioPage implements OnInit {
         .select('total, created_at')
         .eq('vendedor_id', user.id)
         .gte('created_at', inicioSemana.toISOString())
-        .neq('estado', 'cancelado'),
+        .in('estado', ['en_ruta', 'entregado']),
       this.supabase.client
         .from('pedidos')
         .select('id, numero, cliente_nombre, total, comision, estado, created_at')
