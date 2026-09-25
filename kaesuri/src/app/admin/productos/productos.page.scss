@@ -80,10 +80,12 @@
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);
   border-radius: 14px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
+  min-width: 640px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -257,7 +259,26 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 720px) {
+  .productos-page {
+    padding: 18px 14px 40px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+  }
+
   .search-box input {
-    width: 180px;
+    width: 100%;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
   }
 }

@@ -9,12 +9,15 @@ import {
   cubeOutline,
   peopleOutline,
   walletOutline,
+  barChartOutline,
+  cashOutline,
   add,
   sunnyOutline,
   moonOutline,
   chevronBackOutline,
   chevronForwardOutline,
-  logOutOutline, cashOutline } from 'ionicons/icons';
+  logOutOutline,
+} from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
@@ -37,7 +40,8 @@ export class AdminLayoutComponent {
   menuItems: MenuItem[] = [
     { label: 'Inicio', path: '/admin', icon: 'home-outline' },
     { label: 'Pedidos', path: '/admin/pedidos', icon: 'receipt-outline' },
-    { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
+    { label: 'Cuadres', path: '/admin/cuadres', icon: 'cash-outline' },
+    { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
   ];
@@ -47,7 +51,20 @@ export class AdminLayoutComponent {
     private supabase: SupabaseService,
     private router: Router
   ) {
-    addIcons({logOutOutline,homeOutline,receiptOutline,add,cashOutline,cubeOutline,peopleOutline,walletOutline,sunnyOutline,moonOutline,chevronBackOutline,chevronForwardOutline,});
+    addIcons({
+      homeOutline,
+      receiptOutline,
+      cubeOutline,
+      peopleOutline,
+      cashOutline,
+      barChartOutline,
+      add,
+      sunnyOutline,
+      moonOutline,
+      chevronBackOutline,
+      chevronForwardOutline,
+      logOutOutline,
+    });
   }
 
   toggleCollapse(): void {

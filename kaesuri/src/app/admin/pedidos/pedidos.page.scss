@@ -21,12 +21,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
-}
-
-.search-box {
-  display: flex;
-  flex: 1;
 }
 
 .search-box input {
@@ -38,7 +32,6 @@
   color: var(--k-text);
   font-size: 14px;
   font-family: var(--k-font);
-  box-sizing: border-box;
 }
 
 .search-box input:focus {
@@ -57,9 +50,6 @@
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn-secondary {
@@ -72,9 +62,6 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn-secondary:disabled {
@@ -115,7 +102,6 @@
   font-weight: 500;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  white-space: nowrap;
 }
 
 .tab.active {
@@ -128,11 +114,12 @@
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);
   border-radius: 14px;
-  overflow-x: auto; /* Permite scroll horizontal si la tabla no cabe */
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 table {
+  min-width: 900px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -214,66 +201,27 @@ tbody tr:last-child td {
   margin: 0;
 }
 
-/* ==========================================================================
-   MEDIA QUERIES (RESPONSIVE DESIGN)
-   ========================================================================== */
-
-/* Pantallas Medianas (Tablets) */
-@media (max-width: 1024px) {
+@media (max-width: 720px) {
   .pedidos-page {
-    padding: 24px 20px 32px;
-  }
-}
-
-/* Pantallas Pequeñas (Móviles) */
-@media (max-width: 768px) {
-  .pedidos-page {
-    padding: 16px 12px 24px;
+    padding: 18px 14px 40px;
   }
 
   .page-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
-  }
-
-  .page-header h1 {
-    font-size: 22px;
   }
 
   .header-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .search-box {
-    grid-column: 1 / -1; /* Ocupa todo el ancho superior de las acciones */
+    flex-wrap: wrap;
   }
 
   .search-box input {
     width: 100%;
   }
 
-  .filtro-rotulo {
-    grid-column: 1 / -1; /* El filtro toma la línea completa si es necesario */
-  }
-
-  /* Las pestañas permiten desplazamiento horizontal limpio en móviles */
   .tabs {
-    flex-wrap: nowrap;
     overflow-x: auto;
-    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .tab {
-    margin-right: 16px;
-    flex-shrink: 0;
-  }
-
-  tbody td, thead th {
-    padding: 10px 12px;
+    white-space: nowrap;
   }
 }

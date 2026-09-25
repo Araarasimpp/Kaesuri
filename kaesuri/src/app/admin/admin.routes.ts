@@ -43,6 +43,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./cuadres/cuadres.page').then((m) => m.AdminCuadresPage),
       },
+      {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./reportes/reportes.page').then((m) => m.ReportesPage),
+      },
     ],
   },
 ];

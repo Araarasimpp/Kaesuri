@@ -1,0 +1,59 @@
+<div class="reportes-page">
+  <header class="page-header">
+    <h1>Reportes</h1>
+    <div class="filtros">
+      <input type="date" [(ngModel)]="desde" (ngModelChange)="cargarReporte()" />
+      <span class="hasta-label">hasta</span>
+      <input type="date" [(ngModel)]="hasta" (ngModelChange)="cargarReporte()" />
+      <button class="btn-quick" (click)="irEsteMes()">Este mes</button>
+      <button class="btn-quick" (click)="irMesAnterior()">Mes anterior</button>
+    </div>
+  </header>
+
+  <ng-container *ngIf="!loading; else cargando">
+    <section class="stats-row">
+      <div class="stat-card destacada">
+        <span class="stat-label">Ganancia del período</span>
+        <span class="stat-valor">{{ formatoMoneda(gananciaTotal) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Ventas totales</span>
+        <span class="stat-valor">{{ formatoMoneda(ventasTotal) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pedidos</span>
+        <span class="stat-valor">{{ cantidadPedidos }}</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Ventas y comisión por vendedor</h2>
+
+      <div class="vendedor-grupo" *ngFor="let v of vendedores">
+        <div class="vendedor-fila" (click)="toggleVendedor(v.id)">
+          <span class="v-nombre">{{ v.nombre }}</span>
+          <span class="v-pedidos text-soft">{{ v.cantidadPedidos }} pedidos</span>
+          <span class="v-ventas">{{ formatoMoneda(v.totalVentas) }}</span>
+          <span class="v-comision">Comisión: {{ formatoMoneda(v.totalComision) }}</span>
+        </div>
+
+        <div class="vendedor-detalle" *ngIf="expandidoId === v.id">
+          <div class="producto-row" *ngFor="let p of v.productos">
+            <span class="p-nombre">{{ p.nombre }}</span>
+            <span class="p-cantidad text-soft">x{{ p.cantidad }}</span>
+            <span class="p-monto">{{ formatoMoneda(p.monto) }}</span>
+          </div>
+          <p class="empty-msg" *ngIf="!v.productos.length">Sin productos registrados.</p>
+        </div>
+      </div>
+
+      <p class="empty-msg" *ngIf="!vendedores.length">
+        No hay ventas registradas en este período.
+      </p>
+    </section>
+  </ng-container>
+
+  <ng-template #cargando>
+    <p class="empty-msg">Cargando reporte...</p>
+  </ng-template>
+</div>
