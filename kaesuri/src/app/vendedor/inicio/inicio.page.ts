@@ -25,7 +25,7 @@ interface BarraDia {
 @Component({
   selector: 'app-inicio-vendedor',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
