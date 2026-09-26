@@ -14,11 +14,56 @@
   margin-bottom: 28px;
 }
 
+.seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
 .bloque h2 {
   font-size: 14px;
   font-weight: 600;
   color: var(--k-text-soft);
-  margin: 0 0 10px;
+  margin: 0;
+}
+
+.filtro-fecha-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filtro-fecha {
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  font-size: 12px;
+  font-family: var(--k-font);
+  cursor: pointer;
+  outline: none;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+.btn-limpiar-fecha {
+  position: absolute;
+  right: 22px;
+  border: none;
+  background: transparent;
+  color: var(--k-text-soft);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+
+  &:hover {
+    color: var(--k-text);
+  }
 }
 
 .stats-grid {

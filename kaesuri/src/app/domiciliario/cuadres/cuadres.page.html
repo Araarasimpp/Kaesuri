@@ -75,7 +75,26 @@
     </section>
 
     <section class="bloque">
-      <h2>Totales por día</h2>
+      <div class="seccion-header">
+        <h2>Totales por día</h2>
+        
+        <div class="filtro-fecha-group">
+          <input 
+            type="date" 
+            class="filtro-fecha" 
+            [(ngModel)]="fechaFiltro" 
+          />
+          <button 
+            type="button" 
+            class="btn-limpiar-fecha" 
+            *ngIf="fechaFiltro" 
+            (click)="limpiarFecha()"
+            title="Limpiar fecha"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
 
       <div class="lista" *ngIf="porDia.length; else vacioHist">
         <div class="dia-grupo" *ngFor="let dia of porDia">
@@ -114,7 +133,9 @@
       </div>
 
       <ng-template #vacioHist>
-        <p class="empty-msg">Todavía no has cerrado ningún cuadre.</p>
+        <p class="empty-msg">
+          {{ fechaFiltro ? 'No hay cierres registrados en esta fecha.' : 'Todavía no has cerrado ningún cuadre.' }}
+        </p>
       </ng-template>
     </section>
   </ng-container>

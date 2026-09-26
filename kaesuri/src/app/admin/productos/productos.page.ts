@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import * as XLSX from 'xlsx';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ProductoFormComponent } from './producto-form/producto-form.component';
 import { Producto } from '../../shared/models/models';
@@ -28,6 +29,9 @@ export class ProductosPage implements OnInit, OnDestroy {
   modalAbierto = false;
   productoEditando: Producto | null = null;
   menuAbiertoId: string | null = null;
+
+  cargandoExcel = false;
+  resumenCarga: { creados: number; errores: string[] } | null = null;
 
   private canal: RealtimeChannel | null = null;
 
@@ -188,6 +192,71 @@ export class ProductosPage implements OnInit, OnDestroy {
       currency: 'COP',
       maximumFractionDigits: 0,
     });
+  }
+
+  async onArchivoExcel(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.cargandoExcel = true;
+    this.resumenCarga = null;
+    this.cdr.detectChanges();
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const hoja = workbook.Sheets[workbook.SheetNames[0]];
+      const filas: any[] = XLSX.utils.sheet_to_json(hoja, { defval: null });
+
+      const errores: string[] = [];
+      const productosValidos: any[] = [];
+
+      filas.forEach((fila, i) => {
+        const numFila = i + 2; // +2 porque la fila 1 es el encabezado
+        const nombre = String(fila.nombre ?? '').trim();
+        const sku = String(fila.sku ?? '').trim();
+        const precio = Number(fila.precio);
+
+        if (!nombre || !sku || !fila.precio || isNaN(precio)) {
+          errores.push(`Fila ${numFila}: falta nombre, sku o precio válido — se omitió.`);
+          return;
+        }
+
+        productosValidos.push({
+          nombre,
+          sku,
+          categoria: fila.categoria ? String(fila.categoria).trim() : null,
+          descripcion: fila.descripcion ? String(fila.descripcion).trim() : null,
+          precio,
+          costo: fila.costo != null && fila.costo !== '' ? Number(fila.costo) : null,
+          stock: fila.stock != null && fila.stock !== '' ? Number(fila.stock) : 0,
+          activo: true,
+        });
+      });
+
+      if (productosValidos.length) {
+        // upsert por sku: si el SKU ya existe, actualiza ese producto en vez
+        // de crear uno duplicado — así se puede resubir el mismo Excel corregido.
+        const { error } = await this.supabase.client
+          .from('productos')
+          .upsert(productosValidos, { onConflict: 'sku' });
+
+        if (error) {
+          errores.push(`Error al guardar: ${error.message}`);
+        }
+      }
+
+      this.resumenCarga = { creados: productosValidos.length, errores };
+
+      await this.cargarProductos();
+    } catch (err) {
+      this.resumenCarga = { creados: 0, errores: ['No se pudo leer el archivo. ¿Es un .xlsx válido?'] };
+    }
+
+    this.cargandoExcel = false;
+    input.value = '';
+    this.cdr.detectChanges();
   }
 
   inicial(nombre: string): string {

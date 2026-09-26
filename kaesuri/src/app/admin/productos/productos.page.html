@@ -12,8 +12,26 @@
         />
       </div>
       <button class="btn-primary" (click)="abrirNuevo()">+ Nuevo producto</button>
+      <label class="btn-secondary btn-excel">
+        {{ cargandoExcel ? 'Cargando...' : 'Cargar Excel' }}
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          hidden
+          (change)="onArchivoExcel($event)"
+          [disabled]="cargandoExcel"
+        />
+      </label>
     </div>
   </header>
+
+  <div class="resumen-carga" *ngIf="resumenCarga">
+    <p class="resumen-ok" *ngIf="resumenCarga.creados">
+      {{ resumenCarga.creados }} producto(s) cargado(s)/actualizado(s) correctamente.
+    </p>
+    <p class="resumen-error" *ngFor="let e of resumenCarga.errores">{{ e }}</p>
+    <button class="cerrar-resumen" (click)="resumenCarga = null">✕</button>
+  </div>
 
   <div class="tabs">
     <button class="tab" [class.active]="tab === 'activos'" (click)="cambiarTab('activos')">

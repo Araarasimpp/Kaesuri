@@ -30,6 +30,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   cuadres: Cuadre[] = [];
   nombresPorId = new Map<string, string>();
   filtro: FiltroCuadre = 'pendiente';
+  fechaFiltro: string = ''; // Formato 'YYYY-MM-DD' desde el <input type="date">
   confirmandoId: string | null = null;
 
   expandidoId: string | null = null;
@@ -80,12 +81,19 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   get filtrados(): Cuadre[] {
-    if (this.filtro === 'todos') return this.cuadres;
-    return this.cuadres.filter((c) => c.estado === this.filtro);
+    return this.cuadres.filter((c) => {
+      const cumpleEstado = this.filtro === 'todos' || c.estado === this.filtro;
+      const cumpleFecha = !this.fechaFiltro || c.fecha === this.fechaFiltro;
+      return cumpleEstado && cumpleFecha;
+    });
   }
 
   get pendientesCount(): number {
     return this.cuadres.filter((c) => c.estado === 'pendiente').length;
+  }
+
+  limpiarFecha(): void {
+    this.fechaFiltro = '';
   }
 
   nombreDomiciliario(id: string): string {
