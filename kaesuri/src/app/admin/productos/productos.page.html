@@ -72,11 +72,11 @@
                   <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" />
                   <ng-container *ngIf="!p.imagen_url">{{ inicial(p.nombre) }}</ng-container>
                 </span>
-                <span>{{ p.nombre }}</span>
+                <span>{{ p.nombre | uppercase }}</span>
               </div>
             </td>
-            <td class="text-soft">{{ p.sku }}</td>
-            <td class="text-soft">{{ p.categoria || '—' }}</td>
+            <td class="text-soft">{{ p.sku | uppercase }}</td>
+            <td class="text-soft">{{ p.categoria || '—' | uppercase }}</td>
             <td>{{ formatoMoneda(p.precio) }}</td>
             <td>{{ p.stock }}</td>
             <td>

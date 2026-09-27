@@ -28,8 +28,8 @@ export class NuevoPedidoPage implements OnInit {
   clienteTelefono = '';
   direccion = '';
   barrio = '';
-  valorDomicilio: number = 0;
-  comision: number = 0;
+  valorDomicilio: number | null = null; // Inicia limpio
+  comision: number | null = null;       // Inicia limpio
   observaciones = '';
 
   guardando = false;
@@ -109,7 +109,7 @@ export class NuevoPedidoPage implements OnInit {
   }
 
   get total(): number {
-    return this.subtotal + (Number(this.valorDomicilio) || 0) + (Number(this.comision) || 0);
+    return this.subtotal + (this.valorDomicilio ?? 0) + (this.comision ?? 0);
   }
 
   async onCrearPedido(): Promise<void> {

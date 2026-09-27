@@ -8,7 +8,12 @@ import { Producto } from '../../../shared/models/models';
 // solo dentro de este formulario (el resto de los campos usan el mismo
 // tipo Producto que ya usa toda la app, para que TypeScript no los trate
 // como tipos distintos).
-type ProductoForm = Omit<Producto, 'id'> & { id?: string };
+type ProductoForm = Omit<Producto, 'id' | 'precio' | 'stock' | 'costo'> & {
+  id?: string;
+  precio?: number | null;
+  costo?: number | null;
+  stock?: number | null;
+};
 
 @Component({
   selector: 'app-producto-form',
@@ -74,7 +79,7 @@ export class ProductoFormComponent implements OnChanges {
         sku: this.form.sku,
         descripcion: this.form.descripcion || null,
         categoria: this.form.categoria || null,
-        precio: this.form.precio,
+        precio: this.form.precio ?? 0,
         costo: this.form.costo ?? null,
         stock: this.form.stock ?? 0,
         imagen_url: imagenUrl || null,
@@ -131,9 +136,9 @@ export class ProductoFormComponent implements OnChanges {
       sku: '',
       descripcion: null,
       categoria: null,
-      precio: 0,
-      costo: null,
-      stock: 0,
+      precio: null, 
+      costo: null,  
+      stock: null,  
       imagen_url: null,
       activo: true,
     };
