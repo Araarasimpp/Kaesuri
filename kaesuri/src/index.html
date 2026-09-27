@@ -1,6 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <title>Variedades JYB</title>
@@ -14,13 +11,12 @@
 
   <link rel="icon" type="image/png" href="assets/icon/logo.png" />
 
-  <!-- add to homescreen for ios -->
+  <!-- Soporte PWA / Pantalla Completa para iOS y Android -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  
+  <!-- ESTAS TRES LÍNEAS HACEN LA DIFERENCIA EN iOS Y ANDROID -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Variedades JYB" />
+  <meta name="theme-color" content="#ffffff" /> <!-- Cambia #ffffff por el color primario/de fondo de tu app -->
 </head>
-
-<body>
-  <app-root></app-root>
-</body>
-
-</html>
