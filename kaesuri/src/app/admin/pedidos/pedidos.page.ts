@@ -151,26 +151,6 @@ export class PedidosPage implements OnInit, OnDestroy {
     return lista;
   }
 
-  async cancelarPedido(pedido: PedidoFila): Promise<void> {
-    const confirmado = confirm(`¿Cancelar el pedido #${pedido.numero}?`);
-    if (!confirmado) return;
-
-    this.guardandoId = pedido.id;
-
-    const { error } = await this.supabase.client
-      .from('pedidos')
-      .update({ estado: 'cancelado' })
-      .eq('id', pedido.id);
-
-    this.guardandoId = null;
-
-    if (!error) {
-      await this.cargarPedidos();
-    } else {
-      this.cdr.detectChanges();
-    }
-  }
-
   async asignarDomiciliario(pedido: PedidoFila, domiciliarioId: string): Promise<void> {
     // Un pedido ya entregado (o cancelado) no se puede reasignar: eso
     // rompería el cuadre y el historial de quién lo entregó de verdad.
@@ -191,6 +171,26 @@ export class PedidosPage implements OnInit, OnDestroy {
     if (!error) {
       await this.cargarPedidos();
     } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  async eliminarPedido(pedido: PedidoFila): Promise<void> {
+    if (pedido.estado === 'entregado') return;
+
+    const confirmado = confirm(
+      `¿Eliminar el pedido #${pedido.numero} de ${pedido.cliente_nombre}? Se devolverá el stock de los productos. Esta acción no se puede deshacer.`
+    );
+    if (!confirmado) return;
+
+    const { error } = await this.supabase.client.rpc('eliminar_pedido', {
+      p_pedido_id: pedido.id,
+    });
+
+    if (!error) {
+      await this.cargarPedidos();
+    } else {
+      alert(error.message);
       this.cdr.detectChanges();
     }
   }
@@ -335,10 +335,9 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
               align-items: flex-start; /* Alinea el borde superior de la imagen y la fecha */
               margin-bottom: 10px; 
             }
-            /* Aumentado a 110px para mayor visibilidad */
             .marca-logo { 
               width: 100px; 
-              height: 80px; 
+              height: 100px; 
               object-fit: contain; 
             }
             

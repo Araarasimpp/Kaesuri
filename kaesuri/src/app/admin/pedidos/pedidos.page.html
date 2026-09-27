@@ -55,6 +55,7 @@
             <th>Domiciliario</th>
             <th>Rótulo</th>
             <th>Fecha</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -100,11 +101,12 @@
             <td class="text-soft">{{ formatoFecha(p.created_at) }}</td>
             <td>
               <button
-                class="btn-cancelar"
-                *ngIf="p.estado !== 'entregado' && p.estado !== 'cancelado'"
-                (click)="cancelarPedido(p)"
-                [disabled]="guardandoId === p.id">
-                Cancelar
+                class="btn-eliminar"
+                *ngIf="p.estado !== 'entregado'"
+                (click)="eliminarPedido(p)"
+                title="Eliminar pedido"
+              >
+                Eliminar
               </button>
             </td>
           </tr>
