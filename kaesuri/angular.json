@@ -31,7 +31,8 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
-              }
+              },
+              "src/manifest.json"
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
             "scripts": [],
