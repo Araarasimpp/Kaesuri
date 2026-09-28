@@ -285,7 +285,7 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
         ).padStart(2, '0')} / ${fecha.getFullYear()}`;
 
         return `
-          <div class="rotulo">
+          <div class="">
             <div class="rotulo-header">
               <img class="marca-logo" src="${ROTULO_LOGO_BASE64}" alt="${NEGOCIO.nombre}" />
               <div class="header-derecha">
