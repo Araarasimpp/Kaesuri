@@ -323,7 +323,7 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
             body { font-family: Arial, sans-serif; }
             .rotulo {
               width: 320px;
-              border: 2px solid #000;
+              border: 0.4px solid #000;
               border-radius: 14px;
               padding: 16px;
               margin: 0 auto 20px;
