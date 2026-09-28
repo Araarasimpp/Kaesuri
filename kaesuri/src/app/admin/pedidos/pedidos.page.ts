@@ -12,7 +12,7 @@ import { ROTULO_LOGO_BASE64 } from '../rotulo-logo';
 // "configuracion" con una sola fila.
 const NEGOCIO = {
   nombre: 'Variedades JYB',
-  telefonos: '300 000 0000',
+  telefonos: '318 8156960 - 3107425663',
   redes: '@variedadesjyb',
   garantia:
     'Todos nuestros productos cuentan con garantía. Guarda este documento ya que es el soporte para la garantía.',
