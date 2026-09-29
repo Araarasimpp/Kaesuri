@@ -12,7 +12,7 @@ import { ROTULO_LOGO_BASE64 } from '../rotulo-logo';
 // "configuracion" con una sola fila.
 const NEGOCIO = {
   nombre: 'Variedades JYB',
-  telefonos: '318 8156960 - 3107425663',
+  telefonos: '318 8156960 - 310 7425663',
   redes: '@variedadesjyb',
   garantia:
     'Todos nuestros productos cuentan con garantía. Guarda este documento ya que es el soporte para la garantía.',
@@ -32,6 +32,7 @@ interface PedidoFila {
   domiciliario_id: string | null;
   rotulo_impreso_at: string | null;
   created_at: string;
+  productos: string;
 }
 
 interface Domiciliario {
@@ -59,6 +60,7 @@ export class PedidosPage implements OnInit, OnDestroy {
   filtroRotulo: FiltroRotulo = 'todos';
   guardandoId: string | null = null;
   seleccionados = new Set<string>();
+  menuAbiertoId: string | null = null;
   imprimiendo = false;
 
   private canal: RealtimeChannel | null = null;
@@ -104,9 +106,27 @@ export class PedidosPage implements OnInit, OnDestroy {
       )
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      this.pedidos = data as PedidoFila[];
+    let pedidos = (data as any[]) ?? [];
+
+    if (!error && pedidos.length) {
+      const { data: items } = await this.supabase.client
+        .from('pedido_items')
+        .select('pedido_id, cantidad, producto:productos(nombre)')
+        .in(
+          'pedido_id',
+          pedidos.map((p) => p.id)
+        );
+
+      pedidos = pedidos.map((p) => ({
+        ...p,
+        productos: (items ?? [])
+          .filter((i: any) => i.pedido_id === p.id)
+          .map((i: any) => `${i.producto?.nombre ?? 'Producto'} x${i.cantidad}`)
+          .join(', '),
+      }));
     }
+
+    this.pedidos = pedidos as PedidoFila[];
     this.loading = false;
     this.cdr.detectChanges();
   }
@@ -175,7 +195,33 @@ export class PedidosPage implements OnInit, OnDestroy {
     }
   }
 
+  toggleMenu(id: string): void {
+    this.menuAbiertoId = this.menuAbiertoId === id ? null : id;
+  }
+
+  async cancelarPedido(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') return;
+
+    const confirmado = confirm(
+      `¿Cancelar el pedido #${pedido.numero} de ${pedido.cliente_nombre}? Se devolverá el stock de los productos.`
+    );
+    if (!confirmado) return;
+
+    const { error } = await this.supabase.client.rpc('cancelar_pedido', {
+      p_pedido_id: pedido.id,
+    });
+
+    if (!error) {
+      await this.cargarPedidos();
+    } else {
+      alert(error.message);
+      this.cdr.detectChanges();
+    }
+  }
+
   async eliminarPedido(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
     if (pedido.estado === 'entregado') return;
 
     const confirmado = confirm(
@@ -271,7 +317,7 @@ export class PedidosPage implements OnInit, OnDestroy {
     await this.cargarPedidos();
   }
 
-private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
+  private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
     const rotulos = pedidos
       .map((p) => {
         const productos = items
@@ -288,13 +334,11 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
           <div class="rotulo">
             <div class="rotulo-header">
               <img class="marca-logo" src="${ROTULO_LOGO_BASE64}" alt="${NEGOCIO.nombre}" />
-              <div class="header-derecha">
-                <div class="fecha-box">${fechaStr}</div>
-                <div class="contacto">
-                  <div>${NEGOCIO.telefonos}</div>
-                  <div>${NEGOCIO.redes}</div>
-                </div>
+              <div class="contacto">
+                <div>${NEGOCIO.telefonos}</div>
+                <div>${NEGOCIO.redes}</div>
               </div>
+              <div class="fecha-box">${fechaStr}</div>
             </div>
             <div class="valor-cobrar">
               <span>VALOR A COBRAR:</span>
@@ -323,33 +367,16 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
             body { font-family: Arial, sans-serif; }
             .rotulo {
               width: 320px;
-              border: 0.4px solid #000;
+              border: 2px solid #000;
               border-radius: 14px;
               padding: 16px;
-              margin: 0 auto 20px;
+              margin: 0 auto 24px;
               page-break-after: always;
             }
-            .rotulo-header { 
-              display: flex; 
-              justify-content: space-between; 
-              align-items: flex-start; /* Alinea el borde superior de la imagen y la fecha */
-              margin-bottom: 10px; 
-            }
-            .marca-logo { 
-              width: 100px; 
-              height: 100px; 
-              object-fit: contain; 
-            }
-            
-            .header-derecha { 
-              display: flex; 
-              flex-direction: column; 
-              align-items: flex-end; 
-              gap: 8px; 
-            }
-            .fecha-box { border: 1px solid #000; padding: 4px 8px; font-size: 11px; }
+            .rotulo-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+            .marca-logo { width: 64px; height: 64px; object-fit: contain; }
             .contacto { font-size: 11px; text-align: right; }
-            
+            .fecha-box { border: 1px solid #000; padding: 4px 8px; font-size: 11px; }
             .valor-cobrar { border: 1px solid #000; padding: 8px; margin-bottom: 10px; font-size: 14px; display: flex; justify-content: space-between; }
             .datos { width: 100%; font-size: 13px; border-collapse: collapse; }
             .datos td { padding: 3px 0; vertical-align: top; }
@@ -360,7 +387,7 @@ private construirHtmlRotulos(pedidos: PedidoFila[], items: any[]): string {
         <body>${rotulos}</body>
       </html>
     `;
-}
+  }
 
   formatoMoneda(valor: number): string {
     return valor.toLocaleString('es-CO', {

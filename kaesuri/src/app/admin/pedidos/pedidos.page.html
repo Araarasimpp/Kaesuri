@@ -48,6 +48,7 @@
             <th>#</th>
             <th>Vendedor</th>
             <th>Cliente</th>
+            <th>Producto</th>
             <th>Teléfono</th>
             <th>Barrio</th>
             <th>Total</th>
@@ -70,6 +71,7 @@
             <td class="text-soft">#{{ p.numero }}</td>
             <td class="text-soft">{{ nombreVendedor(p.vendedor_id) }}</td>
             <td>{{ p.cliente_nombre }}</td>
+            <td class="text-soft productos-cell">{{ p.productos || '—' }}</td>
             <td class="text-soft">{{ p.cliente_telefono || '—' }}</td>
             <td class="text-soft">{{ p.barrio || '—' }}</td>
             <td>{{ formatoMoneda(p.total) }}</td>
@@ -99,15 +101,12 @@
               </span>
             </td>
             <td class="text-soft">{{ formatoFecha(p.created_at) }}</td>
-            <td>
-              <button
-                class="btn-eliminar"
-                *ngIf="p.estado !== 'entregado'"
-                (click)="eliminarPedido(p)"
-                title="Eliminar pedido"
-              >
-                Eliminar
-              </button>
+            <td class="menu-cell">
+              <button class="menu-btn" (click)="toggleMenu(p.id)" *ngIf="p.estado !== 'entregado'">⋯</button>
+              <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
+                <button *ngIf="p.estado !== 'cancelado'" (click)="cancelarPedido(p)">Cancelar</button>
+                <button class="danger" (click)="eliminarPedido(p)">Eliminar</button>
+              </div>
             </td>
           </tr>
         </tbody>

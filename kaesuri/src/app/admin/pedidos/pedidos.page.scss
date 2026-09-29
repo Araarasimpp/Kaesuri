@@ -84,18 +84,57 @@
   width: 32px;
 }
 
-.btn-eliminar {
+.productos-cell {
+  max-width: 305px;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.menu-cell {
+  position: relative;
+  text-align: right;
+}
+
+.menu-btn {
   border: none;
   background: none;
-  color: var(--k-coral);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--k-text-soft);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.menu-popover {
+  position: absolute;
+  right: 16px;
+  top: 36px;
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(18, 21, 28, 0.12);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.menu-popover button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--k-text);
+  font-size: 13px;
+  text-align: left;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.btn-eliminar:hover {
-  text-decoration: underline;
+.menu-popover button:hover {
+  background: var(--k-bg-alt);
+}
+
+.menu-popover button.danger {
+  color: var(--k-coral);
 }
 
 .tabs {
@@ -133,7 +172,7 @@
 }
 
 table {
-  min-width: 980px;
+  min-width: 1180px;
   width: 100%;
   border-collapse: collapse;
 }

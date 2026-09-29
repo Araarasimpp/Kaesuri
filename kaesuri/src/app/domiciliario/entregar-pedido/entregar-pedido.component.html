@@ -25,7 +25,7 @@
         <label class="comprobante-preview" [class.empty]="!previewComprobante">
           <img *ngIf="previewComprobante" [src]="previewComprobante" alt="Comprobante" />
           <span *ngIf="!previewComprobante">Toca para subir foto del comprobante</span>
-          <input type="file" accept="image/*" capture="environment" (change)="onArchivoSeleccionado($event)" hidden />
+          <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" hidden />
         </label>
       </div>
 
