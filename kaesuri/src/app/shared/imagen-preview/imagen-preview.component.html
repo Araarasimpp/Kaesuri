@@ -1,0 +1,4 @@
+<div class="preview-backdrop" (click)="onCerrar()">
+  <button class="preview-close" (click)="onCerrar()">✕</button>
+  <img *ngIf="url" [src]="url" alt="Comprobante" (click)="$event.stopPropagation()" />
+</div>

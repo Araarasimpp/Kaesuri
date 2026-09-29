@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
+import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import {
   hoyColombiaISO,
   inicioDiaColombia,
@@ -28,7 +28,7 @@ interface PedidoSinCuadrar {
 @Component({
   selector: 'app-cuadres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ImagenPreviewComponent],
   templateUrl: './cuadres.page.html',
   styleUrls: ['./cuadres.page.scss'],
 })
@@ -37,7 +37,6 @@ export class CuadresPage implements OnInit {
   pedidosHoy: PedidoSinCuadrar[] = [];
   historial: Cuadre[] = [];
   diasExpandidos = new Set<string>();
-  fechaFiltro: string = ''; // Formato 'YYYY-MM-DD'
   cerrando = false;
   errorMsg = '';
 
@@ -77,7 +76,7 @@ export class CuadresPage implements OnInit {
         .select('*')
         .eq('domiciliario_id', user.id)
         .order('fecha', { ascending: false })
-        .limit(30),
+        .limit(20),
     ]);
 
     let pedidos = (pedidosRes.data as any[]) ?? [];
@@ -110,6 +109,7 @@ export class CuadresPage implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // Lo que aportó ESTE pedido en efectivo (0 si fue por transferencia)
   efectivoDe(p: PedidoSinCuadrar): number {
     return p.metodo_pago === 'efectivo' ? p.total : 0;
   }
@@ -118,6 +118,9 @@ export class CuadresPage implements OnInit {
     return p.metodo_pago === 'transferencia' ? p.total : 0;
   }
 
+  // Cuadre de este pedido en particular: lo que aportó en efectivo menos el
+  // domicilio que te queda a ti. Si fue por transferencia, sale negativo:
+  // significa que el negocio te debe ese domicilio.
   cuadreDe(p: PedidoSinCuadrar): number {
     return this.efectivoDe(p) - p.valor_domicilio;
   }
@@ -150,12 +153,7 @@ export class CuadresPage implements OnInit {
   }[] {
     const grupos = new Map<string, Cuadre[]>();
 
-    // Filtrar por fecha si hay una seleccionada
-    const historialFiltrado = this.fechaFiltro
-      ? this.historial.filter((c) => c.fecha === this.fechaFiltro)
-      : this.historial;
-
-    for (const c of historialFiltrado) {
+    for (const c of this.historial) {
       const lista = grupos.get(c.fecha) ?? [];
       lista.push(c);
       grupos.set(c.fecha, lista);
@@ -173,10 +171,6 @@ export class CuadresPage implements OnInit {
         todoConfirmado: cuadres.every((c) => c.estado === 'confirmado'),
       }))
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
-  }
-
-  limpiarFecha(): void {
-    this.fechaFiltro = '';
   }
 
   toggleDia(fecha: string): void {
@@ -209,6 +203,8 @@ export class CuadresPage implements OnInit {
     await this.cargarTodo();
   }
 
+  previewUrl: string | null = null;
+
   async verComprobante(p: PedidoSinCuadrar): Promise<void> {
     if (!p.comprobante_url) return;
     const { data, error } = await this.supabase.client.storage
@@ -216,8 +212,13 @@ export class CuadresPage implements OnInit {
       .createSignedUrl(p.comprobante_url, 60);
 
     if (!error && data?.signedUrl) {
-      window.open(data.signedUrl, '_blank');
+      this.previewUrl = data.signedUrl;
+      this.cdr.detectChanges();
     }
+  }
+
+  cerrarPreview(): void {
+    this.previewUrl = null;
   }
 
   formatoMoneda(valor: number): string {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
+import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import { formatoFechaCO } from '../../shared/fecha-colombia';
 
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
@@ -23,7 +24,7 @@ interface PedidoDelCuadre {
 @Component({
   selector: 'app-admin-cuadres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImagenPreviewComponent],
   templateUrl: './cuadres.page.html',
   styleUrls: ['./cuadres.page.scss'],
 })
@@ -135,6 +136,8 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     return p.metodo_pago === 'transferencia' ? p.total : 0;
   }
 
+  previewUrl: string | null = null;
+
   async verComprobante(pedido: PedidoDelCuadre): Promise<void> {
     if (!pedido.comprobante_url) return;
 
@@ -143,8 +146,13 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       .createSignedUrl(pedido.comprobante_url, 60);
 
     if (!error && data?.signedUrl) {
-      window.open(data.signedUrl, '_blank');
+      this.previewUrl = data.signedUrl;
+      this.cdr.detectChanges();
     }
+  }
+
+  cerrarPreview(): void {
+    this.previewUrl = null;
   }
 
   async confirmarCuadre(cuadre: Cuadre): Promise<void> {
