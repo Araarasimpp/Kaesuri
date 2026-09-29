@@ -24,7 +24,7 @@
             <span class="producto-nombre">{{ p.nombre }}</span>
             <span class="producto-meta">{{ p.sku }} · Stock: {{ p.stock }}</span>
           </div>
-          <span class="producto-precio">{{ formatoMoneda(p.precio) }}</span>
+          <span class="producto-precio">{{ formatoMoneda(p.precio_sugerido) }}</span>
         </div>
 
         <p class="empty-msg" *ngIf="!productosFiltrados.length">
@@ -43,22 +43,31 @@
 
       <div class="carrito" *ngIf="carrito.length; else carritoVacio">
         <div class="carrito-item" *ngFor="let item of carrito">
-          <div class="carrito-info">
-            <span class="producto-nombre">{{ item.producto.nombre }}</span>
-            <span class="producto-meta">
-              {{ formatoMoneda(item.producto.precio) }} c/u
-            </span>
+          <div class="carrito-fila-top">
+            <div class="carrito-info">
+              <span class="producto-nombre">{{ item.producto.nombre }}</span>
+              <span class="producto-meta">Precio base: {{ formatoMoneda(item.producto.precio_base) }}</span>
+            </div>
+            <div class="cantidad-control">
+              <button (click)="decrementar(item)">−</button>
+              <span>{{ item.cantidad }}</span>
+              <button (click)="incrementar(item)" [disabled]="item.cantidad >= item.producto.stock">
+                +
+              </button>
+            </div>
           </div>
-          <div class="cantidad-control">
-            <button (click)="decrementar(item)">−</button>
-            <span>{{ item.cantidad }}</span>
-            <button (click)="incrementar(item)" [disabled]="item.cantidad >= item.producto.stock">
-              +
-            </button>
+          <div class="carrito-fila-precio">
+            <label>
+              Precio de venta
+              <input type="number" [(ngModel)]="item.precioUnitario" min="0" />
+            </label>
+            <div class="carrito-montos">
+              <span class="carrito-subtotal">{{ formatoMoneda(item.cantidad * item.precioUnitario) }}</span>
+              <span class="carrito-comision" [class.negativa]="comisionDe(item) < 0">
+                Comisión: {{ formatoMoneda(comisionDe(item)) }}
+              </span>
+            </div>
           </div>
-          <span class="carrito-subtotal">
-            {{ formatoMoneda(item.cantidad * item.producto.precio) }}
-          </span>
         </div>
       </div>
 
@@ -91,15 +100,9 @@
         <input type="text" [(ngModel)]="direccion" />
       </div>
 
-      <div class="fields-row">
-        <div class="field">
-          <label>Valor del domicilio</label>
-          <input type="number" [(ngModel)]="valorDomicilio" min="0" />
-        </div>
-        <div class="field">
-          <label>Tu comisión</label>
-          <input type="number" [(ngModel)]="comision" min="0" />
-        </div>
+      <div class="field">
+        <label>Valor del domicilio</label>
+        <input type="number" [(ngModel)]="valorDomicilio" min="0" />
       </div>
 
       <div class="field">
@@ -116,13 +119,13 @@
           <span>Domicilio</span>
           <span>{{ formatoMoneda(valorDomicilio || 0) }}</span>
         </div>
-        <div class="totales-linea">
-          <span>Tu comisión</span>
-          <span>{{ formatoMoneda(comision || 0) }}</span>
-        </div>
         <div class="totales-linea total">
-          <span>Total</span>
+          <span>Total a cobrar</span>
           <span>{{ formatoMoneda(total) }}</span>
+        </div>
+        <div class="totales-linea comision-linea">
+          <span>Tu comisión (ya incluida arriba)</span>
+          <span>{{ formatoMoneda(comisionTotal) }}</span>
         </div>
       </div>
 

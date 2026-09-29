@@ -51,7 +51,8 @@
             <th>Nombre</th>
             <th>SKU</th>
             <th>Categoría</th>
-            <th>Precio</th>
+            <th>Precio base</th>
+            <th>Precio sugerido</th>
             <th>Disponible</th>
             <th>Estado</th>
             <th class="col-check"></th>
@@ -72,12 +73,13 @@
                   <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" />
                   <ng-container *ngIf="!p.imagen_url">{{ inicial(p.nombre) }}</ng-container>
                 </span>
-                <span>{{ p.nombre | uppercase }}</span>
+                <span>{{ p.nombre }}</span>
               </div>
             </td>
-            <td class="text-soft">{{ p.sku | uppercase }}</td>
-            <td class="text-soft">{{ p.categoria || '—' | uppercase }}</td>
-            <td>{{ formatoMoneda(p.precio) }}</td>
+            <td class="text-soft">{{ p.sku }}</td>
+            <td class="text-soft">{{ p.categoria || '—' }}</td>
+            <td class="text-soft">{{ formatoMoneda(p.precio_base) }}</td>
+            <td>{{ formatoMoneda(p.precio_sugerido) }}</td>
             <td>{{ p.stock }}</td>
             <td>
               <span class="badge" [ngClass]="estadoStock(p.stock).clase" *ngIf="p.activo">

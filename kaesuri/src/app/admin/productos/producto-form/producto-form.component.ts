@@ -8,12 +8,7 @@ import { Producto } from '../../../shared/models/models';
 // solo dentro de este formulario (el resto de los campos usan el mismo
 // tipo Producto que ya usa toda la app, para que TypeScript no los trate
 // como tipos distintos).
-type ProductoForm = Omit<Producto, 'id' | 'precio' | 'stock' | 'costo'> & {
-  id?: string;
-  precio?: number | null;
-  costo?: number | null;
-  stock?: number | null;
-};
+type ProductoForm = Omit<Producto, 'id'> & { id?: string };
 
 @Component({
   selector: 'app-producto-form',
@@ -48,6 +43,13 @@ export class ProductoFormComponent implements OnChanges {
     return !!this.form.id;
   }
 
+  // Comisión sugerida por unidad, solo para que el admin vea cuánto le
+  // queda al vendedor con estos precios (no se guarda como tal, se
+  // recalcula siempre a partir de precio_base y precio_sugerido).
+  get comisionSugerida(): number {
+    return (this.form.precio_sugerido ?? 0) - (this.form.precio_base ?? 0);
+  }
+
   onArchivoSeleccionado(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -60,8 +62,8 @@ export class ProductoFormComponent implements OnChanges {
   async onGuardar(): Promise<void> {
     this.errorMsg = '';
 
-    if (!this.form.nombre || !this.form.sku || this.form.precio == null) {
-      this.errorMsg = 'Nombre, SKU y precio son obligatorios.';
+    if (!this.form.nombre || !this.form.sku || this.form.precio_sugerido == null) {
+      this.errorMsg = 'Nombre, SKU y precio sugerido son obligatorios.';
       return;
     }
 
@@ -79,7 +81,8 @@ export class ProductoFormComponent implements OnChanges {
         sku: this.form.sku,
         descripcion: this.form.descripcion || null,
         categoria: this.form.categoria || null,
-        precio: this.form.precio ?? 0,
+        precio_base: this.form.precio_base ?? 0,
+        precio_sugerido: this.form.precio_sugerido,
         costo: this.form.costo ?? null,
         stock: this.form.stock ?? 0,
         imagen_url: imagenUrl || null,
@@ -136,9 +139,10 @@ export class ProductoFormComponent implements OnChanges {
       sku: '',
       descripcion: null,
       categoria: null,
-      precio: null, 
-      costo: null,  
-      stock: null,  
+      precio_base: 0,
+      precio_sugerido: 0,
+      costo: null,
+      stock: 0,
       imagen_url: null,
       activo: true,
     };

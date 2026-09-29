@@ -21,6 +21,11 @@ interface PedidoDelCuadre {
   comprobante_url: string | null;
 }
 
+interface Domiciliario {
+  id: string;
+  nombre: string;
+}
+
 @Component({
   selector: 'app-admin-cuadres',
   standalone: true,
@@ -31,8 +36,11 @@ interface PedidoDelCuadre {
 export class AdminCuadresPage implements OnInit, OnDestroy {
   loading = true;
   cuadres: Cuadre[] = [];
+  domiciliarios: Domiciliario[] = [];
   nombresPorId = new Map<string, string>();
   filtro: FiltroCuadre = 'pendiente';
+  fecha = '';
+  domiciliarioId = 'todos';
   confirmandoId: string | null = null;
 
   expandidoId: string | null = null;
@@ -68,7 +76,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
 
     const [cuadresRes, perfilesRes] = await Promise.all([
       this.supabase.client.from('cuadres').select('*').order('fecha', { ascending: false }),
-      this.supabase.client.from('profiles').select('id, nombre'),
+      this.supabase.client.from('profiles').select('id, nombre, role'),
     ]);
 
     if (!cuadresRes.error && cuadresRes.data) {
@@ -76,6 +84,10 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     }
     if (!perfilesRes.error && perfilesRes.data) {
       this.nombresPorId = new Map(perfilesRes.data.map((p: any) => [p.id, p.nombre]));
+      this.domiciliarios = (perfilesRes.data as any[])
+        .filter((p) => p.role === 'domiciliario')
+        .map((p) => ({ id: p.id, nombre: p.nombre }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
     }
 
     this.loading = false;
@@ -83,8 +95,12 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   get filtrados(): Cuadre[] {
-    if (this.filtro === 'todos') return this.cuadres;
-    return this.cuadres.filter((c) => c.estado === this.filtro);
+    return this.cuadres.filter((c) => {
+      if (this.filtro !== 'todos' && c.estado !== this.filtro) return false;
+      if (this.domiciliarioId !== 'todos' && c.domiciliario_id !== this.domiciliarioId) return false;
+      if (this.fecha && c.fecha !== this.fecha) return false;
+      return true;
+    });
   }
 
   get pendientesCount(): number {

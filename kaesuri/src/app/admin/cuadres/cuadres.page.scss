@@ -17,6 +17,12 @@
   margin: 0;
 }
 
+.filtros {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .filtro {
   padding: 9px 12px;
   border-radius: 10px;
@@ -199,6 +205,19 @@
 @media (max-width: 720px) {
   .cuadres-admin-page {
     padding: 18px 14px 40px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros {
+    flex-direction: column;
+  }
+
+  .filtro {
+    width: 100%;
   }
 
   .cuadre-fila {

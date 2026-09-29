@@ -146,7 +146,7 @@ export class ReportesPage implements OnInit {
     if (pedidos.length) {
       const { data: items } = await this.supabase.client
         .from('pedido_items')
-        .select('pedido_id, cantidad, precio_unitario, producto:productos(nombre, costo)')
+        .select('pedido_id, cantidad, precio_unitario, precio_base, producto:productos(nombre, costo)')
         .in(
           'pedido_id',
           pedidos.map((p) => p.id)
@@ -160,8 +160,11 @@ export class ReportesPage implements OnInit {
 
         const costo = (item as any).producto?.costo ?? null;
         const precioVenta = (item as any).precio_unitario;
+        const precioBase = (item as any).precio_base;
         const cantidad = (item as any).cantidad;
-        const gananciaItem = cantidad * (precioVenta - (costo != null ? costo : precioVenta));
+        // Ganancia de la TIENDA = precio_base - costo (no precio_unitario,
+        // que ya trae la comisión del vendedor mezclada adentro).
+        const gananciaItem = cantidad * (precioBase - (costo != null ? costo : precioBase));
 
         filasNuevas.push({
           pedidoId: p.id,

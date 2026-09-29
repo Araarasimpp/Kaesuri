@@ -120,6 +120,15 @@
   margin: 14px 0 0;
 }
 
+.comision-hint {
+  color: var(--k-teal);
+  margin-top: 4px;
+}
+
+.comision-hint.negativa {
+  color: var(--k-coral);
+}
+
 .error-msg {
   color: var(--k-coral);
   font-size: 13px;

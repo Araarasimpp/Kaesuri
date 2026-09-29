@@ -8,6 +8,9 @@ import { Producto } from '../../shared/models/models';
 interface ItemCarrito {
   producto: Producto;
   cantidad: number;
+  // Precio al que se vende ESTE pedido. Arranca en precio_sugerido, pero el
+  // vendedor lo puede subir si vende más caro — ahí su comisión sube también.
+  precioUnitario: number;
 }
 
 @Component({
@@ -28,8 +31,7 @@ export class NuevoPedidoPage implements OnInit {
   clienteTelefono = '';
   direccion = '';
   barrio = '';
-  valorDomicilio: number | null = null; // Inicia limpio
-  comision: number | null = null;       // Inicia limpio
+  valorDomicilio: number = 0;
   observaciones = '';
 
   guardando = false;
@@ -50,7 +52,9 @@ export class NuevoPedidoPage implements OnInit {
     this.loadingProductos = true;
     const { data, error } = await this.supabase.client
       .from('productos')
-      .select('id, nombre, sku, descripcion, categoria, precio, costo, stock, imagen_url, activo')
+      .select(
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo'
+      )
       .eq('activo', true)
       .gt('stock', 0)
       .order('nombre');
@@ -83,7 +87,7 @@ export class NuevoPedidoPage implements OnInit {
         existente.cantidad++;
       }
     } else {
-      this.carrito.push({ producto, cantidad: 1 });
+      this.carrito.push({ producto, cantidad: 1, precioUnitario: producto.precio_sugerido });
     }
   }
 
@@ -104,12 +108,22 @@ export class NuevoPedidoPage implements OnInit {
     this.carrito = this.carrito.filter((i) => i.producto.id !== item.producto.id);
   }
 
+  // Comisión que deja ESTE item con el precio actual (puede subir si el
+  // vendedor editó el precio hacia arriba, o bajar si lo editó hacia abajo)
+  comisionDe(item: ItemCarrito): number {
+    return item.cantidad * (item.precioUnitario - item.producto.precio_base);
+  }
+
   get subtotal(): number {
-    return this.carrito.reduce((sum, i) => sum + i.cantidad * i.producto.precio, 0);
+    return this.carrito.reduce((sum, i) => sum + i.cantidad * i.precioUnitario, 0);
+  }
+
+  get comisionTotal(): number {
+    return this.carrito.reduce((sum, i) => sum + this.comisionDe(i), 0);
   }
 
   get total(): number {
-    return this.subtotal + (this.valorDomicilio ?? 0) + (this.comision ?? 0);
+    return this.subtotal + (Number(this.valorDomicilio) || 0);
   }
 
   async onCrearPedido(): Promise<void> {
@@ -130,7 +144,8 @@ export class NuevoPedidoPage implements OnInit {
     const items = this.carrito.map((i) => ({
       producto_id: i.producto.id,
       cantidad: i.cantidad,
-      precio_unitario: i.producto.precio,
+      precio_unitario: i.precioUnitario,
+      precio_base: i.producto.precio_base,
     }));
 
     const { data, error } = await this.supabase.client.rpc('crear_pedido', {
@@ -139,7 +154,6 @@ export class NuevoPedidoPage implements OnInit {
       p_direccion: this.direccion,
       p_barrio: this.barrio || null,
       p_valor_domicilio: Number(this.valorDomicilio) || 0,
-      p_comision: Number(this.comision) || 0,
       p_observaciones: this.observaciones || null,
       p_items: items,
     });

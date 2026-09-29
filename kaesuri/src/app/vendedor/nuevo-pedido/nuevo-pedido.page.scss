@@ -97,20 +97,65 @@
 }
 
 .carrito-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--k-border);
+}
+
+.carrito-fila-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--k-border);
+}
+
+.carrito-fila-precio {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.carrito-fila-precio label {
+  font-size: 11px;
+  color: var(--k-text-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.carrito-fila-precio input {
+  width: 110px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  font-size: 13px;
+  font-family: var(--k-font);
+}
+
+.carrito-montos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 .carrito-subtotal {
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  min-width: 90px;
   text-align: right;
+}
+
+.carrito-comision {
+  font-size: 11px;
+  color: var(--k-teal);
+}
+
+.carrito-comision.negativa {
+  color: var(--k-coral);
 }
 
 .cantidad-control {
@@ -201,6 +246,12 @@
   padding-top: 8px;
 }
 
+.totales-linea.comision-linea {
+  font-size: 12px;
+  color: var(--k-teal);
+  padding-top: 8px;
+}
+
 .error-msg {
   color: var(--k-coral);
   font-size: 13px;
@@ -232,55 +283,7 @@
 }
 
 @media (max-width: 860px) {
-  .pedido-page {
-    padding: 20px 16px 40px;
-  }
-
-  .page-header h1 {
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-
   .layout {
     grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .panel {
-    padding: 16px;
-  }
-
-  .producto-lista {
-    max-height: 300px;
-  }
-
-  .fields-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .producto-item {
-    padding: 10px 6px;
-  }
-
-  .cantidad-control button {
-    width: 30px;
-    height: 30px;
-  }
-
-  .carrito-item {
-    flex-wrap: wrap;
-  }
-
-  .carrito-subtotal {
-    min-width: auto;
-    margin-left: auto;
-  }
-
-  .btn-primary {
-    padding: 14px;
-    font-size: 16px;
   }
 }

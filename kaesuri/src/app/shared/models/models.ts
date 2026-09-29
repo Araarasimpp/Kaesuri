@@ -7,8 +7,9 @@ export interface Producto {
   nombre: string;
   sku: string;
   descripcion: string | null;
-  precio: number;
   costo: number | null;
+  precio_base: number;
+  precio_sugerido: number;
   imagen_url: string | null;
   stock: number;
   categoria: string | null;
@@ -21,6 +22,7 @@ export interface PedidoItem {
   producto_id: string;
   cantidad: number;
   precio_unitario: number;
+  precio_base: number;
 }
 
 export interface Pedido {
@@ -70,11 +72,11 @@ export interface CrearPedidoPayload {
   p_direccion: string;
   p_barrio?: string;
   p_valor_domicilio: number;
-  p_comision: number;
   p_observaciones?: string;
   p_items: {
     producto_id: string;
     cantidad: number;
     precio_unitario: number;
+    precio_base: number;
   }[];
 }

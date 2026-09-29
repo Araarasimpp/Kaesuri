@@ -55,7 +55,7 @@
   padding: 10px 16px;
   border-radius: 10px;
   border: 1px solid var(--k-border);
-  background: linear-gradient(135deg, #107c41 0%, #1f9a55 50%, #0b5c30 100%);
+  background: var(--k-bg-alt);
   color: var(--k-text);
   font-size: 14px;
   font-weight: 600;
@@ -135,7 +135,7 @@
 }
 
 table {
-  min-width: 640px;
+  min-width: 780px;
   width: 100%;
   border-collapse: collapse;
 }

@@ -65,7 +65,9 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('productos')
-      .select('id, nombre, sku, descripcion, categoria, precio, costo, stock, imagen_url, activo')
+      .select(
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo'
+      )
       .order('nombre');
 
     if (!error && data) {
@@ -216,10 +218,12 @@ export class ProductosPage implements OnInit, OnDestroy {
         const numFila = i + 2; // +2 porque la fila 1 es el encabezado
         const nombre = String(fila.nombre ?? '').trim();
         const sku = String(fila.sku ?? '').trim();
-        const precio = Number(fila.precio);
+        const precioSugerido = Number(fila.precio_sugerido);
+        const precioBase =
+          fila.precio_base != null && fila.precio_base !== '' ? Number(fila.precio_base) : precioSugerido;
 
-        if (!nombre || !sku || !fila.precio || isNaN(precio)) {
-          errores.push(`Fila ${numFila}: falta nombre, sku o precio válido — se omitió.`);
+        if (!nombre || !sku || !fila.precio_sugerido || isNaN(precioSugerido)) {
+          errores.push(`Fila ${numFila}: falta nombre, sku o precio_sugerido válido — se omitió.`);
           return;
         }
 
@@ -228,9 +232,11 @@ export class ProductosPage implements OnInit, OnDestroy {
           sku,
           categoria: fila.categoria ? String(fila.categoria).trim() : null,
           descripcion: fila.descripcion ? String(fila.descripcion).trim() : null,
-          precio,
+          precio_base: precioBase,
+          precio_sugerido: precioSugerido,
           costo: fila.costo != null && fila.costo !== '' ? Number(fila.costo) : null,
           stock: fila.stock != null && fila.stock !== '' ? Number(fila.stock) : 0,
+          imagen_url: fila.imagen_url ? String(fila.imagen_url).trim() : null,
           activo: true,
         });
       });

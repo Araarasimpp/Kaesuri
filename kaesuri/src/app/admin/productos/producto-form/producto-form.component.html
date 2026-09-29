@@ -36,12 +36,17 @@
         </div>
 
         <div class="field">
-          <label>Precio de venta *</label>
-          <input type="number" [(ngModel)]="form.precio" min="0" />
+          <label>Precio base (a lo que le sale al vendedor) *</label>
+          <input type="number" [(ngModel)]="form.precio_base" min="0" />
         </div>
 
         <div class="field">
-          <label>Costo</label>
+          <label>Precio sugerido (con comisión incluida) *</label>
+          <input type="number" [(ngModel)]="form.precio_sugerido" min="0" />
+        </div>
+
+        <div class="field">
+          <label>Costo (lo que te sale a ti) *</label>
           <input type="number" [(ngModel)]="form.costo" min="0" placeholder="Opcional" />
         </div>
 
@@ -50,6 +55,11 @@
           <textarea [(ngModel)]="form.descripcion" rows="2"></textarea>
         </div>
       </div>
+
+      <p class="hint comision-hint" [class.negativa]="comisionSugerida < 0">
+        Comisión del vendedor con estos precios: <strong>{{ comisionSugerida | number: '1.0-0' }}</strong> por unidad
+        <span *ngIf="comisionSugerida < 0"> — el precio sugerido es menor al precio base, revisa los valores.</span>
+      </p>
 
       <p class="hint">
         El costo es opcional, pero sin él el panel de ganancias no puede calcular el margen real
