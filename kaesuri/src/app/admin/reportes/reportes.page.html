@@ -1,59 +1,83 @@
 <div class="reportes-page">
   <header class="page-header">
     <h1>Reportes</h1>
-    <div class="filtros">
-      <input type="date" [(ngModel)]="desde" (ngModelChange)="cargarReporte()" />
-      <span class="hasta-label">hasta</span>
-      <input type="date" [(ngModel)]="hasta" (ngModelChange)="cargarReporte()" />
-      <button class="btn-quick" (click)="irEsteMes()">Este mes</button>
-      <button class="btn-quick" (click)="irMesAnterior()">Mes anterior</button>
-    </div>
   </header>
 
-  <ng-container *ngIf="!loading; else cargando">
-    <section class="stats-row">
-      <div class="stat-card destacada">
-        <span class="stat-label">Ganancia del período</span>
-        <span class="stat-valor">{{ formatoMoneda(gananciaTotal) }}</span>
+  <div class="filtros-card">
+    <div class="filtros-grid">
+      <div class="field">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="desde" (ngModelChange)="cargarReporte()" />
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Ventas totales</span>
-        <span class="stat-valor">{{ formatoMoneda(ventasTotal) }}</span>
+      <div class="field">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="hasta" (ngModelChange)="cargarReporte()" />
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Pedidos</span>
-        <span class="stat-valor">{{ cantidadPedidos }}</span>
+      <div class="field">
+        <label>Vendedor</label>
+        <select [(ngModel)]="vendedorId" (ngModelChange)="cargarReporte()">
+          <option value="todos">Todos</option>
+          <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
+        </select>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2>Ventas y comisión por vendedor</h2>
-
-      <div class="vendedor-grupo" *ngFor="let v of vendedores">
-        <div class="vendedor-fila" (click)="toggleVendedor(v.id)">
-          <span class="v-nombre">{{ v.nombre }}</span>
-          <span class="v-pedidos text-soft">{{ v.cantidadPedidos }} pedidos</span>
-          <span class="v-ventas">{{ formatoMoneda(v.totalVentas) }}</span>
-          <span class="v-comision">Comisión: {{ formatoMoneda(v.totalComision) }}</span>
-        </div>
-
-        <div class="vendedor-detalle" *ngIf="expandidoId === v.id">
-          <div class="producto-row" *ngFor="let p of v.productos">
-            <span class="p-nombre">{{ p.nombre }}</span>
-            <span class="p-cantidad text-soft">x{{ p.cantidad }}</span>
-            <span class="p-monto">{{ formatoMoneda(p.monto) }}</span>
-          </div>
-          <p class="empty-msg" *ngIf="!v.productos.length">Sin productos registrados.</p>
-        </div>
+      <div class="field">
+        <label>Estado</label>
+        <select [(ngModel)]="estado" (ngModelChange)="cargarReporte()">
+          <option *ngFor="let e of estados" [value]="e.valor">{{ e.etiqueta }}</option>
+        </select>
       </div>
+    </div>
+    <div class="filtros-quick">
+      <button (click)="irEsteMes()">Este mes</button>
+      <button (click)="irMesAnterior()">Mes anterior</button>
+    </div>
+  </div>
 
-      <p class="empty-msg" *ngIf="!vendedores.length">
-        No hay ventas registradas en este período.
-      </p>
-    </section>
-  </ng-container>
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <table *ngIf="filas.length; else vacio">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Vendedor</th>
+            <th>Total</th>
+            <th>Domicilio</th>
+            <th>Ganancia tienda</th>
+            <th>Ganancia vendedor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of filas">
+            <td class="text-soft">#{{ f.numero }}</td>
+            <td><span class="badge" [ngClass]="claseEstado(f.estado)">{{ etiquetaEstado(f.estado) }}</span></td>
+            <td class="text-soft">{{ formatoFecha(f.created_at) }}</td>
+            <td>{{ f.vendedorNombre }}</td>
+            <td>{{ formatoMoneda(f.total) }}</td>
+            <td class="text-soft">{{ formatoMoneda(f.valorDomicilio) }}</td>
+            <td class="ganancia">{{ formatoMoneda(f.gananciaTienda) }}</td>
+            <td class="comision">{{ formatoMoneda(f.comision) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">Totales del período</td>
+            <td>{{ formatoMoneda(totalPedido) }}</td>
+            <td>{{ formatoMoneda(totalDomicilio) }}</td>
+            <td class="ganancia">{{ formatoMoneda(totalGananciaTienda) }}</td>
+            <td class="comision">{{ formatoMoneda(totalComision) }}</td>
+          </tr>
+        </tfoot>
+      </table>
 
-  <ng-template #cargando>
-    <p class="empty-msg">Cargando reporte...</p>
-  </ng-template>
+      <ng-template #vacio>
+        <p class="empty-msg">No hay pedidos que coincidan con estos filtros.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando reporte...</p>
+    </ng-template>
+  </div>
 </div>

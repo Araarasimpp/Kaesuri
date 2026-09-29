@@ -102,50 +102,6 @@
   margin-left: auto;
 }
 
-.filtros-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.filtro-fecha-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.filtro-fecha {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--k-border);
-  background: var(--k-bg-alt);
-  color: var(--k-text);
-  font-size: 13px;
-  font-family: var(--k-font);
-  cursor: pointer;
-  outline: none;
-
-  &::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-  }
-}
-
-.btn-limpiar-fecha {
-  position: absolute;
-  right: 28px;
-  border: none;
-  background: transparent;
-  color: var(--k-text-soft);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 4px;
-
-  &:hover {
-    color: var(--k-text);
-  }
-}
-
 .btn-confirmar:disabled {
   opacity: 0.6;
   cursor: default;
@@ -163,17 +119,34 @@
 }
 
 .pedido-detalle-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid var(--k-border);
   font-size: 13px;
-  flex-wrap: wrap;
 }
 
 .pedido-detalle-row:last-child {
   border-bottom: none;
+}
+
+.pd-linea-principal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-linea-secundaria {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--k-text-soft);
+  margin-top: 4px;
+}
+
+.pd-montos {
+  margin-left: auto;
 }
 
 .pd-numero {

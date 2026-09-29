@@ -2,16 +2,27 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { hoyColombiaISO, inicioDiaColombia, finDiaColombia } from '../../shared/fecha-colombia';
+import { EstadoPedido } from '../../shared/models/models';
+import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
 
-interface VendedorResumen {
+interface FilaReporte {
+  id: string;
+  numero: number;
+  estado: EstadoPedido;
+  created_at: string;
+  vendedorNombre: string;
+  total: number;
+  valorDomicilio: number;
+  gananciaTienda: number;
+  comision: number;
+}
+
+interface Vendedor {
   id: string;
   nombre: string;
-  cantidadPedidos: number;
-  totalVentas: number;
-  totalComision: number;
-  productos: { nombre: string; cantidad: number; monto: number }[];
 }
+
+type FiltroEstado = 'todos' | EstadoPedido;
 
 @Component({
   selector: 'app-reportes',
@@ -25,13 +36,19 @@ export class ReportesPage implements OnInit {
 
   desde = '';
   hasta = '';
+  vendedorId = 'todos';
+  estado: FiltroEstado = 'todos';
 
-  gananciaTotal = 0;
-  ventasTotal = 0;
-  cantidadPedidos = 0;
+  vendedores: Vendedor[] = [];
+  filas: FilaReporte[] = [];
 
-  vendedores: VendedorResumen[] = [];
-  expandidoId: string | null = null;
+  readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
+    { valor: 'todos', etiqueta: 'Todos' },
+    { valor: 'pendiente', etiqueta: 'Pendiente' },
+    { valor: 'en_ruta', etiqueta: 'En ruta' },
+    { valor: 'entregado', etiqueta: 'Entregado' },
+    { valor: 'cancelado', etiqueta: 'Cancelado' },
+  ];
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
@@ -40,7 +57,21 @@ export class ReportesPage implements OnInit {
     const [anio, mes] = hoy.split('-');
     this.desde = `${anio}-${mes}-01`;
     this.hasta = hoy;
+
+    await this.cargarVendedores();
     await this.cargarReporte();
+  }
+
+  async cargarVendedores(): Promise<void> {
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('id, nombre')
+      .eq('role', 'vendedor')
+      .order('nombre');
+
+    if (!error && data) {
+      this.vendedores = data as Vendedor[];
+    }
   }
 
   irEsteMes(): void {
@@ -73,82 +104,99 @@ export class ReportesPage implements OnInit {
     const inicio = inicioDiaColombia(this.desde);
     const fin = finDiaColombia(this.hasta);
 
-    const [gananciaRes, pedidosRes, perfilesRes] = await Promise.all([
-      this.supabase.client.rpc('ganancias_rango', { p_desde: this.desde, p_hasta: this.hasta }),
-      this.supabase.client
-        .from('pedidos')
-        .select('id, vendedor_id, total, comision, created_at')
-        .in('estado', ['en_ruta', 'entregado'])
-        .gte('created_at', inicio.toISOString())
-        .lte('created_at', fin.toISOString()),
+    let query = this.supabase.client
+      .from('pedidos')
+      .select('id, numero, estado, created_at, vendedor_id, total, valor_domicilio, comision')
+      .gte('created_at', inicio.toISOString())
+      .lte('created_at', fin.toISOString())
+      .order('created_at', { ascending: false });
+
+    if (this.vendedorId !== 'todos') {
+      query = query.eq('vendedor_id', this.vendedorId);
+    }
+    if (this.estado !== 'todos') {
+      query = query.eq('estado', this.estado);
+    }
+
+    const [pedidosRes, perfilesRes] = await Promise.all([
+      query,
       this.supabase.client.from('profiles').select('id, nombre'),
     ]);
-
-    this.gananciaTotal = Number(gananciaRes.data ?? 0);
 
     const pedidos = pedidosRes.data ?? [];
     const nombresPorId = new Map((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre]));
 
-    this.ventasTotal = pedidos.reduce((s, p) => s + Number(p.total ?? 0), 0);
-    this.cantidadPedidos = pedidos.length;
-
-    // Agrupar por vendedor
-    const porVendedor = new Map<string, VendedorResumen>();
-    for (const p of pedidos) {
-      const actual = porVendedor.get(p.vendedor_id) ?? {
-        id: p.vendedor_id,
-        nombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
-        cantidadPedidos: 0,
-        totalVentas: 0,
-        totalComision: 0,
-        productos: [],
-      };
-      actual.cantidadPedidos++;
-      actual.totalVentas += Number(p.total ?? 0);
-      actual.totalComision += Number(p.comision ?? 0);
-      porVendedor.set(p.vendedor_id, actual);
-    }
-
-    // Traer los productos vendidos por cada vendedor en el rango
+    // Ganancia de tienda por pedido = suma de (precio - costo) * cantidad de sus items
+    const gananciaPorPedido = new Map<string, number>();
     if (pedidos.length) {
       const { data: items } = await this.supabase.client
         .from('pedido_items')
-        .select('pedido_id, cantidad, precio_unitario, producto:productos(nombre)')
+        .select('pedido_id, cantidad, precio_unitario, producto:productos(costo)')
         .in(
           'pedido_id',
           pedidos.map((p) => p.id)
         );
 
-      const vendedorPorPedido = new Map(pedidos.map((p) => [p.id, p.vendedor_id]));
-
       for (const item of items ?? []) {
-        const vendedorId = vendedorPorPedido.get((item as any).pedido_id);
-        if (!vendedorId) continue;
-        const resumen = porVendedor.get(vendedorId);
-        if (!resumen) continue;
-
-        const nombreProd = (item as any).producto?.nombre ?? 'Producto';
-        const monto = (item as any).cantidad * (item as any).precio_unitario;
-        const existente = resumen.productos.find((pr) => pr.nombre === nombreProd);
-        if (existente) {
-          existente.cantidad += (item as any).cantidad;
-          existente.monto += monto;
-        } else {
-          resumen.productos.push({ nombre: nombreProd, cantidad: (item as any).cantidad, monto });
-        }
+        const costo = (item as any).producto?.costo;
+        const ganancia =
+          (item as any).cantidad *
+          ((item as any).precio_unitario - (costo != null ? costo : (item as any).precio_unitario));
+        gananciaPorPedido.set(
+          (item as any).pedido_id,
+          (gananciaPorPedido.get((item as any).pedido_id) ?? 0) + ganancia
+        );
       }
     }
 
-    this.vendedores = Array.from(porVendedor.values()).sort(
-      (a, b) => b.totalVentas - a.totalVentas
-    );
+    this.filas = pedidos.map((p) => ({
+      id: p.id,
+      numero: p.numero,
+      estado: p.estado,
+      created_at: p.created_at,
+      vendedorNombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
+      total: Number(p.total ?? 0),
+      valorDomicilio: Number(p.valor_domicilio ?? 0),
+      gananciaTienda: gananciaPorPedido.get(p.id) ?? 0,
+      comision: Number(p.comision ?? 0),
+    }));
 
     this.loading = false;
     this.cdr.detectChanges();
   }
 
-  toggleVendedor(id: string): void {
-    this.expandidoId = this.expandidoId === id ? null : id;
+  get totalPedido(): number {
+    return this.filas.reduce((s, f) => s + f.total, 0);
+  }
+
+  get totalDomicilio(): number {
+    return this.filas.reduce((s, f) => s + f.valorDomicilio, 0);
+  }
+
+  get totalGananciaTienda(): number {
+    return this.filas.reduce((s, f) => s + f.gananciaTienda, 0);
+  }
+
+  get totalComision(): number {
+    return this.filas.reduce((s, f) => s + f.comision, 0);
+  }
+
+  etiquetaEstado(estado: EstadoPedido): string {
+    return this.estados.find((e) => e.valor === estado)?.etiqueta ?? estado;
+  }
+
+  claseEstado(estado: EstadoPedido): string {
+    const clases: Record<EstadoPedido, string> = {
+      pendiente: 'badge-bajo',
+      en_ruta: 'badge-info',
+      entregado: 'badge-ok',
+      cancelado: 'badge-coral',
+    };
+    return clases[estado];
+  }
+
+  formatoFecha(fecha: string): string {
+    return formatoFechaCO(fecha, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   formatoMoneda(valor: number): string {

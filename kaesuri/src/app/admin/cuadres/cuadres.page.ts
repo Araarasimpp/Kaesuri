@@ -12,6 +12,8 @@ interface PedidoDelCuadre {
   id: string;
   numero: number;
   cliente_nombre: string;
+  cliente_telefono: string | null;
+  direccion: string;
   total: number;
   valor_domicilio: number;
   metodo_pago: MetodoPago | null;
@@ -30,7 +32,6 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   cuadres: Cuadre[] = [];
   nombresPorId = new Map<string, string>();
   filtro: FiltroCuadre = 'pendiente';
-  fechaFiltro: string = ''; // Formato 'YYYY-MM-DD' desde el <input type="date">
   confirmandoId: string | null = null;
 
   expandidoId: string | null = null;
@@ -81,19 +82,12 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   get filtrados(): Cuadre[] {
-    return this.cuadres.filter((c) => {
-      const cumpleEstado = this.filtro === 'todos' || c.estado === this.filtro;
-      const cumpleFecha = !this.fechaFiltro || c.fecha === this.fechaFiltro;
-      return cumpleEstado && cumpleFecha;
-    });
+    if (this.filtro === 'todos') return this.cuadres;
+    return this.cuadres.filter((c) => c.estado === this.filtro);
   }
 
   get pendientesCount(): number {
     return this.cuadres.filter((c) => c.estado === 'pendiente').length;
-  }
-
-  limpiarFecha(): void {
-    this.fechaFiltro = '';
   }
 
   nombreDomiciliario(id: string): string {
@@ -114,7 +108,9 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
 
       const { data, error } = await this.supabase.client
         .from('pedidos')
-        .select('id, numero, cliente_nombre, total, valor_domicilio, metodo_pago, comprobante_url')
+        .select(
+          'id, numero, cliente_nombre, cliente_telefono, direccion, total, valor_domicilio, metodo_pago, comprobante_url'
+        )
         .eq('cuadre_id', cuadre.id)
         .order('numero');
 
@@ -129,6 +125,14 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
 
   pedidosDe(cuadreId: string): PedidoDelCuadre[] {
     return this.pedidosPorCuadre.get(cuadreId) ?? [];
+  }
+
+  efectivoDe(p: PedidoDelCuadre): number {
+    return p.metodo_pago === 'efectivo' ? p.total : 0;
+  }
+
+  transferenciaDe(p: PedidoDelCuadre): number {
+    return p.metodo_pago === 'transferencia' ? p.total : 0;
   }
 
   async verComprobante(pedido: PedidoDelCuadre): Promise<void> {

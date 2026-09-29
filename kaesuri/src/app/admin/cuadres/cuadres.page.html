@@ -1,31 +1,11 @@
 <div class="cuadres-admin-page">
   <header class="page-header">
     <h1>Cuadres</h1>
-    
-    <div class="filtros-container">
-      <div class="filtro-fecha-group">
-        <input 
-          type="date" 
-          class="filtro-fecha" 
-          [(ngModel)]="fechaFiltro" 
-        />
-        <button 
-          type="button" 
-          class="btn-limpiar-fecha" 
-          *ngIf="fechaFiltro" 
-          (click)="limpiarFecha()"
-          title="Limpiar fecha"
-        >
-          ✕
-        </button>
-      </div>
-
-      <select class="filtro" [(ngModel)]="filtro">
-        <option value="pendiente">Pendientes ({{ pendientesCount }})</option>
-        <option value="confirmado">Confirmados</option>
-        <option value="todos">Todos</option>
-      </select>
-    </div>
+    <select class="filtro" [(ngModel)]="filtro">
+      <option value="pendiente">Pendientes ({{ pendientesCount }})</option>
+      <option value="confirmado">Confirmados</option>
+      <option value="todos">Todos</option>
+    </select>
   </header>
 
   <div class="table-card">
@@ -57,19 +37,30 @@
             <p class="detalle-cargando" *ngIf="cargandoDetalle">Cargando pedidos...</p>
 
             <div class="pedido-detalle-row" *ngFor="let p of pedidosDe(c.id)">
-              <span class="pd-numero">#{{ p.numero }}</span>
-              <span class="pd-cliente">{{ p.cliente_nombre }}</span>
-              <span class="pd-metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
-                {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
-              </span>
-              <button
-                class="pd-comprobante"
-                *ngIf="p.metodo_pago === 'transferencia'"
-                (click)="verComprobante(p)"
-              >
-                Ver comprobante
-              </button>
-              <span class="pd-total">{{ formatoMoneda(p.total) }}</span>
+              <div class="pd-linea-principal">
+                <span class="pd-numero">#{{ p.numero }}</span>
+                <span class="pd-cliente">{{ p.cliente_nombre }}</span>
+                <span class="pd-metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
+                  {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                </span>
+                <button
+                  class="pd-comprobante"
+                  *ngIf="p.metodo_pago === 'transferencia'"
+                  (click)="verComprobante(p)"
+                >
+                  Ver comprobante
+                </button>
+                <span class="pd-total">{{ formatoMoneda(p.total) }}</span>
+              </div>
+              <div class="pd-linea-secundaria">
+                <span>{{ p.direccion }}</span>
+                <span *ngIf="p.cliente_telefono">· {{ p.cliente_telefono }}</span>
+                <span class="pd-montos">
+                  Efectivo: {{ formatoMoneda(efectivoDe(p)) }} · Transferencia:
+                  {{ formatoMoneda(transferenciaDe(p)) }} · Domicilio:
+                  {{ formatoMoneda(p.valor_domicilio) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>

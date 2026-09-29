@@ -3,12 +3,7 @@
 }
 
 .page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 22px;
-  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
 .page-header h1 {
@@ -17,30 +12,56 @@
   margin: 0;
 }
 
-.filtros {
+.filtros-card {
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.filtros input[type='date'] {
-  padding: 9px 10px;
+.filtros-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--k-text-soft);
+}
+
+.field input,
+.field select {
+  padding: 9px 11px;
   border-radius: 9px;
   border: 1px solid var(--k-border);
   background: var(--k-bg-alt);
   color: var(--k-text);
   font-size: 13px;
   font-family: var(--k-font);
+  min-width: 140px;
 }
 
-.hasta-label {
-  font-size: 12px;
-  color: var(--k-text-soft);
+.filtros-quick {
+  display: flex;
+  gap: 8px;
 }
 
-.btn-quick {
-  padding: 9px 12px;
+.filtros-quick button {
+  padding: 9px 14px;
   border-radius: 9px;
   border: 1px solid var(--k-border);
   background: var(--k-bg-alt);
@@ -51,140 +72,97 @@
   white-space: nowrap;
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
+.table-card {
+  background: var(--k-card-bg);
   border: 1px solid var(--k-border);
   border-radius: 14px;
-  padding: 16px 18px;
-  background: var(--k-card-bg);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.stat-card.destacada {
-  background: var(--k-ink);
-  border-color: var(--k-ink);
+table {
+  min-width: 900px;
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.stat-label {
-  font-size: 13px;
+thead th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--k-text-soft);
-}
-
-.stat-card.destacada .stat-label {
-  color: rgba(247, 247, 245, 0.6);
-}
-
-.stat-valor {
-  font-size: 22px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-card.destacada .stat-valor {
-  color: var(--k-amber);
-}
-
-.panel {
-  background: var(--k-card-bg);
-  border: 1px solid var(--k-border);
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.panel h2 {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
-
-.vendedor-grupo {
+  padding: 14px 16px;
   border-bottom: 1px solid var(--k-border);
+  white-space: nowrap;
 }
 
-.vendedor-grupo:last-child {
-  border-bottom: none;
-}
-
-.vendedor-fila {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 4px;
-  cursor: pointer;
-  flex-wrap: wrap;
+tbody td {
+  padding: 11px 16px;
   font-size: 13px;
+  border-bottom: 1px solid var(--k-border);
+  white-space: nowrap;
 }
 
-.vendedor-fila:hover {
-  background: var(--k-bg-alt);
-}
-
-.v-nombre {
-  font-weight: 600;
-  min-width: 120px;
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .text-soft {
   color: var(--k-text-soft);
 }
 
-.v-ventas {
+.ganancia {
+  color: var(--k-teal);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
-.v-comision {
+.comision {
   color: var(--k-amber);
   font-weight: 600;
-  margin-left: auto;
 }
 
-.vendedor-detalle {
-  background: var(--k-bg-alt);
-  border-radius: 10px;
-  padding: 6px 14px;
-  margin: 0 4px 10px;
-}
-
-.producto-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--k-border);
-  font-size: 13px;
-}
-
-.producto-row:last-child {
-  border-bottom: none;
-}
-
-.p-nombre {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
-.p-monto {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+.badge-ok {
+  background: rgba(47, 143, 130, 0.12);
+  color: var(--k-teal);
+}
+
+.badge-bajo {
+  background: rgba(232, 163, 61, 0.15);
+  color: var(--k-amber);
+}
+
+.badge-info {
+  background: rgba(18, 21, 28, 0.08);
+  color: var(--k-text-soft);
+}
+
+.badge-coral {
+  background: rgba(214, 95, 95, 0.12);
+  color: var(--k-coral);
+}
+
+tfoot td {
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--k-bg-alt);
+  white-space: nowrap;
 }
 
 .empty-msg {
-  color: var(--k-text-soft);
-  font-size: 13px;
-  padding: 16px 0;
+  padding: 32px 16px;
   text-align: center;
+  color: var(--k-text-soft);
+  font-size: 14px;
+  margin: 0;
 }
 
 @media (max-width: 720px) {
@@ -192,17 +170,14 @@
     padding: 18px 14px 40px;
   }
 
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
-
-  .vendedor-fila {
+  .filtros-card {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: stretch;
   }
 
-  .v-comision {
-    margin-left: 0;
+  .field input,
+  .field select {
+    min-width: 0;
+    width: 100%;
   }
 }
