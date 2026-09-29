@@ -1,20 +1,25 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
 
 interface FilaReporte {
-  id: string;
+  pedidoId: string;
   numero: number;
   estado: EstadoPedido;
   created_at: string;
   vendedorNombre: string;
   total: number;
   valorDomicilio: number;
-  gananciaTienda: number;
   comision: number;
+  productoNombre: string;
+  costo: number | null;
+  precioVenta: number;
+  cantidad: number;
+  gananciaItem: number;
 }
 
 interface Vendedor {
@@ -33,6 +38,7 @@ type FiltroEstado = 'todos' | EstadoPedido;
 })
 export class ReportesPage implements OnInit {
   loading = true;
+  descargando = false;
 
   desde = '';
   hasta = '';
@@ -41,6 +47,9 @@ export class ReportesPage implements OnInit {
 
   vendedores: Vendedor[] = [];
   filas: FilaReporte[] = [];
+
+  // Totales a nivel de PEDIDO (no se duplican aunque el pedido tenga varias filas de producto)
+  private pedidosUnicos: { total: number; valorDomicilio: number; comision: number }[] = [];
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: 'todos', etiqueta: 'Todos' },
@@ -126,59 +135,117 @@ export class ReportesPage implements OnInit {
     const pedidos = pedidosRes.data ?? [];
     const nombresPorId = new Map((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre]));
 
-    // Ganancia de tienda por pedido = suma de (precio - costo) * cantidad de sus items
-    const gananciaPorPedido = new Map<string, number>();
+    this.pedidosUnicos = pedidos.map((p) => ({
+      total: Number(p.total ?? 0),
+      valorDomicilio: Number(p.valor_domicilio ?? 0),
+      comision: Number(p.comision ?? 0),
+    }));
+
+    const filasNuevas: FilaReporte[] = [];
+
     if (pedidos.length) {
       const { data: items } = await this.supabase.client
         .from('pedido_items')
-        .select('pedido_id, cantidad, precio_unitario, producto:productos(costo)')
+        .select('pedido_id, cantidad, precio_unitario, producto:productos(nombre, costo)')
         .in(
           'pedido_id',
           pedidos.map((p) => p.id)
         );
 
+      const pedidosPorId = new Map(pedidos.map((p) => [p.id, p]));
+
       for (const item of items ?? []) {
-        const costo = (item as any).producto?.costo;
-        const ganancia =
-          (item as any).cantidad *
-          ((item as any).precio_unitario - (costo != null ? costo : (item as any).precio_unitario));
-        gananciaPorPedido.set(
-          (item as any).pedido_id,
-          (gananciaPorPedido.get((item as any).pedido_id) ?? 0) + ganancia
-        );
+        const p = pedidosPorId.get((item as any).pedido_id);
+        if (!p) continue;
+
+        const costo = (item as any).producto?.costo ?? null;
+        const precioVenta = (item as any).precio_unitario;
+        const cantidad = (item as any).cantidad;
+        const gananciaItem = cantidad * (precioVenta - (costo != null ? costo : precioVenta));
+
+        filasNuevas.push({
+          pedidoId: p.id,
+          numero: p.numero,
+          estado: p.estado,
+          created_at: p.created_at,
+          vendedorNombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
+          total: Number(p.total ?? 0),
+          valorDomicilio: Number(p.valor_domicilio ?? 0),
+          comision: Number(p.comision ?? 0),
+          productoNombre: (item as any).producto?.nombre ?? 'Producto',
+          costo,
+          precioVenta,
+          cantidad,
+          gananciaItem,
+        });
       }
     }
 
-    this.filas = pedidos.map((p) => ({
-      id: p.id,
-      numero: p.numero,
-      estado: p.estado,
-      created_at: p.created_at,
-      vendedorNombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
-      total: Number(p.total ?? 0),
-      valorDomicilio: Number(p.valor_domicilio ?? 0),
-      gananciaTienda: gananciaPorPedido.get(p.id) ?? 0,
-      comision: Number(p.comision ?? 0),
-    }));
-
+    this.filas = filasNuevas;
     this.loading = false;
     this.cdr.detectChanges();
   }
 
   get totalPedido(): number {
-    return this.filas.reduce((s, f) => s + f.total, 0);
+    return this.pedidosUnicos.reduce((s, p) => s + p.total, 0);
   }
 
   get totalDomicilio(): number {
-    return this.filas.reduce((s, f) => s + f.valorDomicilio, 0);
-  }
-
-  get totalGananciaTienda(): number {
-    return this.filas.reduce((s, f) => s + f.gananciaTienda, 0);
+    return this.pedidosUnicos.reduce((s, p) => s + p.valorDomicilio, 0);
   }
 
   get totalComision(): number {
-    return this.filas.reduce((s, f) => s + f.comision, 0);
+    return this.pedidosUnicos.reduce((s, p) => s + p.comision, 0);
+  }
+
+  get totalGananciaTienda(): number {
+    return this.filas.reduce((s, f) => s + f.gananciaItem, 0);
+  }
+
+  get totalCantidad(): number {
+    return this.filas.reduce((s, f) => s + f.cantidad, 0);
+  }
+
+  descargarExcel(): void {
+    if (!this.filas.length) return;
+    this.descargando = true;
+
+    const datos = this.filas.map((f) => ({
+      Pedido: f.numero,
+      Estado: this.etiquetaEstado(f.estado),
+      Fecha: formatoFechaCO(f.created_at, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      Vendedor: f.vendedorNombre,
+      Producto: f.productoNombre,
+      Costo: f.costo ?? '',
+      'Precio venta': f.precioVenta,
+      Cantidad: f.cantidad,
+      'Ganancia tienda': f.gananciaItem,
+      'Total pedido': f.total,
+      Domicilio: f.valorDomicilio,
+      'Ganancia vendedor': f.comision,
+    }));
+
+    datos.push({
+      Pedido: '' as any,
+      Estado: '' as any,
+      Fecha: '' as any,
+      Vendedor: '' as any,
+      Producto: 'TOTALES',
+      Costo: '' as any,
+      'Precio venta': '' as any,
+      Cantidad: this.totalCantidad,
+      'Ganancia tienda': this.totalGananciaTienda,
+      'Total pedido': this.totalPedido,
+      Domicilio: this.totalDomicilio,
+      'Ganancia vendedor': this.totalComision,
+    });
+
+    const hoja = XLSX.utils.json_to_sheet(datos);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Reporte');
+    XLSX.writeFile(libro, `reporte_${this.desde}_a_${this.hasta}.xlsx`);
+
+    this.descargando = false;
   }
 
   etiquetaEstado(estado: EstadoPedido): string {

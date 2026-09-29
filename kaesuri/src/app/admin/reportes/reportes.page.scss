@@ -3,13 +3,35 @@
 }
 
 .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .page-header h1 {
   font-size: 26px;
   font-weight: 700;
   margin: 0;
+}
+
+.btn-excel {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--k-teal);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-excel:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .filtros-card {
@@ -81,7 +103,7 @@
 }
 
 table {
-  min-width: 900px;
+  min-width: 1280px;
   width: 100%;
   border-collapse: collapse;
 }
