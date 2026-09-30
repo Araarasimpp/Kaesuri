@@ -37,7 +37,16 @@ export class ProductosPage implements OnInit, OnDestroy {
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
+  stockBajoUmbral = 5;
+
   async ngOnInit(): Promise<void> {
+    const { data: config } = await this.supabase.client
+      .from('configuracion')
+      .select('stock_bajo_umbral')
+      .eq('id', true)
+      .single();
+    this.stockBajoUmbral = config?.stock_bajo_umbral ?? 5;
+
     await this.cargarProductos();
     this.suscribirRealtime();
   }
@@ -184,7 +193,7 @@ export class ProductosPage implements OnInit, OnDestroy {
 
   estadoStock(stock: number): { texto: string; clase: string } {
     if (stock === 0) return { texto: 'Agotado', clase: 'estado-agotado' };
-    if (stock < 5) return { texto: 'Stock bajo', clase: 'estado-bajo' };
+    if (stock < this.stockBajoUmbral) return { texto: 'Stock bajo', clase: 'estado-bajo' };
     return { texto: 'Disponible', clase: 'estado-ok' };
   }
 

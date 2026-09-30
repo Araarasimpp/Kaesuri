@@ -10,6 +10,7 @@ export interface Profile {
   email?: string;
   telefono?: string;
   role: UserRole;
+  activo: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -59,7 +60,7 @@ export class SupabaseService {
 
     const { data, error } = await this.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role')
+      .select('id, nombre, email, telefono, role, activo')
       .eq('id', user.id)
       .single();
 

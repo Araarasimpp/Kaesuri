@@ -50,6 +50,13 @@ export class LoginPage {
       return;
     }
 
+    if (!profile.activo) {
+      await this.supabase.logout();
+      this.errorMsg = 'Tu cuenta está desactivada. Contacta al administrador.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     switch (profile.role) {
       case 'admin':
         this.router.navigateByUrl('/admin');

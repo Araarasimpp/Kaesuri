@@ -10,7 +10,7 @@ import {
   peopleOutline,
   walletOutline,
   barChartOutline,
-  cashOutline,
+  settingsOutline,
   add,
   sunnyOutline,
   moonOutline,
@@ -40,10 +40,11 @@ export class AdminLayoutComponent {
   menuItems: MenuItem[] = [
     { label: 'Inicio', path: '/admin', icon: 'home-outline' },
     { label: 'Pedidos', path: '/admin/pedidos', icon: 'receipt-outline' },
-    { label: 'Cuadres', path: '/admin/cuadres', icon: 'cash-outline' },
+    { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
+    { label: 'Configuración', path: '/admin/configuracion', icon: 'settings-outline' },
   ];
 
   constructor(
@@ -56,8 +57,9 @@ export class AdminLayoutComponent {
       receiptOutline,
       cubeOutline,
       peopleOutline,
-      cashOutline,
+      walletOutline,
       barChartOutline,
+      settingsOutline,
       add,
       sunnyOutline,
       moonOutline,

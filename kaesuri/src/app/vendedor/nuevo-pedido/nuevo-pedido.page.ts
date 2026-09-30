@@ -31,6 +31,7 @@ export class NuevoPedidoPage implements OnInit {
   clienteTelefono = '';
   direccion = '';
   barrio = '';
+  zonas: { id: string; nombre: string; valor: number }[] = [];
   valorDomicilio: number = 0;
   observaciones = '';
 
@@ -46,6 +47,39 @@ export class NuevoPedidoPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.cargarProductos();
+    await this.cargarZonas();
+  }
+
+  async cargarZonas(): Promise<void> {
+    const { data, error } = await this.supabase.client
+      .from('zonas_domicilio')
+      .select('id, nombre, valor')
+      .order('nombre');
+
+    if (!error && data) {
+      this.zonas = data;
+    }
+    this.cdr.detectChanges();
+  }
+
+  mostrarSugerenciasBarrio = false;
+
+  get sugerenciasBarrio(): { id: string; nombre: string; valor: number }[] {
+    const q = this.barrio.trim().toLowerCase();
+    if (!q) return this.zonas;
+    return this.zonas.filter((z) => z.nombre.toLowerCase().includes(q));
+  }
+
+  seleccionarZona(zona: { nombre: string; valor: number }): void {
+    this.barrio = zona.nombre;
+    this.valorDomicilio = zona.valor;
+    this.mostrarSugerenciasBarrio = false;
+  }
+
+  cerrarSugerenciasBarrio(): void {
+    // pequeño retraso para que el (mousedown) de la opción alcance a
+    // dispararse antes de que el blur del input cierre la lista
+    setTimeout(() => (this.mostrarSugerenciasBarrio = false), 150);
   }
 
   volver(): void {

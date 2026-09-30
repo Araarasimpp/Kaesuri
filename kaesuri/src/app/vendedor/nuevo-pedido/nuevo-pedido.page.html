@@ -90,9 +90,28 @@
           <label>Teléfono</label>
           <input type="tel" [(ngModel)]="clienteTelefono" />
         </div>
-        <div class="field">
+        <div class="field combo-field">
           <label>Barrio</label>
-          <input type="text" [(ngModel)]="barrio" />
+          <div class="combo-wrap">
+            <input
+              type="text"
+              [(ngModel)]="barrio"
+              (focus)="mostrarSugerenciasBarrio = true"
+              (blur)="cerrarSugerenciasBarrio()"
+              placeholder="Escribe o elige uno sugerido"
+              autocomplete="off"
+            />
+            <div class="combo-dropdown" *ngIf="mostrarSugerenciasBarrio && sugerenciasBarrio.length">
+              <button
+                type="button"
+                *ngFor="let z of sugerenciasBarrio"
+                (mousedown)="seleccionarZona(z)"
+              >
+                <span>{{ z.nombre }}</span>
+                <span class="combo-valor">{{ formatoMoneda(z.valor) }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

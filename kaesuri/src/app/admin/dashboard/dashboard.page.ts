@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
 
-
 interface PedidoResumen {
   id: string;
   numero: number;
@@ -81,6 +80,13 @@ export class DashboardPage implements OnInit {
     const inicioSemana = new Date(inicioHoy);
     inicioSemana.setDate(inicioSemana.getDate() - 6);
 
+    const { data: config } = await this.supabase.client
+      .from('configuracion')
+      .select('stock_bajo_umbral')
+      .eq('id', true)
+      .single();
+    const umbral = config?.stock_bajo_umbral ?? 5;
+
     const [
       ventasHoyRes,
       gananciaRes,
@@ -117,7 +123,7 @@ export class DashboardPage implements OnInit {
         .from('productos')
         .select('id, nombre, stock')
         .eq('activo', true)
-        .lt('stock', 5)
+        .lt('stock', umbral)
         .order('stock', { ascending: true })
         .limit(5),
       this.supabase.client

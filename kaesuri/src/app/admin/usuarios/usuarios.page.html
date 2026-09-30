@@ -23,10 +23,12 @@
             <th>Correo</th>
             <th>Teléfono</th>
             <th>Rol</th>
+            <th>Estado</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let u of filtrados">
+          <tr *ngFor="let u of filtrados" [class.fila-inactiva]="!u.activo">
             <td>
               <div class="nombre-cell">
                 <span class="avatar">{{ inicial(u.nombre) }}</span>
@@ -45,6 +47,19 @@
               >
                 <option *ngFor="let r of roles" [value]="r.valor">{{ r.etiqueta }}</option>
               </select>
+            </td>
+            <td>
+              <span class="badge" [class.activo]="u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
+            </td>
+            <td>
+              <button
+                class="btn-toggle"
+                *ngIf="u.id !== miId"
+                (click)="toggleActivo(u)"
+                [disabled]="guardandoId === u.id"
+              >
+                {{ u.activo ? 'Desactivar' : 'Reactivar' }}
+              </button>
             </td>
           </tr>
         </tbody>

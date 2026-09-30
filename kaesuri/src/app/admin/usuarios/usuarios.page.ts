@@ -10,6 +10,7 @@ interface UsuarioFila {
   email: string | null;
   telefono: string | null;
   role: UserRole;
+  activo: boolean;
 }
 
 @Component({
@@ -66,7 +67,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role')
+      .select('id, nombre, email, telefono, role, activo')
       .order('nombre');
 
     if (!error && data) {
@@ -98,6 +99,32 @@ export class UsuariosPage implements OnInit, OnDestroy {
     this.guardandoId = null;
 
     if (error) {
+      await this.cargarUsuarios();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  async toggleActivo(usuario: UsuarioFila): Promise<void> {
+    if (usuario.id === this.miId) return;
+
+    const nuevoEstado = !usuario.activo;
+    const confirmado = confirm(
+      nuevoEstado
+        ? `¿Reactivar a ${usuario.nombre}?`
+        : `¿Desactivar a ${usuario.nombre}? No podrá iniciar sesión hasta que lo reactives.`
+    );
+    if (!confirmado) return;
+
+    this.guardandoId = usuario.id;
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({ activo: nuevoEstado })
+      .eq('id', usuario.id);
+
+    this.guardandoId = null;
+
+    if (!error) {
       await this.cargarUsuarios();
     } else {
       this.cdr.detectChanges();
