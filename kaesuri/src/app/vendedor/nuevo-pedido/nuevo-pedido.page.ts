@@ -48,6 +48,11 @@ export class NuevoPedidoPage implements OnInit {
     await this.cargarProductos();
   }
 
+  volver(): void {
+    const volverA = (this.route.snapshot.data['volverA'] as string) ?? '/vendedor';
+    this.router.navigateByUrl(volverA);
+  }
+
   async cargarProductos(): Promise<void> {
     this.loadingProductos = true;
     const { data, error } = await this.supabase.client

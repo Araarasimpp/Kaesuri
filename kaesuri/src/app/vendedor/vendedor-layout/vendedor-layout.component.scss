@@ -30,5 +30,8 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-top: max(14px, env(safe-area-inset-top));
-  padding-bottom: 96px;
+  /* Altura real de la pill-nav (62px) + su separación del borde + un
+     colchón extra, así nada queda escondido debajo aunque el celular
+     tenga una barra de gestos grande abajo. */
+  padding-bottom: calc(62px + max(14px, env(safe-area-inset-bottom)) + 24px);
 }

@@ -156,6 +156,7 @@
   }
 
   .content {
-    padding-bottom: 96px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: calc(62px + max(14px, env(safe-area-inset-bottom)) + 24px);
   }
 }
