@@ -12,8 +12,10 @@
 .modal-card {
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--k-card-bg);
   border-radius: 16px;
 }
@@ -42,6 +44,10 @@
 
 .modal-body {
   padding: 20px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 
 .imagen-uploader {
@@ -139,8 +145,9 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 16px 24px;
+  padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--k-border);
+  flex-shrink: 0;
 }
 
 .btn-primary,

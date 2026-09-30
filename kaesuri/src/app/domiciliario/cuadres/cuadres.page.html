@@ -75,7 +75,11 @@
     </section>
 
     <section class="bloque">
-      <h2>Totales por día</h2>
+      <div class="bloque-header">
+        <h2>Totales por día</h2>
+        <input type="date" class="filtro-fecha" [(ngModel)]="filtroFecha" />
+        <button class="btn-limpiar" *ngIf="filtroFecha" (click)="filtroFecha = ''">✕</button>
+      </div>
 
       <div class="lista" *ngIf="porDia.length; else vacioHist">
         <div class="dia-grupo" *ngFor="let dia of porDia">

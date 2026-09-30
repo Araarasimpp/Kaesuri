@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
@@ -28,7 +29,7 @@ interface PedidoSinCuadrar {
 @Component({
   selector: 'app-cuadres',
   standalone: true,
-  imports: [CommonModule, ImagenPreviewComponent],
+  imports: [CommonModule, FormsModule, ImagenPreviewComponent],
   templateUrl: './cuadres.page.html',
   styleUrls: ['./cuadres.page.scss'],
 })
@@ -36,6 +37,7 @@ export class CuadresPage implements OnInit {
   loading = true;
   pedidosHoy: PedidoSinCuadrar[] = [];
   historial: Cuadre[] = [];
+  filtroFecha = '';
   diasExpandidos = new Set<string>();
   cerrando = false;
   errorMsg = '';
@@ -152,8 +154,11 @@ export class CuadresPage implements OnInit {
     todoConfirmado: boolean;
   }[] {
     const grupos = new Map<string, Cuadre[]>();
+    const historialFiltrado = this.filtroFecha
+      ? this.historial.filter((c) => c.fecha === this.filtroFecha)
+      : this.historial;
 
-    for (const c of this.historial) {
+    for (const c of historialFiltrado) {
       const lista = grupos.get(c.fecha) ?? [];
       lista.push(c);
       grupos.set(c.fecha, lista);

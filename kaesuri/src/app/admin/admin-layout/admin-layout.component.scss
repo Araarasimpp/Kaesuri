@@ -1,6 +1,7 @@
 .shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   background: var(--k-bg);
   overflow: hidden;
 }
@@ -136,6 +137,7 @@
   flex: 1;
   min-width: 0;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--k-bg);
