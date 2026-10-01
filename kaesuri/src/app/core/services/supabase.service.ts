@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
 
-export type UserRole = 'admin' | 'vendedor' | 'domiciliario';
+export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador';
 
 export interface Profile {
   id: string;

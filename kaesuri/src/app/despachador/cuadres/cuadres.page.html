@@ -1,0 +1,87 @@
+<div class="cuadres-admin-page">
+  <header class="page-header">
+    <h1>Cuadres</h1>
+    <div class="filtros">
+      <input type="date" class="filtro" [(ngModel)]="fecha" title="Fecha" />
+      <select class="filtro" [(ngModel)]="domiciliarioId">
+        <option value="todos">Todos los domiciliarios</option>
+        <option *ngFor="let d of domiciliarios" [value]="d.id">{{ d.nombre }}</option>
+      </select>
+      <select class="filtro" [(ngModel)]="filtro">
+        <option value="pendiente">Pendientes ({{ pendientesCount }})</option>
+        <option value="confirmado">Confirmados</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="table-card">
+    <ng-container *ngIf="!loading; else cargando">
+      <div class="lista" *ngIf="filtrados.length; else vacio">
+        <div class="cuadre-grupo" *ngFor="let c of filtrados">
+          <div class="cuadre-fila" (click)="toggleDetalle(c)">
+            <span class="col-dom">{{ nombreDomiciliario(c.domiciliario_id) }}</span>
+            <span class="col-fecha text-soft">{{ formatoFecha(c.fecha) }}</span>
+            <span class="col-pedidos text-soft">{{ c.cantidad_pedidos }} pedidos</span>
+            <span class="col-monto text-soft">Efectivo: {{ formatoMoneda(c.total_efectivo) }}</span>
+            <span class="col-monto text-soft">Transf: {{ formatoMoneda(c.total_transferencia) }}</span>
+            <span class="col-monto text-soft">Domicilios: {{ formatoMoneda(c.total_domicilios) }}</span>
+            <span class="col-entregar"><strong>{{ formatoMoneda(c.total_a_entregar) }}</strong></span>
+            <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
+              {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
+            </span>
+            <button
+              class="btn-confirmar"
+              *ngIf="c.estado === 'pendiente'"
+              (click)="$event.stopPropagation(); confirmarCuadre(c)"
+              [disabled]="confirmandoId === c.id"
+            >
+              {{ confirmandoId === c.id ? 'Confirmando...' : 'Completado' }}
+            </button>
+          </div>
+
+          <div class="cuadre-detalle" *ngIf="expandidoId === c.id">
+            <p class="detalle-cargando" *ngIf="cargandoDetalle">Cargando pedidos...</p>
+
+            <div class="pedido-detalle-row" *ngFor="let p of pedidosDe(c.id)">
+              <div class="pd-linea-principal">
+                <span class="pd-numero">#{{ p.numero }}</span>
+                <span class="pd-cliente">{{ p.cliente_nombre }}</span>
+                <span class="pd-metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
+                  {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                </span>
+                <button
+                  class="pd-comprobante"
+                  *ngIf="p.metodo_pago === 'transferencia'"
+                  (click)="verComprobante(p)"
+                >
+                  Ver comprobante
+                </button>
+                <span class="pd-total">{{ formatoMoneda(p.total) }}</span>
+              </div>
+              <div class="pd-linea-secundaria">
+                <span>{{ p.direccion }}</span>
+                <span *ngIf="p.cliente_telefono">· {{ p.cliente_telefono }}</span>
+                <span class="pd-montos">
+                  Efectivo: {{ formatoMoneda(efectivoDe(p)) }} · Transferencia:
+                  {{ formatoMoneda(transferenciaDe(p)) }} · Domicilio:
+                  {{ formatoMoneda(p.valor_domicilio) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #vacio>
+        <p class="empty-msg">No hay cuadres en este filtro.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="empty-msg">Cargando cuadres...</p>
+    </ng-template>
+  </div>
+</div>
+
+<app-imagen-preview [url]="previewUrl" *ngIf="previewUrl" (cerrar)="cerrarPreview()"></app-imagen-preview>

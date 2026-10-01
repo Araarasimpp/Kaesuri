@@ -26,4 +26,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./domiciliario/domiciliario.routes').then((m) => m.DOMICILIARIO_ROUTES),
   },
+  {
+    path: 'despachador',
+    loadChildren: () =>
+      import('./despachador/despachador.routes').then((m) => m.DESPACHADOR_ROUTES),
+  },
 ];

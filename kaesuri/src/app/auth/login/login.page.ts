@@ -67,6 +67,9 @@ export class LoginPage {
       case 'domiciliario':
         this.router.navigateByUrl('/domiciliario');
         break;
+      case 'despachador':
+        this.router.navigateByUrl('/despachador');
+        break;
     }
   }
 }

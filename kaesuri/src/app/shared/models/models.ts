@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'vendedor' | 'domiciliario';
+export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador';
 export type EstadoPedido = 'pendiente' | 'en_ruta' | 'entregado' | 'cancelado';
 export type MetodoPago = 'efectivo' | 'transferencia';
 

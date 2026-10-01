@@ -1,0 +1,57 @@
+<div class="inicio-despachador">
+  <header class="page-header">
+    <h1>Inicio</h1>
+    <a routerLink="/despachador/pedidos/nuevo" class="btn-primary">+ Nuevo pedido</a>
+  </header>
+
+  <ng-container *ngIf="!loading; else cargando">
+    <section class="stats-grid">
+      <div class="stat-card destacada">
+        <span class="stat-label">Ventas de hoy</span>
+        <span class="stat-valor">{{ formatoMoneda(ventasHoy) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-valor">{{ pedidosPendientes }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">En ruta</span>
+        <span class="stat-valor">{{ pedidosEnRuta }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Entregados hoy</span>
+        <span class="stat-valor">{{ entregadosHoy }}</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Cuadres por confirmar</h2>
+        <a routerLink="/despachador/cuadres" class="ver-todos">Ver todos</a>
+      </div>
+      <div class="reminder-item" *ngFor="let c of cuadresPendientes.slice(0, 5)">
+        <span>{{ nombreDomiciliario(c.domiciliario_id) }}</span>
+        <span class="reminder-monto">{{ formatoMoneda(c.total_a_entregar) }}</span>
+      </div>
+      <p class="empty-msg" *ngIf="!cuadresPendientes.length">No hay cuadres pendientes de confirmar.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Pedidos recientes</h2>
+        <a routerLink="/despachador/pedidos" class="ver-todos">Ver todos</a>
+      </div>
+      <div class="pedido-row" *ngFor="let p of pedidosRecientes">
+        <span class="pedido-num text-soft">#{{ p.numero }}</span>
+        <span class="pedido-cliente">{{ p.cliente_nombre }}</span>
+        <span class="badge" [ngClass]="claseEstado(p.estado)">{{ etiquetaEstado(p.estado) }}</span>
+        <span class="pedido-total">{{ formatoMoneda(p.total) }}</span>
+      </div>
+      <p class="empty-msg" *ngIf="!pedidosRecientes.length">Todavía no hay pedidos.</p>
+    </section>
+  </ng-container>
+
+  <ng-template #cargando>
+    <p class="empty-msg">Cargando...</p>
+  </ng-template>
+</div>

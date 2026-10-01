@@ -41,6 +41,9 @@ export class AppInitPage implements OnInit {
       case 'domiciliario':
         this.router.navigateByUrl('/domiciliario');
         break;
+      case 'despachador':
+        this.router.navigateByUrl('/despachador');
+        break;
     }
   }
 }

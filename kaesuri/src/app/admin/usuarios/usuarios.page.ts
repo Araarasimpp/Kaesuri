@@ -31,6 +31,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
 
   readonly roles: { valor: UserRole; etiqueta: string }[] = [
     { valor: 'admin', etiqueta: 'Admin' },
+    { valor: 'despachador', etiqueta: 'Despachador' },
     { valor: 'vendedor', etiqueta: 'Vendedor' },
     { valor: 'domiciliario', etiqueta: 'Domiciliario' },
   ];
