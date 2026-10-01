@@ -56,7 +56,7 @@ export class PedidosPage implements OnInit, OnDestroy {
   domiciliarios: Domiciliario[] = [];
   nombresPorId = new Map<string, string>();
   busqueda = '';
-  filtroEstado: FiltroEstado = 'todos';
+  filtroEstado: FiltroEstado = 'pendiente';
   filtroRotulo: FiltroRotulo = 'todos';
   guardandoId: string | null = null;
   seleccionados = new Set<string>();
@@ -67,11 +67,11 @@ export class PedidosPage implements OnInit, OnDestroy {
   private canal: RealtimeChannel | null = null;
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
-    { valor: 'todos', etiqueta: 'Todos' },
     { valor: 'pendiente', etiqueta: 'Pendiente' },
     { valor: 'en_ruta', etiqueta: 'En ruta' },
     { valor: 'entregado', etiqueta: 'Entregado' },
     { valor: 'cancelado', etiqueta: 'Cancelado' },
+    { valor: 'todos', etiqueta: 'Todos' },
   ];
 
   constructor(
