@@ -152,22 +152,22 @@ tbody tr:last-child td {
 }
 
 .badge-ok {
-  background: rgba(47, 143, 130, 0.12);
+  background: var(--k-teal-soft);
   color: var(--k-teal);
 }
 
 .badge-bajo {
-  background: rgba(232, 163, 61, 0.15);
+  background: var(--k-amber-soft);
   color: var(--k-amber);
 }
 
 .badge-info {
-  background: rgba(18, 21, 28, 0.08);
+  background: var(--k-hover);
   color: var(--k-text-soft);
 }
 
 .badge-coral {
-  background: rgba(214, 95, 95, 0.12);
+  background: var(--k-coral-soft);
   color: var(--k-coral);
 }
 

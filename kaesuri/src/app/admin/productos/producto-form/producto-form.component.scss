@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(18, 21, 28, 0.5);
+  background: var(--k-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,7 +117,7 @@
 .field input:focus,
 .field textarea:focus {
   outline: none;
-  border-color: var(--k-amber);
+  border-color: var(--k-role-ink);
 }
 
 .hint {
@@ -161,8 +161,8 @@
 }
 
 .btn-primary {
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
 }
 
 .btn-primary:disabled {

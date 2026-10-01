@@ -1,280 +1,424 @@
 .pedidos-page {
-  padding: 32px 40px 48px;
+  padding: 28px 36px 40px;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--k-text);
 }
 
+/* ---------- Encabezado */
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .page-header h1 {
-  font-size: 26px;
-  font-weight: 700;
   margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--k-text-soft);
 }
 
 .header-actions {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.search-box input {
-  width: 240px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--k-border);
-  background: var(--k-bg-alt);
-  color: var(--k-text);
+.btn-primary,
+.btn-secondary {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   font-family: var(--k-font);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
-.search-box input:focus {
-  outline: none;
-  border-color: var(--k-amber);
+.btn-primary .ico,
+.btn-secondary .ico {
+  flex-shrink: 0;
 }
 
 .btn-primary {
-  padding: 10px 18px;
-  border-radius: 10px;
   border: none;
-  background: var(--k-ink);
-  color: var(--k-paper);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
+  background: var(--k-role);
+  color: var(--k-on-role);
+}
+
+.btn-primary:hover {
+  background: var(--k-role-hover);
 }
 
 .btn-secondary {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--k-border);
-  background: var(--k-bg-alt);
+  border: 1px solid var(--k-border-strong);
+  background: var(--k-card-bg);
   color: var(--k-text);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--k-hover);
 }
 
 .btn-secondary:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: default;
 }
 
-.filtro-rotulo {
-  padding: 9px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--k-border);
-  background: var(--k-bg-alt);
-  color: var(--k-text);
-  font-size: 13px;
-  font-family: var(--k-font);
-  cursor: pointer;
-}
-
-.col-check {
-  width: 32px;
-}
-
-.productos-cell {
-  max-width: 305px;
-  white-space: normal;
-  line-height: 1.4;
-}
-
-.menu-cell {
-  position: relative;
-  text-align: right;
-}
-
-.menu-btn {
-  border: none;
-  background: none;
-  color: var(--k-text-soft);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 4px 8px;
-}
-
-.menu-popover {
-  position: absolute;
-  right: 16px;
-  top: 36px;
+/* ---------- Tarjeta de la tabla */
+.table-card {
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(18, 21, 28, 0.12);
-  z-index: 20;
-  overflow: hidden;
-}
-
-.menu-popover button {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  border: none;
-  background: none;
-  color: var(--k-text);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.menu-popover button:hover {
-  background: var(--k-bg-alt);
-}
-
-.menu-popover button.danger {
-  color: var(--k-coral);
+  border-radius: 12px;
+  overflow: visible;
 }
 
 .tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 20px;
+  padding: 6px 8px 0;
   border-bottom: 1px solid var(--k-border);
-  flex-wrap: wrap;
+  overflow-x: auto;
 }
 
 .tab {
-  padding: 10px 4px;
-  margin-right: 24px;
+  height: 42px;
+  padding: 0 12px;
   border: none;
-  background: none;
-  color: var(--k-text-soft);
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  font-family: var(--k-font);
   font-size: 14px;
   font-weight: 500;
+  color: var(--k-text-soft);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab:hover {
+  color: var(--k-text);
 }
 
 .tab.active {
   color: var(--k-text);
   font-weight: 600;
-  border-bottom-color: var(--k-amber);
+  border-bottom-color: var(--k-role-ink);
 }
 
-.table-card {
+.tab-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-text-muted);
+  background: var(--k-bg-alt);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--k-border);
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 0 1 340px;
+  min-width: 200px;
+}
+
+.search-box .ico {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--k-text-muted);
+  pointer-events: none;
+}
+
+.search-box input,
+.filtro-rotulo,
+.domiciliario-select {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--k-border-strong);
   background: var(--k-card-bg);
-  border: 1px solid var(--k-border);
-  border-radius: 14px;
+  color: var(--k-text);
+  font-size: 14px;
+  font-family: var(--k-font);
+  box-sizing: border-box;
+}
+
+.search-box input {
+  width: 100%;
+  padding-left: 36px;
+}
+
+.domiciliario-select {
+  height: 34px;
+  min-width: 150px;
+}
+
+/* ---------- Tabla */
+.table-scroll {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 table {
-  min-width: 1180px;
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
-thead th {
-  text-align: left;
+th {
+  padding: 10px 14px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--k-text-soft);
-  padding: 14px 16px;
+  color: var(--k-text-muted);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--k-thead-bg);
   border-bottom: 1px solid var(--k-border);
+}
+
+td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--k-row-line);
+  vertical-align: middle;
   white-space: nowrap;
 }
 
-tbody td {
-  padding: 12px 16px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--k-border);
-  white-space: nowrap;
+tbody tr:first-child td {
+  border-top: none;
 }
 
-tbody tr:last-child td {
-  border-bottom: none;
+tbody tr:hover td {
+  background: var(--k-hover);
+}
+
+tbody tr.seleccionada td {
+  background: var(--k-role-soft);
+}
+
+.num {
+  text-align: right;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .text-soft {
   color: var(--k-text-soft);
 }
 
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
+.small {
   font-size: 12px;
-  font-weight: 600;
 }
 
-.estado-ok {
-  background: rgba(47, 143, 130, 0.12);
-  color: var(--k-teal);
+.col-check {
+  width: 36px;
+  padding-right: 0;
 }
 
-.estado-bajo {
-  background: rgba(232, 163, 61, 0.15);
-  color: var(--k-amber);
-}
-
-.estado-agotado {
-  background: rgba(214, 95, 95, 0.12);
-  color: var(--k-coral);
-}
-
-.estado-info {
-  background: rgba(18, 21, 28, 0.08);
-  color: var(--k-text-soft);
-}
-
-.domiciliario-select {
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--k-border);
-  background: var(--k-bg-alt);
-  color: var(--k-text);
-  font-size: 13px;
-  font-family: var(--k-font);
+.col-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--k-role);
   cursor: pointer;
 }
 
-.domiciliario-select:disabled {
-  opacity: 0.6;
+/* ---------- Producto con foto */
+.col-producto {
+  min-width: 240px;
+  white-space: normal;
+}
+
+.productos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.producto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+  padding: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: zoom-in;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb:hover {
+  border-color: var(--k-role-ink);
+}
+
+.thumb-vacio {
   cursor: default;
+  color: var(--k-text-muted);
+  font-size: 20px;
 }
 
-.empty-msg {
-  padding: 32px 16px;
-  text-align: center;
-  color: var(--k-text-soft);
+.producto-nombre {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ---------- Menú de acciones */
+.menu-cell {
+  position: relative;
+  width: 44px;
+  text-align: right;
+}
+
+.menu-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--k-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-btn:hover {
+  background: var(--k-hover);
+  color: var(--k-text);
+}
+
+.menu-popover {
+  position: absolute;
+  right: 12px;
+  top: calc(100% - 6px);
+  z-index: 20;
+  min-width: 170px;
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  box-shadow: var(--k-shadow-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-popover button {
+  text-align: left;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--k-text);
+  font-family: var(--k-font);
   font-size: 14px;
-  margin: 0;
+  cursor: pointer;
 }
 
-@media (max-width: 720px) {
-  .pedidos-page {
-    padding: 18px 14px 40px;
-  }
+.menu-popover button:hover {
+  background: var(--k-hover);
+}
 
-  .page-header {
-    flex-direction: column;
-    align-items: stretch;
+.menu-popover button.danger {
+  color: var(--k-coral);
+}
+
+/* ---------- Pie y vacío */
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid var(--k-border);
+  font-size: 13px;
+  color: var(--k-text-soft);
+}
+
+.empty {
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.empty-title {
+  font-weight: 600;
+  margin-bottom: 4px !important;
+}
+
+/* ---------- Celular */
+@media (max-width: 860px) {
+  .pedidos-page {
+    padding: 16px 14px 24px;
   }
 
   .header-actions {
-    flex-wrap: wrap;
-  }
-
-  .search-box input {
     width: 100%;
   }
 
-  .tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
+  .header-actions > * {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .search-box {
+    flex: 1 1 100%;
+  }
+
+  .filtro-rotulo {
+    flex: 1;
   }
 }

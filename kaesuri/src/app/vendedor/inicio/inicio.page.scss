@@ -21,8 +21,8 @@
 .btn-nuevo {
   padding: 9px 14px;
   border-radius: 10px;
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -47,8 +47,8 @@
 }
 
 .stat-card.destacada {
-  background: var(--k-ink);
-  border-color: var(--k-ink);
+  background: var(--k-role);
+  border-color: var(--k-role);
 }
 
 .stat-label {
@@ -57,7 +57,7 @@
 }
 
 .stat-card.destacada .stat-label {
-  color: rgba(247, 247, 245, 0.6);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .stat-valor {
@@ -67,7 +67,7 @@
 }
 
 .stat-card.destacada .stat-valor {
-  color: var(--k-amber);
+  color: var(--k-sol);
 }
 
 .panel {
@@ -116,7 +116,7 @@
 }
 
 .bar-fill.hoy {
-  background: var(--k-amber);
+  background: var(--k-sol);
 }
 
 .bar-label {
@@ -167,13 +167,13 @@
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 999px;
-  background: rgba(232, 163, 61, 0.15);
+  background: var(--k-amber-soft);
   color: var(--k-amber);
   white-space: nowrap;
 }
 
 .badge.entregado {
-  background: rgba(47, 143, 130, 0.12);
+  background: var(--k-teal-soft);
   color: var(--k-teal);
 }
 

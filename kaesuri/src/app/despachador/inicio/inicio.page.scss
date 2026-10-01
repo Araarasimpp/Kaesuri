@@ -22,8 +22,8 @@
 .btn-primary {
   padding: 10px 18px;
   border-radius: 10px;
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -49,8 +49,8 @@
 }
 
 .stat-card.destacada {
-  background: var(--k-ink);
-  border-color: var(--k-ink);
+  background: var(--k-role);
+  border-color: var(--k-role);
 }
 
 .stat-label {
@@ -59,7 +59,7 @@
 }
 
 .stat-card.destacada .stat-label {
-  color: rgba(247, 247, 245, 0.6);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .stat-valor {
@@ -69,7 +69,7 @@
 }
 
 .stat-card.destacada .stat-valor {
-  color: var(--k-amber);
+  color: var(--k-sol);
 }
 
 .panel {
@@ -97,7 +97,7 @@
 .ver-todos {
   font-size: 12px;
   font-weight: 600;
-  color: var(--k-amber);
+  color: var(--k-role-ink);
   text-decoration: none;
 }
 
@@ -153,22 +153,22 @@
 }
 
 .badge-ok {
-  background: rgba(47, 143, 130, 0.12);
+  background: var(--k-teal-soft);
   color: var(--k-teal);
 }
 
 .badge-bajo {
-  background: rgba(232, 163, 61, 0.15);
+  background: var(--k-amber-soft);
   color: var(--k-amber);
 }
 
 .badge-info {
-  background: rgba(18, 21, 28, 0.08);
+  background: var(--k-hover);
   color: var(--k-text-soft);
 }
 
 .badge-coral {
-  background: rgba(214, 95, 95, 0.12);
+  background: var(--k-coral-soft);
   color: var(--k-coral);
 }
 

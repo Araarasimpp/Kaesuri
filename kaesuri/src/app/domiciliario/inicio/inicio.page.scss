@@ -42,7 +42,7 @@
 }
 
 .link-direccion {
-  color: #3b82f6;
+  color: var(--k-azul-ink);
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
@@ -96,16 +96,16 @@
 }
 
 .accion-llamar {
-  background: #2563eb;
+  background: var(--k-azul);
 }
 
 .accion-whatsapp {
-  background: #16a34a;
+  background: var(--k-whatsapp);
 }
 
 .accion-navegar {
-  background: var(--k-amber);
-  color: var(--k-ink);
+  background: var(--k-sol);
+  color: var(--k-on-sol);
 }
 
 .btn-entregar {
@@ -113,8 +113,8 @@
   padding: 13px;
   border-radius: 10px;
   border: none;
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

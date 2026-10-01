@@ -71,7 +71,7 @@
 }
 
 .stat-card.destacada {
-  background: var(--k-ink);
+  background: var(--k-role);
 }
 
 .stat-label {
@@ -80,7 +80,7 @@
 }
 
 .stat-card.destacada .stat-label {
-  color: rgba(247, 247, 245, 0.6);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .stat-valor {
@@ -90,7 +90,7 @@
 }
 
 .stat-card.destacada .stat-valor {
-  color: var(--k-paper);
+  color: var(--k-on-role);
 }
 
 .btn-cerrar {
@@ -98,8 +98,8 @@
   padding: 13px;
   border-radius: 10px;
   border: none;
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -183,15 +183,15 @@
 }
 
 .mini-stat.negativo {
-  background: var(--k-ink);
+  background: var(--k-role);
 }
 
 .mini-stat.negativo .mini-label {
-  color: rgba(247, 247, 245, 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .mini-stat.negativo .mini-valor {
-  color: var(--k-paper);
+  color: var(--k-on-role);
 }
 
 .mini-stat.positivo {
@@ -286,13 +286,13 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(232, 163, 61, 0.15);
+  background: var(--k-amber-soft);
   color: var(--k-amber);
   white-space: nowrap;
 }
 
 .badge.confirmado {
-  background: rgba(47, 143, 130, 0.12);
+  background: var(--k-teal-soft);
   color: var(--k-teal);
 }
 

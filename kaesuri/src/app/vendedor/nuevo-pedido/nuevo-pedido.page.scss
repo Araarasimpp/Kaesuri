@@ -68,7 +68,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: var(--k-amber);
+  border-color: var(--k-role-ink);
 }
 
 .producto-lista {
@@ -259,7 +259,7 @@
   background: var(--k-card-bg);
   border: 1px solid var(--k-border);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(18, 21, 28, 0.15);
+  box-shadow: var(--k-shadow-md);
   z-index: 30;
 }
 
@@ -313,7 +313,7 @@
 .field input:focus,
 .field textarea:focus {
   outline: none;
-  border-color: var(--k-amber);
+  border-color: var(--k-role-ink);
 }
 
 .totales {
@@ -355,8 +355,8 @@
   padding: 13px;
   border-radius: 10px;
   border: none;
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;

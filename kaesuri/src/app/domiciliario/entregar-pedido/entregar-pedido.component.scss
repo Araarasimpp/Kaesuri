@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(18, 21, 28, 0.5);
+  background: var(--k-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,8 +76,8 @@
 }
 
 .metodo-opcion.selected {
-  border-color: var(--k-amber);
-  background: rgba(232, 163, 61, 0.08);
+  border-color: var(--k-role-ink);
+  background: var(--k-amber-soft);
 }
 
 .comprobante-uploader {
@@ -136,8 +136,8 @@
 }
 
 .btn-primary {
-  background: var(--k-ink);
-  color: var(--k-paper);
+  background: var(--k-role);
+  color: var(--k-on-role);
 }
 
 .btn-primary:disabled {

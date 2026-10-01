@@ -1,0 +1,77 @@
+// src/app/shared/pill-nav.scss
+// Barra de navegación flotante compartida. Se importa junto al scss propio
+// de cada layout vía styleUrls, igual que auth-shell.scss.
+
+.pill-nav {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  height: 62px;
+  background: var(--k-ink);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 10px 30px rgba(18, 21, 28, 0.35);
+  z-index: 100;
+}
+
+.pill-nav a,
+.pill-nav .pill-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: rgba(247, 247, 245, 0.5);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+}
+
+.pill-nav a ion-icon {
+  font-size: 22px;
+}
+
+.pill-nav a.active {
+  color: var(--k-amber);
+}
+
+.pill-nav a .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--k-amber);
+  opacity: 0;
+}
+
+.pill-nav a.active .dot {
+  opacity: 1;
+}
+
+// Botón central elevado (acción principal, ej. "+ Nuevo pedido")
+.pill-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.pill-center .pill-action {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--k-amber);
+  color: var(--k-ink);
+  box-shadow: 0 0 0 6px rgba(232, 163, 61, 0.15);
+  margin-top: -22px;
+  flex: none;
+}
+
+.pill-center .pill-action ion-icon {
+  font-size: 24px;
+}
