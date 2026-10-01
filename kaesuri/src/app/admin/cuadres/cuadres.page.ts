@@ -5,7 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
-import { formatoFechaCO } from '../../shared/fecha-colombia';
+import { hoyColombiaISO, formatoFechaCO } from '../../shared/fecha-colombia';
 
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
 
@@ -39,7 +39,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   domiciliarios: Domiciliario[] = [];
   nombresPorId = new Map<string, string>();
   filtro: FiltroCuadre = 'pendiente';
-  fecha = '';
+  fecha = hoyColombiaISO();
   domiciliarioId = 'todos';
   confirmandoId: string | null = null;
 

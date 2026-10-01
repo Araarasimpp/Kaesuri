@@ -17,7 +17,7 @@
         <input type="date" [(ngModel)]="hasta" (ngModelChange)="cargarReporte()" />
       </div>
       <div class="field">
-        <label>Vendedor</label>
+        <label>Vendido por</label>
         <select [(ngModel)]="vendedorId" (ngModelChange)="cargarReporte()">
           <option value="todos">Todos</option>
           <option *ngFor="let v of vendedores" [value]="v.id">{{ v.nombre }}</option>
@@ -31,6 +31,7 @@
       </div>
     </div>
     <div class="filtros-quick">
+      <button (click)="irHoy()">Hoy</button>
       <button (click)="irEsteMes()">Este mes</button>
       <button (click)="irMesAnterior()">Mes anterior</button>
     </div>

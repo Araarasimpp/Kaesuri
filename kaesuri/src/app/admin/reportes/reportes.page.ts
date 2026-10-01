@@ -25,6 +25,7 @@ interface FilaReporte {
 interface Vendedor {
   id: string;
   nombre: string;
+  role?: string;
 }
 
 type FiltroEstado = 'todos' | EstadoPedido;
@@ -62,26 +63,43 @@ export class ReportesPage implements OnInit {
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
+    // Por defecto el reporte muestra el día de hoy (hora Colombia).
     const hoy = hoyColombiaISO();
-    const [anio, mes] = hoy.split('-');
-    this.desde = `${anio}-${mes}-01`;
+    this.desde = hoy;
     this.hasta = hoy;
 
     await this.cargarVendedores();
     await this.cargarReporte();
   }
 
+  irHoy(): void {
+    const hoy = hoyColombiaISO();
+    this.desde = hoy;
+    this.hasta = hoy;
+    this.cargarReporte();
+  }
+
   async cargarVendedores(): Promise<void> {
+    // Los administradores y despachadores también crean pedidos, así que
+    // aparecen en el filtro junto a los vendedores (con su rol entre paréntesis).
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('id, nombre')
-      .eq('role', 'vendedor')
+      .select('id, nombre, role')
+      .in('role', ['vendedor', 'admin', 'despachador'])
       .order('nombre');
 
     if (!error && data) {
-      this.vendedores = data as Vendedor[];
+      const orden: Record<string, number> = { vendedor: 0, despachador: 1, admin: 2 };
+      const etiqueta: Record<string, string> = { admin: 'Admin', despachador: 'Despachador' };
+      this.vendedores = (data as Vendedor[])
+        .sort((a, b) => (orden[a.role ?? ''] ?? 9) - (orden[b.role ?? ''] ?? 9) || a.nombre.localeCompare(b.nombre))
+        .map((v) => ({
+          ...v,
+          nombre: etiqueta[v.role ?? ''] ? `${v.nombre} (${etiqueta[v.role ?? '']})` : v.nombre,
+        }));
     }
   }
+
 
   irEsteMes(): void {
     const hoy = hoyColombiaISO();

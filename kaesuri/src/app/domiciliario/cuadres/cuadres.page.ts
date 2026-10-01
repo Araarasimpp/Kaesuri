@@ -37,7 +37,7 @@ export class CuadresPage implements OnInit {
   loading = true;
   pedidosHoy: PedidoSinCuadrar[] = [];
   historial: Cuadre[] = [];
-  filtroFecha = '';
+  filtroFecha = hoyColombiaISO();
   diasExpandidos = new Set<string>();
   cerrando = false;
   errorMsg = '';
