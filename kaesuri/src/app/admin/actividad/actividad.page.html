@@ -1,0 +1,75 @@
+<div class="actividad-page">
+  <header class="page-header">
+    <h1>Actividad</h1>
+    <p class="subtitle">Quién creó, cambió o recibió cada cosa en la app</p>
+  </header>
+
+  <div class="filtros">
+    <label class="filtro">
+      <span>Día</span>
+      <input type="date" [(ngModel)]="fecha" (ngModelChange)="cargar()" />
+    </label>
+    <label class="filtro">
+      <span>Sección</span>
+      <select [(ngModel)]="tabla" (ngModelChange)="cargar()">
+        <option value="todas">Todas</option>
+        <option *ngFor="let t of tablas" [value]="t.valor">{{ t.etiqueta }}</option>
+      </select>
+    </label>
+    <label class="filtro">
+      <span>Persona</span>
+      <select [(ngModel)]="usuarioId" (ngModelChange)="cargar()">
+        <option value="todos">Todas</option>
+        <option *ngFor="let u of usuarios" [value]="u.id">{{ u.nombre }}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="card">
+    <ng-container *ngIf="!loading; else cargando">
+      <ul class="lista" *ngIf="registros.length; else vacio">
+        <li *ngFor="let r of registros" class="registro">
+          <button type="button" class="fila" (click)="alternar(r)" [attr.aria-expanded]="abiertoId === r.id">
+            <span class="hora">{{ fecha ? hora(r.created_at) : fechaHora(r.created_at) }}</span>
+            <span class="texto">
+              <strong>{{ r.usuario_nombre || 'Sistema' }}</strong>
+              <span class="rol" *ngIf="r.usuario_rol">{{ etiquetaRol(r.usuario_rol) }}</span>
+              {{ descripcion(r) }}
+              <strong>{{ r.resumen }}</strong>
+            </span>
+            <span class="seccion">{{ etiquetaTabla(r.tabla) }}</span>
+          </button>
+
+          <div class="detalle" *ngIf="abiertoId === r.id">
+            <table *ngIf="detalles(r).length; else sinDetalle">
+              <tr *ngFor="let c of detalles(r)">
+                <th>{{ c.campo }}</th>
+                <td>
+                  <span class="antes" *ngIf="c.antes">{{ c.antes }}</span>
+                  <span class="flecha" *ngIf="c.antes">→</span>
+                  <span>{{ c.despues }}</span>
+                </td>
+              </tr>
+            </table>
+            <ng-template #sinDetalle><p class="text-soft">Sin más detalles.</p></ng-template>
+          </div>
+        </li>
+      </ul>
+
+      <div class="pie" *ngIf="registros.length">
+        <span>Mostrando {{ registros.length }} de {{ total }}</span>
+        <button type="button" class="btn-secondary" *ngIf="hayMas" (click)="cargarMas()" [disabled]="cargandoMas">
+          {{ cargandoMas ? 'Cargando...' : 'Cargar más' }}
+        </button>
+      </div>
+
+      <ng-template #vacio>
+        <p class="vacio">No hay actividad con estos filtros. Borra el día para ver todo el historial.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cargando>
+      <p class="vacio">Cargando actividad...</p>
+    </ng-template>
+  </div>
+</div>

@@ -7,10 +7,11 @@ import { homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline } 
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ThemeService } from '../../core/services/theme.service';
 
+import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 @Component({
   selector: 'app-domiciliario-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent],
   templateUrl: './domiciliario-layout.component.html',
   styleUrls: ['../../shared/pill-nav.scss', './domiciliario-layout.component.scss'],
 })

@@ -1,0 +1,82 @@
+.instalar {
+  position: fixed;
+  z-index: 500;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 76px);
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  background: var(--k-card-bg, #fff);
+  color: var(--k-text, #16161a);
+  border: 1px solid var(--k-border, #e6e6ea);
+  border-radius: 14px;
+  box-shadow: var(--k-shadow-lg, 0 16px 40px rgba(22, 22, 26, 0.16));
+  font-family: var(--k-font, system-ui, sans-serif);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--k-text-soft, #5b5b66);
+  min-width: 0;
+}
+
+.texto > strong {
+  font-size: 14px;
+  color: var(--k-text, #16161a);
+}
+
+.texto svg {
+  vertical-align: -2px;
+}
+
+.btn-instalar {
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--k-role, #0f7b5f);
+  color: var(--k-on-role, #fff);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cerrar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--k-text-muted, #6b6b76);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (min-width: 861px) {
+  .instalar {
+    left: auto;
+    right: 20px;
+    bottom: 20px;
+    margin: 0;
+    width: 420px;
+  }
+}

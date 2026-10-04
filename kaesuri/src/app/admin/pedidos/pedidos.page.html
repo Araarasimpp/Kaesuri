@@ -24,7 +24,7 @@
         *ngFor="let e of estados"
         [class.active]="filtroEstado === e.valor"
         [attr.aria-selected]="filtroEstado === e.valor"
-        (click)="filtroEstado = e.valor"
+        (click)="cambiarEstado(e.valor)"
       >
         {{ e.etiqueta }}
         <span class="tab-count">{{ contarEstado(e.valor) }}</span>
@@ -34,9 +34,9 @@
     <div class="toolbar">
       <div class="search-box">
         <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
-        <input type="search" [(ngModel)]="busqueda" placeholder="Buscar por cliente o producto" aria-label="Buscar pedidos" />
+        <input type="search" [(ngModel)]="busqueda" (ngModelChange)="buscar()" placeholder="Buscar por cliente, teléfono, barrio o #pedido" aria-label="Buscar pedidos" />
       </div>
-      <select class="filtro-rotulo" [(ngModel)]="filtroRotulo" aria-label="Filtrar por rótulo">
+      <select class="filtro-rotulo" [(ngModel)]="filtroRotulo" (ngModelChange)="cambiarRotulo()" aria-label="Filtrar por rótulo">
         <option value="todos">Rótulo: todos</option>
         <option value="pendiente">Rótulo: pendiente</option>
         <option value="impreso">Rótulo: impreso</option>
@@ -106,7 +106,7 @@
                       <span class="text-soft small">Cantidad: {{ it.cantidad }}</span>
                     </div>
                   </div>
-                  <span class="text-soft" *ngIf="!p.items?.length">—</span>
+                  <span class="text-soft" *ngIf="!p.items.length">—</span>
                 </div>
               </td>
               <td>
@@ -157,7 +157,10 @@
       </div>
 
       <div class="table-footer" *ngIf="filtrados.length">
-        <span>{{ filtrados.length }} {{ filtrados.length === 1 ? 'pedido' : 'pedidos' }}</span>
+        <span>Mostrando {{ filtrados.length }} de {{ totalFiltrados }} {{ totalFiltrados === 1 ? 'pedido' : 'pedidos' }}</span>
+        <button class="btn-secondary btn-mas" *ngIf="hayMas" (click)="cargarMas()" [disabled]="cargandoMas">
+          {{ cargandoMas ? 'Cargando...' : 'Cargar 50 más' }}
+        </button>
       </div>
 
       <ng-template #vacio>

@@ -1,0 +1,14 @@
+<div class="instalar" *ngIf="visible()" role="region" aria-label="Instalar la app">
+  <img src="assets/icon/logo.png" alt="" class="logo" />
+  <div class="texto">
+    <strong>Instala Variedades JYB</strong>
+    <span *ngIf="modo() === 'boton'">Ábrela desde tu pantalla de inicio y recibe los avisos aunque esté cerrada.</span>
+    <span *ngIf="modo() === 'ios'">
+      Toca
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Compartir"><path d="M12 3v13M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg>
+      <strong>Compartir</strong> y luego <strong>Agregar a inicio</strong>. Así también recibes avisos.
+    </span>
+  </div>
+  <button type="button" class="btn-instalar" *ngIf="modo() === 'boton'" (click)="instalar()">Instalar</button>
+  <button type="button" class="btn-cerrar" (click)="cerrar()" aria-label="Ahora no">✕</button>
+</div>

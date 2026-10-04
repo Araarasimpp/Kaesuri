@@ -175,7 +175,7 @@
 
 .rotulo-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 100mm;
   gap: 24px;
   align-items: start;
 }
@@ -194,31 +194,34 @@
   color: var(--k-text-muted);
 }
 
-/* Réplica exacta del rótulo impreso: blanco y negro siempre, también en modo oscuro */
+/* Réplica del rótulo impreso: etiqueta de 100 mm x 100 mm, blanco y negro siempre */
 .rotulo {
-  width: 100%;
-  max-width: 340px;
+  width: 100mm;
+  height: 100mm;
+  max-width: 100%;
   background: #ffffff;
   color: #000000;
-  border: 2px solid #000000;
-  border-radius: 14px;
-  padding: 16px;
+  outline: 1px dashed var(--k-border-strong);
+  padding: 4mm;
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
   box-shadow: var(--k-shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .rotulo-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 3mm;
+  margin-bottom: 2.5mm;
 }
 
 .marca-logo {
-  width: 120px;
-  height: 120px;
+  width: 30mm;
+  height: 30mm;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -227,59 +230,61 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 2mm;
+  min-width: 0;
 }
 
 .contacto {
-  font-size: 12px;
+  font-size: 8.5pt;
   text-align: right;
-  line-height: 1.4;
+  line-height: 1.3;
   word-break: break-word;
 }
 
 .fecha-box {
-  border: 1px solid #000000;
-  padding: 4px 8px;
-  font-size: 12px;
+  border: 0.3mm solid #000000;
+  padding: 1mm 2mm;
+  font-size: 8.5pt;
   white-space: nowrap;
 }
 
 .valor-cobrar {
-  border: 1.5px solid #000000;
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  font-size: 15px;
+  border: 0.4mm solid #000000;
+  padding: 1.5mm 2.5mm;
+  margin-bottom: 2mm;
+  font-size: 10pt;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .valor-cobrar strong {
-  font-size: 18px;
+  font-size: 13pt;
 }
 
 .datos {
   width: 100%;
-  font-size: 13px;
+  font-size: 9pt;
   border-collapse: collapse;
 }
 
 .datos td {
-  padding: 3px 0;
+  padding: 0.6mm 0;
   vertical-align: top;
 }
 
 .datos td:first-child {
   font-weight: bold;
-  width: 92px;
+  width: 21mm;
 }
 
 .garantia {
-  font-size: 10px;
+  margin: auto 0 0;
+  font-size: 6.5pt;
+  line-height: 1.25;
   text-align: center;
-  margin: 12px 0 0;
-  border-top: 1px dashed #000000;
-  padding-top: 8px;
+  border-top: 0.3mm dashed #000000;
+  padding-top: 1.5mm;
 }
 
 /* ---------- Zonas */

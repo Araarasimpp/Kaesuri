@@ -131,55 +131,26 @@ export class ReportesPage implements OnInit {
     const inicio = inicioDiaColombia(this.desde);
     const fin = finDiaColombia(this.hasta);
 
-    let query = this.supabase.client
-      .from('pedidos')
-      .select('id, numero, estado, created_at, vendedor_id, total, valor_domicilio, comision')
-      .gte('created_at', inicio.toISOString())
-      .lte('created_at', fin.toISOString())
-      .order('created_at', { ascending: false });
-
-    if (this.vendedorId !== 'todos') {
-      query = query.eq('vendedor_id', this.vendedorId);
-    }
-    if (this.estado !== 'todos') {
-      query = query.eq('estado', this.estado);
-    }
-
-    const [pedidosRes, perfilesRes] = await Promise.all([
-      query,
+    const [pedidos, perfilesRes] = await Promise.all([
+      this.traerPedidosConItems(inicio, fin),
       this.supabase.client.from('profiles').select('id, nombre'),
     ]);
 
-    const pedidos = pedidosRes.data ?? [];
     const nombresPorId = new Map((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre]));
 
-    this.pedidosUnicos = pedidos.map((p) => ({
+    this.pedidosUnicos = pedidos.map((p: any) => ({
       total: Number(p.total ?? 0),
       valorDomicilio: Number(p.valor_domicilio ?? 0),
       comision: Number(p.comision ?? 0),
     }));
 
     const filasNuevas: FilaReporte[] = [];
-
-    if (pedidos.length) {
-      const { data: items } = await this.supabase.client
-        .from('pedido_items')
-        .select('pedido_id, cantidad, precio_unitario, precio_base, producto:productos(nombre, costo)')
-        .in(
-          'pedido_id',
-          pedidos.map((p) => p.id)
-        );
-
-      const pedidosPorId = new Map(pedidos.map((p) => [p.id, p]));
-
-      for (const item of items ?? []) {
-        const p = pedidosPorId.get((item as any).pedido_id);
-        if (!p) continue;
-
-        const costo = (item as any).producto?.costo ?? null;
-        const precioVenta = (item as any).precio_unitario;
-        const precioBase = (item as any).precio_base;
-        const cantidad = (item as any).cantidad;
+    for (const p of pedidos) {
+      for (const item of p.pedido_items ?? []) {
+        const costo = item.producto?.costo ?? null;
+        const precioVenta = item.precio_unitario;
+        const precioBase = item.precio_base;
+        const cantidad = item.cantidad;
         // Ganancia de la TIENDA = precio_base - costo (no precio_unitario,
         // que ya trae la comisión del vendedor mezclada adentro).
         const gananciaItem = cantidad * (precioBase - (costo != null ? costo : precioBase));
@@ -193,7 +164,7 @@ export class ReportesPage implements OnInit {
           total: Number(p.total ?? 0),
           valorDomicilio: Number(p.valor_domicilio ?? 0),
           comision: Number(p.comision ?? 0),
-          productoNombre: (item as any).producto?.nombre ?? 'Producto',
+          productoNombre: item.producto?.nombre ?? 'Producto',
           costo,
           precioVenta,
           cantidad,
@@ -206,6 +177,32 @@ export class ReportesPage implements OnInit {
     this.loading = false;
     this.cdr.detectChanges();
   }
+
+  /** Trae los pedidos del rango con sus productos, en bloques de 1000 (límite de Supabase). */
+  private async traerPedidosConItems(inicio: Date, fin: Date): Promise<any[]> {
+    const todos: any[] = [];
+    const bloque = 1000;
+    for (let desde = 0; ; desde += bloque) {
+      let query = this.supabase.client
+        .from('pedidos')
+        .select(
+          'id, numero, estado, created_at, vendedor_id, total, valor_domicilio, comision, pedido_items(cantidad, precio_unitario, precio_base, producto:productos(nombre, costo))'
+        )
+        .gte('created_at', inicio.toISOString())
+        .lte('created_at', fin.toISOString())
+        .order('created_at', { ascending: false })
+        .range(desde, desde + bloque - 1);
+      if (this.vendedorId !== 'todos') query = query.eq('vendedor_id', this.vendedorId);
+      if (this.estado !== 'todos') query = query.eq('estado', this.estado);
+
+      const { data, error } = await query;
+      if (error || !data) break;
+      todos.push(...data);
+      if (data.length < bloque) break;
+    }
+    return todos;
+  }
+
 
   get totalPedido(): number {
     return this.pedidosUnicos.reduce((s, p) => s + p.total, 0);

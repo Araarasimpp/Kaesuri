@@ -30,6 +30,9 @@
             <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
               {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
             </span>
+            <span class="col-recibido text-soft" *ngIf="c.estado === 'confirmado' && c.confirmado_por">
+              Recibió {{ nombreDomiciliario(c.confirmado_por) }} · {{ horaCorta(c.confirmado_at) }}
+            </span>
             <button
               class="btn-confirmar"
               *ngIf="c.estado === 'pendiente'"

@@ -7,10 +7,11 @@ import { homeOutline, add, logOutOutline, sunnyOutline, moonOutline } from 'ioni
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ThemeService } from '../../core/services/theme.service';
 
+import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 @Component({
   selector: 'app-vendedor-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent],
   templateUrl: './vendedor-layout.component.html',
   styleUrls: ['../../shared/pill-nav.scss', './vendedor-layout.component.scss'],
 })

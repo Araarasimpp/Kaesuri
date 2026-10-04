@@ -5,7 +5,7 @@
       <span class="brand-name" *ngIf="!collapsed">Variedades JYB</span>
     </div>
 
-    <button class="collapse-btn" (click)="toggleCollapse()" aria-label="Contraer menú">
+    <button class="collapse-btn" (click)="toggleCollapse()" [attr.aria-label]="collapsed ? 'Expandir menú' : 'Contraer menú'">
       <ion-icon [name]="collapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"></ion-icon>
     </button>
 
@@ -16,6 +16,7 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.path === '/despachador' }"
         class="menu-item"
+        [attr.title]="collapsed ? item.label : null"
       >
         <ion-icon [name]="item.icon"></ion-icon>
         <span *ngIf="!collapsed">{{ item.label }}</span>
@@ -23,42 +24,45 @@
     </nav>
 
     <div class="sidebar-footer">
+      <app-notificaciones modo="sidebar" [compacto]="collapsed"></app-notificaciones>
       <button class="footer-btn" (click)="toggleTheme()">
         <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
         <span *ngIf="!collapsed">{{ theme.isDark() ? 'Modo claro' : 'Modo oscuro' }}</span>
       </button>
       <button class="footer-btn" (click)="logout()">
         <ion-icon name="log-out-outline"></ion-icon>
-        <span *ngIf="!collapsed">Salir</span>
+        <span *ngIf="!collapsed">Cerrar sesión</span>
       </button>
     </div>
   </aside>
+
+  <app-notificaciones class="notif-movil" modo="flotante"></app-notificaciones>
 
   <main class="content">
     <router-outlet></router-outlet>
   </main>
 
   <nav class="pill-nav mobile-only">
-    <a routerLink="/despachador" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    <a routerLink="/despachador" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Inicio">
       <ion-icon name="home-outline"></ion-icon>
       <span class="dot"></span>
     </a>
-    <a routerLink="/despachador/pedidos" routerLinkActive="active">
+    <a routerLink="/despachador/pedidos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Pedidos">
       <ion-icon name="receipt-outline"></ion-icon>
       <span class="dot"></span>
     </a>
 
     <div class="pill-center">
-      <a routerLink="/despachador/pedidos/nuevo" class="pill-action">
+      <a routerLink="/despachador/pedidos/nuevo" class="pill-action" aria-label="Nuevo pedido">
         <ion-icon name="add"></ion-icon>
       </a>
     </div>
 
-    <a routerLink="/despachador/cuadres" routerLinkActive="active">
+    <a routerLink="/despachador/cuadres" routerLinkActive="active" aria-label="Cuadres">
       <ion-icon name="wallet-outline"></ion-icon>
       <span class="dot"></span>
     </a>
-    <button class="pill-action" (click)="logout()">
+    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
       <ion-icon name="log-out-outline"></ion-icon>
     </button>
   </nav>

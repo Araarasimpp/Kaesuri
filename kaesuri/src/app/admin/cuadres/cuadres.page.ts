@@ -7,6 +7,7 @@ import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import { hoyColombiaISO, formatoFechaCO } from '../../shared/fecha-colombia';
 
+import { confirmar } from '../../shared/dialogo';
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
 
 interface PedidoDelCuadre {
@@ -172,6 +173,12 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   async confirmarCuadre(cuadre: Cuadre): Promise<void> {
+    const ok = await confirmar(
+      `Vas a marcar como recibido el cuadre de ${this.nombreDomiciliario(cuadre.domiciliario_id)} por ${this.formatoMoneda(cuadre.total_a_entregar)}.`,
+      { titulo: 'Recibir cuadre', aceptar: 'Sí, lo recibí' }
+    );
+    if (!ok) return;
+
     this.confirmandoId = cuadre.id;
     const user = await this.supabase.getCurrentUser();
 
@@ -200,6 +207,11 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       maximumFractionDigits: 0,
     });
   }
+  horaCorta(iso?: string | null): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' });
+  }
+
 
   formatoFecha(fecha: string): string {
     return formatoFechaCO(fecha + 'T00:00:00-05:00', {

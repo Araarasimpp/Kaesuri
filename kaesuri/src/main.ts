@@ -12,3 +12,13 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
   ],
 });
+
+// PWA: service worker para los avisos push (app cerrada) y aviso de instalación.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw-push.js').catch(() => undefined));
+}
+window.addEventListener('beforeinstallprompt', (evento) => {
+  evento.preventDefault();
+  (window as any).__jybInstalar = evento;
+  window.dispatchEvent(new Event('jyb-instalable'));
+});

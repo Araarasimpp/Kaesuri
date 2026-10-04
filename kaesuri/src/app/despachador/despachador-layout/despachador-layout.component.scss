@@ -189,3 +189,14 @@
     padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px);
   }
 }
+
+/* ---------- Campana de avisos en celular (en PC va dentro del menú lateral) */
+.notif-movil {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .notif-movil {
+    display: block;
+  }
+}

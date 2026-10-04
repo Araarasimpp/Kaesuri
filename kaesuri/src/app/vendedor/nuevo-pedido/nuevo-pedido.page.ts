@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Producto } from '../../shared/models/models';
 
+import { avisar, confirmar } from '../../shared/dialogo';
 interface ItemCarrito {
   producto: Producto;
   cantidad: number;
@@ -208,7 +209,7 @@ export class NuevoPedidoPage implements OnInit {
     }
 
     const numeroPedido = data as number;
-    alert(`Pedido #${numeroPedido} creado con éxito.`);
+    avisar(`Pedido #${numeroPedido} creado con éxito.`);
 
     const volverA = (this.route.snapshot.data['volverA'] as string) ?? '/vendedor';
     this.router.navigateByUrl(volverA);

@@ -32,7 +32,8 @@
                 "input": "src/assets",
                 "output": "assets"
               },
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/sw-push.js"
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
             "scripts": [],

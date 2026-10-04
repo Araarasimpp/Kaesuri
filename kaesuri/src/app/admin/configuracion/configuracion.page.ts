@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { LOGO_ROTULO, RotuloService } from '../../shared/rotulo.service';
 
+import { avisar, confirmar } from '../../shared/dialogo';
 interface Configuracion {
   nombre_negocio: string;
   telefonos: string | null;
@@ -151,7 +152,7 @@ export class ConfiguracionPage implements OnInit {
   }
 
   async eliminarZona(zona: Zona): Promise<void> {
-    const confirmado = confirm(`¿Eliminar la zona "${zona.nombre}"?`);
+    const confirmado = await confirmar(`¿Eliminar la zona "${zona.nombre}"?`);
     if (!confirmado) return;
 
     const { error } = await this.supabase.client.from('zonas_domicilio').delete().eq('id', zona.id);

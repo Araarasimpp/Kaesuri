@@ -12,6 +12,7 @@ import {
   formatoFechaCO,
 } from '../../shared/fecha-colombia';
 
+import { avisar, confirmar } from '../../shared/dialogo';
 interface PedidoSinCuadrar {
   id: string;
   numero: number;
@@ -185,7 +186,7 @@ export class CuadresPage implements OnInit {
 
   async cerrarCuadre(): Promise<void> {
     this.errorMsg = '';
-    const confirmado = confirm(
+    const confirmado = await confirmar(
       `¿Cerrar el cuadre con ${this.pedidosHoy.length} pedido(s) entregado(s) sin cuadrar? No podrás agregar más pedidos a este cuadre después.`
     );
     if (!confirmado) return;

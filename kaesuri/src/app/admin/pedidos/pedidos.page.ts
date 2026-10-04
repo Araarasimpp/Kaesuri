@@ -1,12 +1,21 @@
+// Página de pedidos compartida por el admin (/admin/pedidos) y el despachador
+// (/despachador/pedidos). Es la ÚNICA copia: las rutas de los dos roles cargan
+// este mismo componente.
+//
+// Escala: los pedidos se piden por páginas de 50 al servidor, ya filtrados por
+// estado, rótulo y búsqueda, y los productos vienen dentro de la misma consulta
+// (sin listas largas de IDs en la URL). Así sigue funcionando con miles de pedidos.
+
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { RotuloService } from '../../shared/rotulo.service';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
+import { avisar, confirmar } from '../../shared/dialogo';
 
 interface ItemFila {
   nombre: string;
@@ -40,6 +49,11 @@ interface Domiciliario {
 type FiltroEstado = 'todos' | EstadoPedido;
 type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
+const TAMANO_PAGINA = 50;
+const COLUMNAS =
+  'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, created_at, ' +
+  'pedido_items(cantidad, producto:productos(nombre, imagen_url))';
+
 @Component({
   selector: 'app-pedidos',
   standalone: true,
@@ -48,11 +62,14 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
   styleUrls: ['./pedidos.page.scss'],
 })
 export class PedidosPage implements OnInit, OnDestroy {
-  /** Ruta del botón "Nuevo pedido" (el despachador usa la suya). */
-  readonly rutaNuevo = '/admin/pedidos/nuevo';
+  /** "/admin/pedidos/nuevo" o "/despachador/pedidos/nuevo" según quién esté usando la página. */
+  readonly rutaNuevo: string;
 
   loading = true;
+  cargandoMas = false;
   pedidos: PedidoFila[] = [];
+  totalFiltrados = 0;
+  conteos: Record<string, number> = {};
   domiciliarios: Domiciliario[] = [];
   nombresPorId = new Map<string, string>();
   busqueda = '';
@@ -65,6 +82,9 @@ export class PedidosPage implements OnInit, OnDestroy {
   imagenAbierta: string | null = null;
 
   private canal: RealtimeChannel | null = null;
+  private temporizadorRecarga: ReturnType<typeof setTimeout> | null = null;
+  private temporizadorBusqueda: ReturnType<typeof setTimeout> | null = null;
+  private consultaActual = 0;
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: 'pendiente', etiqueta: 'Pendiente' },
@@ -77,66 +97,126 @@ export class PedidosPage implements OnInit, OnDestroy {
   constructor(
     private supabase: SupabaseService,
     private rotulos: RotuloService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    router: Router
+  ) {
+    this.rutaNuevo = router.url.startsWith('/despachador') ? '/despachador/pedidos/nuevo' : '/admin/pedidos/nuevo';
+  }
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.cargarPedidos(), this.cargarDomiciliarios()]);
+    await Promise.all([this.cargarPedidos(), this.cargarConteos(), this.cargarDomiciliarios()]);
     this.suscribirRealtime();
   }
 
   ngOnDestroy(): void {
-    if (this.canal) {
-      this.supabase.client.removeChannel(this.canal);
-    }
+    if (this.canal) this.supabase.client.removeChannel(this.canal);
+    if (this.temporizadorRecarga) clearTimeout(this.temporizadorRecarga);
+    if (this.temporizadorBusqueda) clearTimeout(this.temporizadorBusqueda);
   }
 
+  /** Cuando alguien cambia un pedido, se refresca lo que está en pantalla (agrupando cambios seguidos). */
   private suscribirRealtime(): void {
     this.canal = this.supabase.client
       .channel('pedidos-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => this.cargarPedidos())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
+        if (this.temporizadorRecarga) clearTimeout(this.temporizadorRecarga);
+        this.temporizadorRecarga = setTimeout(() => {
+          this.cargarPedidos(Math.max(this.pedidos.length, TAMANO_PAGINA));
+          this.cargarConteos();
+        }, 700);
+      })
       .subscribe();
   }
 
-  async cargarPedidos(): Promise<void> {
+  // ---------- Consultas ----------
+
+  private textoBusqueda(): string {
+    // Se quitan caracteres que rompen el filtro de Supabase.
+    return this.busqueda.trim().replace(/[,()%*\\]/g, ' ').trim();
+  }
+
+  private aplicarFiltros(query: any, incluirEstado = true): any {
+    if (incluirEstado && this.filtroEstado !== 'todos') query = query.eq('estado', this.filtroEstado);
+    if (this.filtroRotulo === 'pendiente') query = query.is('rotulo_impreso_at', null);
+    if (this.filtroRotulo === 'impreso') query = query.not('rotulo_impreso_at', 'is', null);
+
+    const q = this.textoBusqueda();
+    if (q) {
+      const condiciones = [`cliente_nombre.ilike.%${q}%`, `cliente_telefono.ilike.%${q}%`, `barrio.ilike.%${q}%`];
+      const numero = q.replace(/^#/, '');
+      if (/^\d+$/.test(numero)) condiciones.push(`numero.eq.${numero}`);
+      query = query.or(condiciones.join(','));
+    }
+    return query;
+  }
+
+  /** Carga la primera página (o `cantidad` pedidos) con los filtros actuales. */
+  async cargarPedidos(cantidad = TAMANO_PAGINA): Promise<void> {
+    const consulta = ++this.consultaActual;
     this.loading = !this.pedidos.length;
-    const { data, error } = await this.supabase.client
-      .from('pedidos')
-      .select(
-        'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, created_at'
-      )
-      .order('created_at', { ascending: false });
 
-    let pedidos = (data as any[]) ?? [];
+    const query = this.aplicarFiltros(
+      this.supabase.client.from('pedidos').select(COLUMNAS, { count: 'exact' })
+    )
+      .order('created_at', { ascending: false })
+      .range(0, cantidad - 1);
 
-    if (!error && pedidos.length) {
-      const { data: items } = await this.supabase.client
-        .from('pedido_items')
-        .select('pedido_id, cantidad, producto:productos(nombre, imagen_url)')
-        .in(
-          'pedido_id',
-          pedidos.map((p) => p.id)
-        );
+    const { data, count, error } = await query;
+    if (consulta !== this.consultaActual) return; // llegó una consulta más nueva
 
-      pedidos = pedidos.map((p) => {
-        const propios: ItemFila[] = (items ?? [])
-          .filter((i: any) => i.pedido_id === p.id)
-          .map((i: any) => ({
-            nombre: i.producto?.nombre ?? 'Producto',
-            cantidad: i.cantidad,
-            imagen_url: i.producto?.imagen_url ?? null,
-          }));
-        return {
-          ...p,
-          items: propios,
-          productos: propios.map((i) => `${i.nombre} x${i.cantidad}`).join(', '),
-        };
+    if (!error) {
+      this.pedidos = (data ?? []).map((p: any) => this.aFila(p));
+      this.totalFiltrados = count ?? this.pedidos.length;
+      const visibles = new Set(this.pedidos.map((p) => p.id));
+      this.seleccionados.forEach((id) => {
+        if (!visibles.has(id)) this.seleccionados.delete(id);
       });
     }
-
-    this.pedidos = pedidos as PedidoFila[];
     this.loading = false;
     this.cdr.detectChanges();
+  }
+
+  async cargarMas(): Promise<void> {
+    if (this.cargandoMas || this.pedidos.length >= this.totalFiltrados) return;
+    this.cargandoMas = true;
+    this.cdr.detectChanges();
+
+    const desde = this.pedidos.length;
+    const { data, error } = await this.aplicarFiltros(this.supabase.client.from('pedidos').select(COLUMNAS))
+      .order('created_at', { ascending: false })
+      .range(desde, desde + TAMANO_PAGINA - 1);
+
+    if (!error && data) {
+      const ya = new Set(this.pedidos.map((p) => p.id));
+      this.pedidos = this.pedidos.concat(data.map((p: any) => this.aFila(p)).filter((p: PedidoFila) => !ya.has(p.id)));
+    }
+    this.cargandoMas = false;
+    this.cdr.detectChanges();
+  }
+
+  /** Cuántos pedidos hay en cada pestaña (consultas livianas que solo cuentan). */
+  async cargarConteos(): Promise<void> {
+    const valores: FiltroEstado[] = ['pendiente', 'en_ruta', 'entregado', 'cancelado', 'todos'];
+    const resultados = await Promise.all(
+      valores.map((v) => {
+        let query = this.supabase.client.from('pedidos').select('id', { count: 'exact', head: true });
+        if (v !== 'todos') query = query.eq('estado', v);
+        return query;
+      })
+    );
+    valores.forEach((v, i) => (this.conteos[v] = resultados[i].count ?? 0));
+    this.cdr.detectChanges();
+  }
+
+  private aFila(p: any): PedidoFila {
+    const items: ItemFila[] = (p.pedido_items ?? []).map((i: any) => ({
+      nombre: i.producto?.nombre ?? 'Producto',
+      cantidad: i.cantidad,
+      imagen_url: i.producto?.imagen_url ?? null,
+    }));
+    const resto = { ...p };
+    delete resto.pedido_items;
+    return { ...resto, items, productos: items.map((i) => `${i.nombre} x${i.cantidad}`).join(', ') };
   }
 
   async cargarDomiciliarios(): Promise<void> {
@@ -152,112 +232,52 @@ export class PedidosPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // ---------- Filtros ----------
+
+  cambiarEstado(valor: FiltroEstado): void {
+    this.filtroEstado = valor;
+    this.seleccionados.clear();
+    this.pedidos = [];
+    this.cargarPedidos();
+  }
+
+  cambiarRotulo(): void {
+    this.seleccionados.clear();
+    this.cargarPedidos();
+  }
+
+  buscar(): void {
+    if (this.temporizadorBusqueda) clearTimeout(this.temporizadorBusqueda);
+    this.temporizadorBusqueda = setTimeout(() => this.cargarPedidos(), 350);
+  }
+
+  /** Se mantiene el nombre para no cambiar la plantilla: ya vienen filtrados del servidor. */
+  get filtrados(): PedidoFila[] {
+    return this.pedidos;
+  }
+
+  contarEstado(valor: FiltroEstado): number {
+    return this.conteos[valor] ?? 0;
+  }
+
+  get hayMas(): boolean {
+    return this.pedidos.length < this.totalFiltrados;
+  }
+
+  // ---------- Utilidades de vista ----------
+
   nombreVendedor(id: string): string {
     return this.nombresPorId.get(id) ?? 'Desconocido';
   }
 
-  contarEstado(valor: FiltroEstado): number {
-    if (valor === 'todos') return this.pedidos.length;
-    return this.pedidos.filter((p) => p.estado === valor).length;
-  }
-
-  get filtrados(): PedidoFila[] {
-    let lista = this.pedidos;
-
-    if (this.filtroEstado !== 'todos') {
-      lista = lista.filter((p) => p.estado === this.filtroEstado);
-    }
-
-    if (this.filtroRotulo === 'pendiente') {
-      lista = lista.filter((p) => !p.rotulo_impreso_at);
-    } else if (this.filtroRotulo === 'impreso') {
-      lista = lista.filter((p) => !!p.rotulo_impreso_at);
-    }
-
-    if (this.busqueda.trim()) {
-      const q = this.busqueda.trim().toLowerCase();
-      lista = lista.filter(
-        (p) => p.cliente_nombre.toLowerCase().includes(q) || (p.productos ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    return lista;
+  nombreDomiciliario(id: string | null): string {
+    if (!id) return 'Sin asignar';
+    return this.nombresPorId.get(id) ?? 'Sin asignar';
   }
 
   verImagen(url: string | null, evento?: Event): void {
     evento?.stopPropagation();
     if (url) this.imagenAbierta = url;
-  }
-
-  async asignarDomiciliario(pedido: PedidoFila, domiciliarioId: string): Promise<void> {
-    // Un pedido ya entregado (o cancelado) no se puede reasignar: eso
-    // rompería el cuadre y el historial de quién lo entregó de verdad.
-    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
-      await this.cargarPedidos();
-      return;
-    }
-
-    this.guardandoId = pedido.id;
-
-    const { error } = await this.supabase.client
-      .from('pedidos')
-      .update({ domiciliario_id: domiciliarioId || null, estado: 'en_ruta' })
-      .eq('id', pedido.id);
-
-    this.guardandoId = null;
-
-    if (!error) {
-      await this.cargarPedidos();
-    } else {
-      this.cdr.detectChanges();
-    }
-  }
-
-  toggleMenu(id: string): void {
-    this.menuAbiertoId = this.menuAbiertoId === id ? null : id;
-  }
-
-  async cancelarPedido(pedido: PedidoFila): Promise<void> {
-    this.menuAbiertoId = null;
-    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') return;
-
-    const confirmado = confirm(
-      `¿Cancelar el pedido #${pedido.numero} de ${pedido.cliente_nombre}? Se devolverá el stock de los productos.`
-    );
-    if (!confirmado) return;
-
-    const { error } = await this.supabase.client.rpc('cancelar_pedido', { p_pedido_id: pedido.id });
-
-    if (!error) {
-      await this.cargarPedidos();
-    } else {
-      alert(error.message);
-      this.cdr.detectChanges();
-    }
-  }
-
-  async eliminarPedido(pedido: PedidoFila): Promise<void> {
-    this.menuAbiertoId = null;
-    if (pedido.estado === 'entregado') return;
-
-    const confirmado = confirm(
-      `¿Eliminar el pedido #${pedido.numero} de ${pedido.cliente_nombre}? Se devolverá el stock de los productos. Esta acción no se puede deshacer.`
-    );
-    if (!confirmado) return;
-
-    const { error } = await this.supabase.client.rpc('eliminar_pedido', { p_pedido_id: pedido.id });
-
-    if (!error) {
-      await this.cargarPedidos();
-    } else {
-      alert(error.message);
-      this.cdr.detectChanges();
-    }
-  }
-
-  nombreDomiciliario(id: string | null): string {
-    if (!id) return 'Sin asignar';
-    return this.domiciliarios.find((d) => d.id === id)?.nombre ?? 'Sin asignar';
   }
 
   etiquetaEstado(estado: EstadoPedido): string {
@@ -274,20 +294,69 @@ export class PedidosPage implements OnInit, OnDestroy {
     return clases[estado];
   }
 
-  toggleSeleccion(id: string): void {
-    if (this.seleccionados.has(id)) {
-      this.seleccionados.delete(id);
-    } else {
-      this.seleccionados.add(id);
+  // ---------- Acciones ----------
+
+  async asignarDomiciliario(pedido: PedidoFila, domiciliarioId: string): Promise<void> {
+    // Un pedido ya entregado (o cancelado) no se puede reasignar: eso
+    // rompería el cuadre y el historial de quién lo entregó de verdad.
+    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
+      await this.cargarPedidos(this.pedidos.length);
+      return;
     }
+
+    this.guardandoId = pedido.id;
+    const { error } = await this.supabase.client
+      .from('pedidos')
+      .update({ domiciliario_id: domiciliarioId || null, estado: 'en_ruta' })
+      .eq('id', pedido.id);
+    this.guardandoId = null;
+
+    if (error) avisar('No se pudo asignar el domiciliario: ' + error.message);
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  toggleMenu(id: string): void {
+    this.menuAbiertoId = this.menuAbiertoId === id ? null : id;
+  }
+
+  async cancelarPedido(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') return;
+
+    const ok = await confirmar(
+      `Se cancelará el pedido #${pedido.numero} de ${pedido.cliente_nombre} y se devolverá el stock de los productos.`,
+      { titulo: 'Cancelar pedido', aceptar: 'Cancelar pedido', cancelar: 'Volver', peligro: true }
+    );
+    if (!ok) return;
+
+    const { error } = await this.supabase.client.rpc('cancelar_pedido', { p_pedido_id: pedido.id });
+    if (error) avisar(error.message, 'No se pudo cancelar');
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  async eliminarPedido(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    if (pedido.estado === 'entregado') return;
+
+    const ok = await confirmar(
+      `Se eliminará el pedido #${pedido.numero} de ${pedido.cliente_nombre} y se devolverá el stock de los productos. Esta acción no se puede deshacer.`,
+      { titulo: 'Eliminar pedido', aceptar: 'Eliminar', cancelar: 'Volver', peligro: true }
+    );
+    if (!ok) return;
+
+    const { error } = await this.supabase.client.rpc('eliminar_pedido', { p_pedido_id: pedido.id });
+    if (error) avisar(error.message, 'No se pudo eliminar');
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  toggleSeleccion(id: string): void {
+    if (this.seleccionados.has(id)) this.seleccionados.delete(id);
+    else this.seleccionados.add(id);
   }
 
   toggleSeleccionarTodos(): void {
-    if (this.seleccionados.size === this.filtrados.length) {
-      this.seleccionados.clear();
-    } else {
-      this.filtrados.forEach((p) => this.seleccionados.add(p.id));
-    }
+    if (this.seleccionados.size === this.pedidos.length) this.seleccionados.clear();
+    else this.pedidos.forEach((p) => this.seleccionados.add(p.id));
   }
 
   async imprimirRotulos(): Promise<void> {
@@ -301,26 +370,23 @@ export class PedidosPage implements OnInit, OnDestroy {
       (p.items ?? []).map((i) => ({ pedido_id: p.id, cantidad: i.cantidad, producto: { nombre: i.nombre } }))
     );
 
-    const abierto = await this.rotulos.imprimir(pedidosSeleccionados, items);
+    const impreso = await this.rotulos.imprimir(pedidosSeleccionados, items);
 
-    if (abierto) {
-      // Se marca como impreso apenas se abre la ventana de impresión
-      // (no hay forma confiable de detectar si el usuario canceló el diálogo)
-      await this.supabase.client
-        .from('pedidos')
-        .update({ rotulo_impreso_at: new Date().toISOString() })
-        .in('id', ids);
+    if (impreso) {
+      // Se marca como impreso al abrir el diálogo de impresión (el navegador no
+      // avisa de forma confiable si la persona lo canceló).
+      await this.supabase.client.from('pedidos').update({ rotulo_impreso_at: new Date().toISOString() }).in('id', ids);
       this.seleccionados.clear();
     } else {
-      alert('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para esta página e intenta de nuevo.');
+      avisar('No se pudo abrir la impresión. Intenta de nuevo.');
     }
 
     this.imprimiendo = false;
-    await this.cargarPedidos();
+    await this.cargarPedidos(this.pedidos.length);
   }
 
   formatoMoneda(valor: number): string {
-    return valor.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+    return (valor ?? 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   }
 
   formatoFecha(fecha: string): string {
@@ -329,6 +395,7 @@ export class PedidosPage implements OnInit, OnDestroy {
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Bogota',
     });
   }
 }

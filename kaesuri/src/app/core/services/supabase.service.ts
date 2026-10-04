@@ -44,8 +44,22 @@ export class SupabaseService {
 
   async logout() {
     this.currentProfile = null;
+    await this.quitarPushDeEsteDispositivo();
     return this.client.auth.signOut();
   }
+
+  /** Al cerrar sesión, este celular deja de recibir los avisos de esta persona. */
+  private async quitarPushDeEsteDispositivo(): Promise<void> {
+    try {
+      if (!('serviceWorker' in navigator)) return;
+      const registro = await navigator.serviceWorker.getRegistration('/');
+      const sub = await registro?.pushManager?.getSubscription();
+      if (sub) await this.client.from('push_suscripciones').delete().eq('endpoint', sub.endpoint);
+    } catch {
+      // sin conexión o sin soporte: no impide cerrar sesión
+    }
+  }
+
 
   async getCurrentUser(): Promise<User | null> {
     const { data } = await this.client.auth.getUser();

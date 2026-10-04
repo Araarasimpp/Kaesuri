@@ -17,6 +17,7 @@ import {
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
+import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -26,7 +27,7 @@ interface MenuItem {
 @Component({
   selector: 'app-despachador-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent],
   templateUrl: './despachador-layout.component.html',
   styleUrls: ['../../shared/pill-nav.scss', './despachador-layout.component.scss'],
 })

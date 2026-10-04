@@ -7,6 +7,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { ProductoFormComponent } from './producto-form/producto-form.component';
 import { Producto } from '../../shared/models/models';
 
+import { avisar, confirmar } from '../../shared/dialogo';
 type TabFiltro = 'activos' | 'todos';
 
 @Component({
@@ -159,7 +160,7 @@ export class ProductosPage implements OnInit, OnDestroy {
   async eliminarProducto(producto: Producto): Promise<void> {
     this.menuAbiertoId = null;
 
-    const confirmado = confirm(
+    const confirmado = await confirmar(
       `¿Eliminar "${producto.nombre}"? No aparecerá más en el catálogo, pero se conserva en pedidos anteriores.`
     );
     if (!confirmado) return;

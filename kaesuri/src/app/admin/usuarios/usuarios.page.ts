@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService, UserRole } from '../../core/services/supabase.service';
 
+import { avisar, confirmar } from '../../shared/dialogo';
 interface UsuarioFila {
   id: string;
   nombre: string;
@@ -110,7 +111,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
     if (usuario.id === this.miId) return;
 
     const nuevoEstado = !usuario.activo;
-    const confirmado = confirm(
+    const confirmado = await confirmar(
       nuevoEstado
         ? `¿Reactivar a ${usuario.nombre}?`
         : `¿Desactivar a ${usuario.nombre}? No podrá iniciar sesión hasta que lo reactives.`

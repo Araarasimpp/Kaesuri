@@ -1,0 +1,56 @@
+<div class="notif" [class.sidebar]="modo === 'sidebar'" [class.flotante]="modo === 'flotante'" [class.junto]="junto">
+  <button
+    type="button"
+    class="campana"
+    (click)="alternar()"
+    [attr.aria-expanded]="abierto"
+    [attr.aria-label]="avisos.noLeidas() ? avisos.noLeidas() + ' avisos sin leer' : 'Avisos'"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+    </svg>
+    <span class="texto" *ngIf="modo === 'sidebar' && !compacto">Avisos</span>
+    <span class="contador" *ngIf="avisos.noLeidas()">{{ avisos.noLeidas() > 9 ? '9+' : avisos.noLeidas() }}</span>
+  </button>
+
+  <div class="panel" *ngIf="abierto" role="dialog" aria-label="Avisos">
+    <div class="panel-cabecera">
+      <strong>Avisos</strong>
+      <button type="button" class="link" (click)="avisos.marcarTodas()" [disabled]="!avisos.noLeidas()">Marcar todo como leído</button>
+    </div>
+
+    <div class="lista" *ngIf="avisos.lista().length; else vacio">
+      <button type="button" class="item" *ngFor="let n of avisos.lista()" [class.no-leida]="!n.leida" (click)="abrir(n)">
+        <span class="punto" [ngClass]="claseTipo(n.tipo)" aria-hidden="true"></span>
+        <span class="cuerpo">
+          <span class="titulo">{{ n.titulo }}</span>
+          <span class="mensaje" *ngIf="n.mensaje">{{ n.mensaje }}</span>
+          <span class="hora">{{ hace(n.created_at) }}</span>
+        </span>
+      </button>
+    </div>
+    <ng-template #vacio>
+      <p class="vacio">No tienes avisos todavía.</p>
+    </ng-template>
+
+    <div class="panel-pie push" *ngIf="push.estado() !== 'no-soportado' && push.estado() !== 'cargando'" [ngSwitch]="push.estado()">
+      <ng-container *ngSwitchCase="'inactivo'">
+        <span>Recibe los avisos aunque tengas la app cerrada.</span>
+        <button type="button" class="btn-push" (click)="push.activar()" [disabled]="push.trabajando()">
+          {{ push.trabajando() ? 'Activando...' : 'Activar' }}
+        </button>
+      </ng-container>
+      <ng-container *ngSwitchCase="'activo'">
+        <span class="ok">✓ Avisos activados en este dispositivo</span>
+        <button type="button" class="link" (click)="push.desactivar()" [disabled]="push.trabajando()">Desactivar</button>
+      </ng-container>
+      <ng-container *ngSwitchCase="'ios-instalar'">
+        <span>En iPhone, instala la app para recibir avisos: toca <strong>Compartir</strong> y luego <strong>Agregar a inicio</strong>.</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'bloqueado'">
+        <span>Los avisos están bloqueados. Actívalos en los ajustes del navegador o del celular para esta app.</span>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -11,6 +11,7 @@ import {
   walletOutline,
   barChartOutline,
   settingsOutline,
+  timeOutline,
   add,
   sunnyOutline,
   moonOutline,
@@ -21,6 +22,7 @@ import {
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
+import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -30,7 +32,7 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../../shared/pill-nav.scss', './admin-layout.component.scss'],
 })
@@ -44,6 +46,7 @@ export class AdminLayoutComponent {
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
+    { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
     { label: 'Configuración', path: '/admin/configuracion', icon: 'settings-outline' },
   ];
 
@@ -60,6 +63,7 @@ export class AdminLayoutComponent {
       walletOutline,
       barChartOutline,
       settingsOutline,
+      timeOutline,
       add,
       sunnyOutline,
       moonOutline,

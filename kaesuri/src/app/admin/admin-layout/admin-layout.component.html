@@ -24,6 +24,7 @@
     </nav>
 
     <div class="sidebar-footer">
+      <app-notificaciones modo="sidebar" [compacto]="collapsed"></app-notificaciones>
       <button class="footer-btn" (click)="toggleTheme()">
         <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
         <span *ngIf="!collapsed">{{ theme.isDark() ? 'Modo claro' : 'Modo oscuro' }}</span>
@@ -34,6 +35,8 @@
       </button>
     </div>
   </aside>
+
+  <app-notificaciones class="notif-movil" modo="flotante"></app-notificaciones>
 
   <main class="content">
     <router-outlet></router-outlet>

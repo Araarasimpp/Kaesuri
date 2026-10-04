@@ -1,0 +1,256 @@
+:host {
+  display: block;
+}
+
+.notif {
+  position: relative;
+}
+
+/* ---------- Botón */
+.campana {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  color: var(--k-text-soft);
+  font-family: var(--k-font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sidebar .campana {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+
+.sidebar .campana:hover {
+  background: var(--k-hover);
+  color: var(--k-text);
+}
+
+.flotante {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 16px;
+  z-index: 95;
+}
+
+.flotante.junto {
+  right: 68px;
+}
+
+.flotante .campana {
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--k-border);
+  background: var(--k-card-bg);
+}
+
+.contador {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--k-coral);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.sidebar .contador {
+  margin-left: auto;
+}
+
+.flotante .contador {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  border: 2px solid var(--k-bg);
+}
+
+/* ---------- Panel */
+.panel {
+  position: absolute;
+  z-index: 200;
+  width: 340px;
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+  color: var(--k-text);
+}
+
+.sidebar .panel {
+  left: calc(100% + 8px);
+  bottom: 0;
+}
+
+.flotante .panel {
+  right: 0;
+  top: calc(100% + 8px);
+}
+
+.panel-cabecera,
+.panel-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.panel-cabecera {
+  border-bottom: 1px solid var(--k-border);
+  font-size: 15px;
+}
+
+.panel-pie {
+  border-top: 1px solid var(--k-border);
+}
+
+.link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--k-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--k-role-ink);
+  cursor: pointer;
+}
+
+.link:disabled {
+  color: var(--k-text-muted);
+  cursor: default;
+}
+
+.lista {
+  overflow-y: auto;
+}
+
+.item {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: none;
+  border-top: 1px solid var(--k-row-line);
+  background: transparent;
+  text-align: left;
+  font-family: var(--k-font);
+  color: var(--k-text);
+  cursor: pointer;
+}
+
+.item:first-child {
+  border-top: none;
+}
+
+.item:hover {
+  background: var(--k-hover);
+}
+
+.item.no-leida {
+  background: var(--k-role-soft);
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--k-azul);
+}
+
+.punto.tipo-ok { background: var(--k-teal); }
+.punto.tipo-alerta { background: var(--k-coral); }
+.punto.tipo-cuadre { background: var(--k-amber); }
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.titulo {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mensaje {
+  font-size: 13px;
+  color: var(--k-text-soft);
+  line-height: 1.4;
+}
+
+.hora {
+  font-size: 12px;
+  color: var(--k-text-muted);
+}
+
+.vacio {
+  margin: 0;
+  padding: 28px 14px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--k-text-soft);
+}
+
+.panel-pie.push {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--k-text-soft);
+  background: var(--k-thead-bg);
+}
+
+.panel-pie.push:empty {
+  display: none;
+}
+
+.panel-pie .ok {
+  color: var(--k-teal);
+  font-weight: 600;
+}
+
+.btn-push {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--k-role);
+  color: var(--k-on-role);
+  font-family: var(--k-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-push:disabled {
+  opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+  .flotante .panel {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: calc(env(safe-area-inset-top) + 64px);
+    width: auto;
+  }
+}

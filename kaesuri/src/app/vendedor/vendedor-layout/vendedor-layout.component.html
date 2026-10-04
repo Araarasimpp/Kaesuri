@@ -1,5 +1,6 @@
 <div class="layout">
-  <button class="theme-toggle" (click)="toggleTheme()">
+  <app-notificaciones modo="flotante" [junto]="true"></app-notificaciones>
+  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme.isDark() ? 'Modo claro' : 'Modo oscuro'">
     <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
   </button>
 
@@ -8,18 +9,16 @@
   </main>
 
   <nav class="pill-nav">
-    <a routerLink="/vendedor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    <a routerLink="/vendedor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Inicio">
       <ion-icon name="home-outline"></ion-icon>
       <span class="dot"></span>
     </a>
-
     <div class="pill-center">
-      <a routerLink="/vendedor/nuevo-pedido" class="pill-action">
+      <a routerLink="/vendedor/nuevo-pedido" class="pill-action" aria-label="Nuevo pedido">
         <ion-icon name="add"></ion-icon>
       </a>
     </div>
-
-    <button class="pill-action" (click)="logout()">
+    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
       <ion-icon name="log-out-outline"></ion-icon>
     </button>
   </nav>
