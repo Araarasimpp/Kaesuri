@@ -30,7 +30,7 @@
         (click)="cerrarCuadre()"
         [disabled]="cerrando"
       >
-        {{ cerrando ? 'Cerrando...' : 'Cerrar cuadre' }}
+        {{ cerrando ? 'Cerrando...' : 'Cerrar cuadre de hoy' }}
       </button>
       <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
 
@@ -71,7 +71,7 @@
         </div>
       </div>
 
-      <p class="empty-msg" *ngIf="!pedidosHoy.length">No tienes pedidos entregados pendientes de cuadrar.</p>
+      <p class="empty-msg" *ngIf="!pedidosHoy.length">No has entregado pedidos hoy todavía.</p>
     </section>
 
     <section class="bloque">

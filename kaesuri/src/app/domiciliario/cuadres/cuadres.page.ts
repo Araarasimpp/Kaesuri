@@ -56,9 +56,7 @@ export class CuadresPage implements OnInit {
       this.loading = false;
       this.cdr.detectChanges();
       return;
-    }
-
-    const inicioHoy = inicioDiaColombia();
+    }
     const finHoy = finDiaColombia();
 
     const [pedidosRes, cuadresRes] = await Promise.all([
@@ -69,8 +67,7 @@ export class CuadresPage implements OnInit {
         )
         .eq('domiciliario_id', user.id)
         .eq('estado', 'entregado')
-        .is('cuadre_id', null)
-        .gte('entregado_at', inicioHoy.toISOString())
+        .is('cuadre_id', null)
         .lte('entregado_at', finHoy.toISOString())
         .order('entregado_at', { ascending: false }),
       this.supabase.client
@@ -189,7 +186,7 @@ export class CuadresPage implements OnInit {
   async cerrarCuadre(): Promise<void> {
     this.errorMsg = '';
     const confirmado = confirm(
-      `¿Cerrar el cuadre de hoy con ${this.pedidosHoy.length} pedido(s)? No podrás agregar más pedidos a este cuadre después.`
+      `¿Cerrar el cuadre con ${this.pedidosHoy.length} pedido(s) entregado(s) sin cuadrar? No podrás agregar más pedidos a este cuadre después.`
     );
     if (!confirmado) return;
 
