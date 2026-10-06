@@ -5,9 +5,9 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
-import { diaColombiaDe, formatoFechaCO, hoyColombiaISO } from '../../shared/fecha-colombia';
+import { hoyColombiaISO, formatoFechaCO } from '../../shared/fecha-colombia';
 
-import { avisar, confirmar } from '../../shared/dialogo';
+import { confirmar } from '../../shared/dialogo';
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
 
 interface PedidoDelCuadre {
@@ -20,17 +20,6 @@ interface PedidoDelCuadre {
   valor_domicilio: number;
   metodo_pago: MetodoPago | null;
   comprobante_url: string | null;
-}
-
-/** Entregas de un domiciliario en un día que todavía no están en ningún cuadre. */
-interface SinCerrar {
-  domiciliarioId: string;
-  fecha: string;
-  pedidos: number;
-  efectivo: number;
-  transferencia: number;
-  domicilios: number;
-  aEntregar: number;
 }
 
 interface Domiciliario {
@@ -58,15 +47,6 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   expandidoId: string | null = null;
   pedidosPorCuadre = new Map<string, PedidoDelCuadre[]>();
   cargandoDetalle = false;
-  readonly hoy = hoyColombiaISO();
-
-  /** Lo que los domiciliarios llevan entregado y aún no han cerrado (en vivo). */
-  sinCerrar: SinCerrar[] = [];
-  /** Pedidos en ruta por domiciliario (todavía no entregados). */
-  enRutaPorDom = new Map<string, number>();
-  cerrandoClave: string | null = null;
-  private temporizador: ReturnType<typeof setTimeout> | null = null;
-
 
   private canal: RealtimeChannel | null = null;
 
@@ -78,7 +58,6 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.temporizador) clearTimeout(this.temporizador);
     if (this.canal) {
       this.supabase.client.removeChannel(this.canal);
     }
@@ -87,37 +66,19 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   private suscribirRealtime(): void {
     this.canal = this.supabase.client
       .channel('admin-cuadres-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cuadres' }, () => this.programarRecarga())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => this.programarRecarga())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cuadres' }, () =>
+        this.cargarTodo()
+      )
       .subscribe();
   }
 
-  private programarRecarga(): void {
-    if (this.temporizador) clearTimeout(this.temporizador);
-    this.temporizador = setTimeout(() => {
-      this.temporizador = null;
-      this.pedidosPorCuadre.clear();
-      this.cargarTodo();
-    }, 400);
-  }
-
   async cargarTodo(): Promise<void> {
-    if (!this.cuadres.length) this.loading = true;
+    this.loading = true;
 
-    const [cuadresRes, perfilesRes, abiertosRes] = await Promise.all([
+    const [cuadresRes, perfilesRes] = await Promise.all([
       this.supabase.client.from('cuadres').select('*').order('fecha', { ascending: false }),
       this.supabase.client.from('profiles').select('id, nombre, role'),
-      this.supabase.client
-        .from('pedidos')
-        .select('domiciliario_id, estado, entregado_at, total, metodo_pago, valor_domicilio')
-        .in('estado', ['entregado', 'en_ruta'])
-        .is('cuadre_id', null)
-        .not('domiciliario_id', 'is', null),
     ]);
-    if (!abiertosRes.error && abiertosRes.data) {
-      this.calcularSinCerrar(abiertosRes.data as any[]);
-    }
-
 
     if (!cuadresRes.error && cuadresRes.data) {
       this.cuadres = cuadresRes.data as Cuadre[];
@@ -133,94 +94,6 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     this.loading = false;
     this.cdr.detectChanges();
   }
-  private calcularSinCerrar(filas: any[]): void {
-    const grupos = new Map<string, SinCerrar>();
-    const enRuta = new Map<string, number>();
-    for (const p of filas) {
-      if (p.estado === 'en_ruta') {
-        enRuta.set(p.domiciliario_id, (enRuta.get(p.domiciliario_id) ?? 0) + 1);
-        continue;
-      }
-      if (!p.entregado_at) continue;
-      const fecha = diaColombiaDe(p.entregado_at);
-      const clave = p.domiciliario_id + '|' + fecha;
-      const g = grupos.get(clave) ?? {
-        domiciliarioId: p.domiciliario_id, fecha, pedidos: 0, efectivo: 0, transferencia: 0, domicilios: 0, aEntregar: 0,
-      };
-      const total = Number(p.total) || 0;
-      g.pedidos++;
-      if (p.metodo_pago === 'efectivo') g.efectivo += total;
-      if (p.metodo_pago === 'transferencia') g.transferencia += total;
-      g.domicilios += Number(p.valor_domicilio) || 0;
-      g.aEntregar = g.efectivo - g.domicilios;
-      grupos.set(clave, g);
-    }
-    this.enRutaPorDom = enRuta;
-    this.sinCerrar = Array.from(grupos.values()).sort(
-      (a, b) =>
-        b.fecha.localeCompare(a.fecha) ||
-        this.nombreDomiciliario(a.domiciliarioId).localeCompare(this.nombreDomiciliario(b.domiciliarioId))
-    );
-  }
-
-  get sinCerrarFiltrados(): SinCerrar[] {
-    return this.sinCerrar.filter((g) => this.domiciliarioId === 'todos' || g.domiciliarioId === this.domiciliarioId);
-  }
-
-  claveDe(g: SinCerrar): string {
-    return g.domiciliarioId + '|' + g.fecha;
-  }
-
-  /** Cierra el cuadre en nombre del domiciliario (cuando él no lo hizo). */
-  async cerrarPorDomiciliario(g: SinCerrar): Promise<void> {
-    const nombre = this.nombreDomiciliario(g.domiciliarioId);
-    const enRuta = g.fecha === this.hoy ? this.enRutaPorDom.get(g.domiciliarioId) ?? 0 : 0;
-    const aviso = enRuta
-      ? `\n\nTodavía tiene ${enRuta} ${enRuta === 1 ? 'pedido' : 'pedidos'} en ruta; esos quedarán para otro cuadre.`
-      : '';
-    const ok = await confirmar(
-      `Se cerrará el cuadre de ${nombre} del ${this.formatoFecha(g.fecha)}. Debe entregar ${this.formatoMoneda(g.aEntregar)}.${aviso}`,
-      { titulo: 'Cerrar cuadre', aceptar: 'Cerrar cuadre' }
-    );
-    if (!ok) return;
-
-    this.cerrandoClave = this.claveDe(g);
-    this.cdr.detectChanges();
-    const { error } = await this.supabase.client.rpc('cerrar_cuadre', { p_fecha: g.fecha, p_domiciliario: g.domiciliarioId });
-    this.cerrandoClave = null;
-    if (error) {
-      avisar(error.message, 'No se pudo cerrar');
-    } else {
-      this.filtro = 'pendiente';
-      this.fecha = g.fecha;
-    }
-    await this.cargarTodo();
-  }
-
-  /** Quién cerró el cuadre, si no fue el propio domiciliario. */
-  cerradoPor(c: Cuadre): string | null {
-    const por = c.cerrado_por;
-    if (por === undefined || por === c.domiciliario_id) return null;
-    if (por === null) return 'Cierre automático';
-    return 'Cerró ' + (this.nombresPorId.get(por) ?? 'la oficina');
-  }
-
-  /** Cuadres pendientes que el filtro de fecha está ocultando. */
-  get pendientesOtrosDias(): number {
-    if (!this.fecha) return 0;
-    return this.cuadres.filter(
-      (c) =>
-        c.estado === 'pendiente' &&
-        c.fecha !== this.fecha &&
-        (this.domiciliarioId === 'todos' || c.domiciliario_id === this.domiciliarioId)
-    ).length;
-  }
-
-  verPendientesOtrosDias(): void {
-    this.fecha = '';
-    this.filtro = 'pendiente';
-  }
-
 
   get filtrados(): Cuadre[] {
     return this.cuadres.filter((c) => {

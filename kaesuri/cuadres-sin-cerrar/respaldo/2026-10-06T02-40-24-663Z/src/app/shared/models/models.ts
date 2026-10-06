@@ -64,8 +64,6 @@ export interface Cuadre {
   cerrado_at: string;
   confirmado_at?: string | null;
   confirmado_por?: string | null;
-  /** Quién cerró el cuadre; null = cierre automático de la noche. */
-  cerrado_por?: string | null;
 }
 
 export interface CrearPedidoPayload {

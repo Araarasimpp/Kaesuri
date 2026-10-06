@@ -2,9 +2,7 @@
   <header class="page-header">
     <h1>Cuadres</h1>
     <div class="filtros">
-      <input type="date" class="filtro" [(ngModel)]="fecha" title="Fecha" aria-label="Fecha de los cuadres" />
-      <button class="btn-fecha" *ngIf="fecha !== hoy" (click)="fecha = hoy">Hoy</button>
-      <button class="btn-fecha" *ngIf="fecha" (click)="fecha = ''">Todas las fechas</button>
+      <input type="date" class="filtro" [(ngModel)]="fecha" title="Fecha" />
       <select class="filtro" [(ngModel)]="domiciliarioId">
         <option value="todos">Todos los domiciliarios</option>
         <option *ngFor="let d of domiciliarios" [value]="d.id">{{ d.nombre }}</option>
@@ -16,39 +14,6 @@
       </select>
     </div>
   </header>
-
-  <!-- Con la fecha de hoy por defecto, avisa si quedaron cuadres pendientes de otros días -->
-  <div class="aviso-otros-dias" *ngIf="!loading && fecha && pendientesOtrosDias > 0" role="status">
-    <span>
-      {{ pendientesOtrosDias === 1 ? 'Hay 1 cuadre pendiente' : 'Hay ' + pendientesOtrosDias + ' cuadres pendientes' }}
-      de otros días.
-    </span>
-    <button (click)="verPendientesOtrosDias()">Ver pendientes</button>
-  </div>
-
-  <!-- Lo que los domiciliarios llevan entregado y todavía no han cerrado -->
-  <section class="sin-cerrar" *ngIf="!loading && sinCerrarFiltrados.length" aria-labelledby="t-sin-cerrar">
-    <div class="sin-cerrar-head">
-      <h2 id="t-sin-cerrar">Sin cerrar</h2>
-      <span class="text-soft">En vivo: lo entregado que aún no está en un cuadre. Si nadie lo cierra, se cierra solo a las 11:50 p. m.</span>
-    </div>
-    <div class="sin-cerrar-fila" *ngFor="let g of sinCerrarFiltrados">
-      <span class="col-dom">{{ nombreDomiciliario(g.domiciliarioId) }}</span>
-      <span class="col-fecha text-soft">{{ g.fecha === hoy ? 'Hoy' : formatoFecha(g.fecha) }}</span>
-      <span class="col-pedidos text-soft">
-        {{ g.pedidos }} {{ g.pedidos === 1 ? 'entregado' : 'entregados'
-        }}<ng-container *ngIf="g.fecha === hoy && enRutaPorDom.get(g.domiciliarioId)">, {{ enRutaPorDom.get(g.domiciliarioId) }} en ruta</ng-container>
-      </span>
-      <span class="col-monto text-soft">Efectivo: {{ formatoMoneda(g.efectivo) }}</span>
-      <span class="col-monto text-soft">Transf: {{ formatoMoneda(g.transferencia) }}</span>
-      <span class="col-monto text-soft">Domicilios: {{ formatoMoneda(g.domicilios) }}</span>
-      <span class="col-entregar"><span class="text-soft">Debe entregar</span> <strong>{{ formatoMoneda(g.aEntregar) }}</strong></span>
-      <button class="btn-confirmar" (click)="cerrarPorDomiciliario(g)" [disabled]="cerrandoClave === claveDe(g)">
-        {{ cerrandoClave === claveDe(g) ? 'Cerrando…' : 'Cerrar cuadre' }}
-      </button>
-    </div>
-  </section>
-
 
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
@@ -62,7 +27,6 @@
             <span class="col-monto text-soft">Transf: {{ formatoMoneda(c.total_transferencia) }}</span>
             <span class="col-monto text-soft">Domicilios: {{ formatoMoneda(c.total_domicilios) }}</span>
             <span class="col-entregar"><strong>{{ formatoMoneda(c.total_a_entregar) }}</strong></span>
-          <span class="cerrado-por text-soft" *ngIf="cerradoPor(c) as quien">{{ quien }}</span>
             <span class="badge" [class.confirmado]="c.estado === 'confirmado'">
               {{ c.estado === 'confirmado' ? 'Confirmado' : 'Pendiente' }}
             </span>
@@ -113,9 +77,7 @@
       </div>
 
       <ng-template #vacio>
-        <p class="empty-msg">
-          {{ fecha ? 'No hay cuadres ' + (fecha === hoy ? 'de hoy' : 'del ' + formatoFecha(fecha)) + ' en este filtro.' : 'No hay cuadres en este filtro.' }}
-        </p>
+        <p class="empty-msg">No hay cuadres en este filtro.</p>
       </ng-template>
     </ng-container>
 
