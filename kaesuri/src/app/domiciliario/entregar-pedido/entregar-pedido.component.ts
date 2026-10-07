@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { MetodoPago } from '../../shared/models/models';
+import { llevaComprobante } from '../../shared/pago';
 
 interface PedidoResumen {
   id: string;
@@ -26,11 +27,21 @@ export class EntregarPedidoComponent {
   metodoPago: MetodoPago | null = null;
   archivoComprobante: File | null = null;
   previewComprobante: string | null = null;
+  /** Pago mixto: cuánto recibió en efectivo; el resto es transferencia. */
+  montoEfectivo: number | null = null;
 
   guardando = false;
   errorMsg = '';
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
+
+  get llevaComprobante(): boolean {
+    return llevaComprobante(this.metodoPago);
+  }
+
+  get montoTransferencia(): number {
+    return Math.max(this.pedido.total - (this.montoEfectivo ?? 0), 0);
+  }
 
   onArchivoSeleccionado(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -49,7 +60,15 @@ export class EntregarPedidoComponent {
       return;
     }
 
-    if (this.metodoPago === 'transferencia' && !this.archivoComprobante) {
+    if (this.metodoPago === 'mixto') {
+      const efectivo = this.montoEfectivo ?? 0;
+      if (efectivo <= 0 || efectivo >= this.pedido.total) {
+        this.errorMsg = 'El efectivo debe ser mayor que 0 y menor que el total del pedido.';
+        return;
+      }
+    }
+
+    if (this.llevaComprobante && !this.archivoComprobante) {
       this.errorMsg = 'Adjunta la foto del comprobante de transferencia.';
       return;
     }
@@ -59,19 +78,16 @@ export class EntregarPedidoComponent {
     try {
       let comprobanteUrl: string | null = null;
 
-      if (this.archivoComprobante) {
+      if (this.llevaComprobante && this.archivoComprobante) {
         comprobanteUrl = await this.subirComprobante(this.archivoComprobante);
       }
 
-      const { error } = await this.supabase.client
-        .from('pedidos')
-        .update({
-          estado: 'entregado',
-          entregado_at: new Date().toISOString(),
-          metodo_pago: this.metodoPago,
-          comprobante_url: comprobanteUrl,
-        })
-        .eq('id', this.pedido.id);
+      const { error } = await this.supabase.client.rpc('entregar_pedido', {
+        p_pedido_id: this.pedido.id,
+        p_metodo: this.metodoPago,
+        p_comprobante: comprobanteUrl,
+        p_efectivo: this.metodoPago === 'mixto' ? this.montoEfectivo : null,
+      });
 
       this.guardando = false;
 

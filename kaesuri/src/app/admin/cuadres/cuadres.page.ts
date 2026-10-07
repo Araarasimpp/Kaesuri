@@ -5,6 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
+import { ETIQUETA_METODO, efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
 import { diaColombiaDe, formatoFechaCO, hoyColombiaISO } from '../../shared/fecha-colombia';
 
 import { avisar, confirmar } from '../../shared/dialogo';
@@ -19,6 +20,8 @@ interface PedidoDelCuadre {
   total: number;
   valor_domicilio: number;
   metodo_pago: MetodoPago | null;
+  monto_efectivo: number | null;
+  monto_transferencia: number | null;
   comprobante_url: string | null;
 }
 
@@ -109,7 +112,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       this.supabase.client.from('profiles').select('id, nombre, role'),
       this.supabase.client
         .from('pedidos')
-        .select('domiciliario_id, estado, entregado_at, total, metodo_pago, valor_domicilio')
+        .select('domiciliario_id, estado, entregado_at, total, metodo_pago, monto_efectivo, monto_transferencia, valor_domicilio')
         .in('estado', ['entregado', 'en_ruta'])
         .is('cuadre_id', null)
         .not('domiciliario_id', 'is', null),
@@ -147,10 +150,9 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       const g = grupos.get(clave) ?? {
         domiciliarioId: p.domiciliario_id, fecha, pedidos: 0, efectivo: 0, transferencia: 0, domicilios: 0, aEntregar: 0,
       };
-      const total = Number(p.total) || 0;
       g.pedidos++;
-      if (p.metodo_pago === 'efectivo') g.efectivo += total;
-      if (p.metodo_pago === 'transferencia') g.transferencia += total;
+      g.efectivo += efectivoDe(p);
+      g.transferencia += transferenciaDe(p);
       g.domicilios += Number(p.valor_domicilio) || 0;
       g.aEntregar = g.efectivo - g.domicilios;
       grupos.set(clave, g);
@@ -254,7 +256,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       const { data, error } = await this.supabase.client
         .from('pedidos')
         .select(
-          'id, numero, cliente_nombre, cliente_telefono, direccion, total, valor_domicilio, metodo_pago, comprobante_url'
+          'id, numero, cliente_nombre, cliente_telefono, direccion, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url'
         )
         .eq('cuadre_id', cuadre.id)
         .order('numero');
@@ -273,11 +275,19 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
   efectivoDe(p: PedidoDelCuadre): number {
-    return p.metodo_pago === 'efectivo' ? p.total : 0;
+    return efectivoDe(p);
   }
 
   transferenciaDe(p: PedidoDelCuadre): number {
-    return p.metodo_pago === 'transferencia' ? p.total : 0;
+    return transferenciaDe(p);
+  }
+
+  llevaComprobante(p: PedidoDelCuadre): boolean {
+    return llevaComprobante(p.metodo_pago);
+  }
+
+  etiquetaMetodo(p: PedidoDelCuadre): string {
+    return ETIQUETA_METODO[p.metodo_pago ?? 'efectivo'];
   }
 
   previewUrl: string | null = null;

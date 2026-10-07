@@ -172,7 +172,7 @@ export class ConfiguracionPage implements OnInit {
       this.supabase.client
         .from('pedidos')
         .select(
-          'numero, estado, cliente_nombre, cliente_telefono, direccion, barrio, total, valor_domicilio, comision, metodo_pago, created_at, entregado_at'
+          'numero, estado, cliente_nombre, cliente_telefono, direccion, barrio, total, valor_domicilio, comision, metodo_pago, monto_efectivo, monto_transferencia, created_at, entregado_at'
         )
         .order('created_at', { ascending: false }),
       this.supabase.client

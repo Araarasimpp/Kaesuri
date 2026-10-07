@@ -44,7 +44,7 @@
           <p class="pedido-linea" *ngIf="p.barrio"><strong>Barrio:</strong> {{ p.barrio }}</p>
           <button
             class="ver-comprobante"
-            *ngIf="p.metodo_pago === 'transferencia'"
+            *ngIf="llevaComprobante(p)"
             (click)="verComprobante(p)"
           >
             Ver comprobante

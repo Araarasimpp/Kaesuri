@@ -21,7 +21,30 @@
         <span>Transferencia</span>
       </label>
 
-      <div class="comprobante-uploader" *ngIf="metodoPago === 'transferencia'">
+      <label class="metodo-opcion" [class.selected]="metodoPago === 'mixto'">
+        <input type="radio" name="metodo" value="mixto" [(ngModel)]="metodoPago" />
+        <span>Mixto (efectivo + transferencia)</span>
+      </label>
+
+      <div class="mixto-montos" *ngIf="metodoPago === 'mixto'">
+        <label class="mixto-campo">
+          <span>Recibido en efectivo</span>
+          <input
+            type="number"
+            inputmode="numeric"
+            min="0"
+            [max]="pedido.total"
+            placeholder="0"
+            [(ngModel)]="montoEfectivo"
+          />
+        </label>
+        <div class="mixto-campo">
+          <span>Por transferencia</span>
+          <strong class="monto">{{ montoTransferencia | number }}</strong>
+        </div>
+      </div>
+
+      <div class="comprobante-uploader" *ngIf="llevaComprobante">
         <label class="comprobante-preview" [class.empty]="!previewComprobante">
           <img *ngIf="previewComprobante" [src]="previewComprobante" alt="Comprobante" />
           <span *ngIf="!previewComprobante">Toca para subir foto del comprobante</span>

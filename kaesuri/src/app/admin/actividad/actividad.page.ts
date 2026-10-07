@@ -47,6 +47,8 @@ const CAMPOS: Record<string, string> = {
   rotulo_impreso_at: 'Rótulo impreso',
   entregado_at: 'Entregado el',
   metodo_pago: 'Método de pago',
+  monto_efectivo: 'Pagado en efectivo',
+  monto_transferencia: 'Pagado por transferencia',
   comprobante_url: 'Comprobante',
   cuadre_id: 'Cuadre',
   total: 'Total',
@@ -81,7 +83,7 @@ const CAMPOS: Record<string, string> = {
   total_domicilios: 'Domicilios',
 };
 
-const DINERO = new Set(['total', 'valor_domicilio', 'comision', 'costo', 'precio_base', 'precio_sugerido', 'valor', 'total_efectivo', 'total_transferencia', 'total_domicilios']);
+const DINERO = new Set(['total', 'valor_domicilio', 'comision', 'costo', 'precio_base', 'precio_sugerido', 'valor', 'total_efectivo', 'total_transferencia', 'total_domicilios', 'monto_efectivo', 'monto_transferencia']);
 const PERSONAS = new Set(['domiciliario_id', 'vendedor_id', 'confirmado_por']);
 const FECHAS = new Set(['confirmado_at', 'rotulo_impreso_at', 'entregado_at']);
 const OCULTOS = new Set(['id', 'created_at', 'total_general', 'total_a_entregar', 'cerrado_at', 'numero']);

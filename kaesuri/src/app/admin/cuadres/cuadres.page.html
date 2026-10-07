@@ -86,12 +86,16 @@
               <div class="pd-linea-principal">
                 <span class="pd-numero">#{{ p.numero }}</span>
                 <span class="pd-cliente">{{ p.cliente_nombre }}</span>
-                <span class="pd-metodo" [class.transferencia]="p.metodo_pago === 'transferencia'">
-                  {{ p.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                <span
+                  class="pd-metodo"
+                  [class.transferencia]="p.metodo_pago === 'transferencia'"
+                  [class.mixto]="p.metodo_pago === 'mixto'"
+                >
+                  {{ etiquetaMetodo(p) }}
                 </span>
                 <button
                   class="pd-comprobante"
-                  *ngIf="p.metodo_pago === 'transferencia'"
+                  *ngIf="llevaComprobante(p)"
                   (click)="verComprobante(p)"
                 >
                   Ver comprobante

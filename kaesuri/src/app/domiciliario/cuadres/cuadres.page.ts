@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
+import { efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
 import {
   hoyColombiaISO,
   inicioDiaColombia,
@@ -22,6 +23,8 @@ interface PedidoSinCuadrar {
   total: number;
   valor_domicilio: number;
   metodo_pago: MetodoPago | null;
+  monto_efectivo: number | null;
+  monto_transferencia: number | null;
   comprobante_url: string | null;
   entregado_at: string;
   productos: string;
@@ -57,18 +60,20 @@ export class CuadresPage implements OnInit {
       this.loading = false;
       this.cdr.detectChanges();
       return;
-    }
+    }
+
     const finHoy = finDiaColombia();
 
     const [pedidosRes, cuadresRes] = await Promise.all([
       this.supabase.client
         .from('pedidos')
         .select(
-          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, metodo_pago, comprobante_url, entregado_at'
+          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, entregado_at'
         )
         .eq('domiciliario_id', user.id)
         .eq('estado', 'entregado')
-        .is('cuadre_id', null)
+        .is('cuadre_id', null)
+
         .lte('entregado_at', finHoy.toISOString())
         .order('entregado_at', { ascending: false }),
       this.supabase.client
@@ -109,13 +114,18 @@ export class CuadresPage implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // Lo que aportó ESTE pedido en efectivo (0 si fue por transferencia)
+  // Lo que aportó ESTE pedido en efectivo (0 si fue por transferencia;
+  // en un pago mixto, solo la parte en efectivo)
   efectivoDe(p: PedidoSinCuadrar): number {
-    return p.metodo_pago === 'efectivo' ? p.total : 0;
+    return efectivoDe(p);
   }
 
   transferenciaDe(p: PedidoSinCuadrar): number {
-    return p.metodo_pago === 'transferencia' ? p.total : 0;
+    return transferenciaDe(p);
+  }
+
+  llevaComprobante(p: PedidoSinCuadrar): boolean {
+    return llevaComprobante(p.metodo_pago);
   }
 
   // Cuadre de este pedido en particular: lo que aportó en efectivo menos el

@@ -1,6 +1,6 @@
 export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador';
 export type EstadoPedido = 'pendiente' | 'en_ruta' | 'entregado' | 'cancelado';
-export type MetodoPago = 'efectivo' | 'transferencia';
+export type MetodoPago = 'efectivo' | 'transferencia' | 'mixto';
 
 export interface Producto {
   id: string;
@@ -40,6 +40,9 @@ export interface Pedido {
   estado: EstadoPedido;
   total: number;
   metodo_pago?: MetodoPago | null;
+  /** Solo en pago mixto: cuánto se recibió en efectivo y cuánto por transferencia. */
+  monto_efectivo?: number | null;
+  monto_transferencia?: number | null;
   comprobante_url?: string | null;
   rotulo_impreso_at?: string | null;
   cuadre_id?: string | null;
