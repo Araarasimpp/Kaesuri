@@ -1,5 +1,5 @@
 -- Kaesuri · Pago mixto (parte en efectivo, parte por transferencia)
--- Pegar completo en Supabase → SQL Editor → Run (proyecto Kaesuri).
+-- YA APLICADO en Supabase (proyecto Kaesuri) el 7 oct 2026; se guarda como registro.
 --  1. metodo_pago acepta 'mixto'.
 --  2. pedidos.monto_efectivo / monto_transferencia: cómo se repartió un pago mixto
 --     (en efectivo y transferencia quedan en null: el total va todo a un lado).
@@ -7,31 +7,10 @@
 --     del comprobante y, si es mixto, cuánto recibió en efectivo.
 --  4. cuadre_cerrar_interno suma la parte en efectivo / transferencia de los mixtos.
 
--- 1) 'mixto' como método de pago (sirve tanto si la columna es un enum como si es texto con check)
-do $$
-declare
-  v_tipo regtype;
-  v_check record;
-begin
-  select atttypid::regtype into v_tipo
-    from pg_attribute
-   where attrelid = 'public.pedidos'::regclass and attname = 'metodo_pago';
-
-  if exists (select 1 from pg_type where oid = v_tipo and typtype = 'e') then
-    execute format('alter type %s add value if not exists %L', v_tipo, 'mixto');
-  else
-    for v_check in
-      select conname from pg_constraint
-       where conrelid = 'public.pedidos'::regclass and contype = 'c'
-         and pg_get_constraintdef(oid) ilike '%metodo_pago%'
-    loop
-      execute format('alter table public.pedidos drop constraint %I', v_check.conname);
-    end loop;
-    alter table public.pedidos add constraint pedidos_metodo_pago_check
-      check (metodo_pago is null or metodo_pago::text in ('efectivo', 'transferencia', 'mixto'));
-  end if;
-end;
-$$;
+-- 1) 'mixto' como método de pago (metodo_pago es texto con check)
+alter table public.pedidos drop constraint if exists pedidos_metodo_pago_check;
+alter table public.pedidos add constraint pedidos_metodo_pago_check
+  check (metodo_pago is null or metodo_pago in ('efectivo', 'transferencia', 'mixto'));
 
 begin;
 
@@ -48,7 +27,7 @@ language plpgsql set search_path = public as $f$
 declare
   v_efectivo numeric := nullif(current_setting('kaesuri.pago_efectivo', true), '')::numeric;
 begin
-  if new.metodo_pago::text = 'mixto' then
+  if new.metodo_pago = 'mixto' then
     if v_efectivo is not null then
       new.monto_efectivo := v_efectivo;
     end if;
@@ -94,9 +73,7 @@ begin
   update public.pedidos
      set estado = 'entregado',
          entregado_at = now(),
-         -- jsonb_populate_record convierte el texto al tipo real de la columna (enum o texto)
-         metodo_pago = (jsonb_populate_record(null::public.pedidos,
-                          jsonb_build_object('metodo_pago', p_metodo))).metodo_pago,
+         metodo_pago = p_metodo,
          comprobante_url = p_comprobante
    where id = p_pedido_id;
 
@@ -126,11 +103,11 @@ begin
    for update;
 
   select coalesce(sum(valor_domicilio), 0),
-         coalesce(sum(case metodo_pago::text
+         coalesce(sum(case metodo_pago
                         when 'efectivo' then total
                         when 'mixto' then monto_efectivo
                         else 0 end), 0),
-         coalesce(sum(case metodo_pago::text
+         coalesce(sum(case metodo_pago
                         when 'transferencia' then total
                         when 'mixto' then monto_transferencia
                         else 0 end), 0),
