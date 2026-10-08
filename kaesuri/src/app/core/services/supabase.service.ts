@@ -1,6 +1,28 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { createClient, isAuthRetryableFetchError, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
+
+/**
+ * fetch con límite de tiempo. Cuando el celular deja la app en segundo plano,
+ * la conexión queda muerta y, al volver, la petición que renueva la sesión se
+ * podía quedar colgada para siempre: todo lo que espera la sesión (incluido el
+ * guard que deja ver cada pantalla) esperaba con ella y la app quedaba en blanco.
+ * Al cortarla, Supabase la reintenta sola por una conexión nueva.
+ * Las subidas de fotos (storage) no tienen límite: con mala señal pueden tardar.
+ */
+function fetchConLimite(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const limiteMs = url.includes('/auth/v1/') ? 10_000 : url.includes('/rest/v1/') ? 20_000 : 0;
+  if (!limiteMs) return fetch(input, init);
+
+  const control = new AbortController();
+  const original = init?.signal;
+  if (original?.aborted) control.abort(original.reason);
+  original?.addEventListener('abort', () => control.abort(original.reason), { once: true });
+  const temporizador = setTimeout(() => control.abort(new DOMException('Tiempo de espera agotado', 'TimeoutError')), limiteMs);
+
+  return fetch(input, { ...init, signal: control.signal }).finally(() => clearTimeout(temporizador));
+}
 
 export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador';
 
@@ -27,6 +49,7 @@ export class SupabaseService {
         autoRefreshToken: true,
         detectSessionInUrl: false,
       },
+      global: { fetch: fetchConLimite },
     });
   }
 
@@ -62,8 +85,13 @@ export class SupabaseService {
 
 
   async getCurrentUser(): Promise<User | null> {
-    const { data } = await this.client.auth.getUser();
-    return data.user;
+    const { data, error } = await this.client.auth.getUser();
+    if (data.user || !error || !isAuthRetryableFetchError(error)) return data.user;
+
+    // Falló la red (típico justo al volver del segundo plano), no es que no
+    // haya sesión: un segundo intento va por una conexión nueva.
+    const reintento = await this.client.auth.getUser();
+    return reintento.data.user;
   }
 
   async getCurrentProfile(): Promise<Profile | null> {

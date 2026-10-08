@@ -19,18 +19,9 @@ export class RoleGuard implements CanActivate {
 
     // El profile queda cacheado en memoria durante la sesión, así que
     // revisamos "activo" con una consulta fresca por si lo desactivaron
-    // mientras la persona ya tenía la sesión abierta.
-    const { data: estadoActual } = await this.supabase.client
-      .from('profiles')
-      .select('activo')
-      .eq('id', profile.id)
-      .single();
-
-    if (estadoActual && !estadoActual.activo) {
-      await this.supabase.logout();
-      this.router.navigate(['/auth/login']);
-      return false;
-    }
+    // mientras la persona ya tenía la sesión abierta. Va en segundo plano para
+    // no dejar la pantalla en blanco esperando la red.
+    this.revisarActivo(profile.id);
 
     // La ruta no restringe roles → cualquier autenticado pasa
     if (!allowedRoles || allowedRoles.length === 0) {
@@ -44,6 +35,19 @@ export class RoleGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  private async revisarActivo(perfilId: string): Promise<void> {
+    const { data: estadoActual } = await this.supabase.client
+      .from('profiles')
+      .select('activo')
+      .eq('id', perfilId)
+      .single();
+
+    if (estadoActual && !estadoActual.activo) {
+      await this.supabase.logout();
+      this.router.navigate(['/auth/login']);
+    }
   }
 }
 
