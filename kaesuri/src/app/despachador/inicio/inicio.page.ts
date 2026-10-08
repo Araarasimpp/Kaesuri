@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { inicioDiaColombia } from '../../shared/fecha-colombia';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface PedidoResumen {
   id: string;
@@ -22,7 +23,7 @@ interface CuadrePendiente {
 @Component({
   selector: 'app-inicio-despachador',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [SkeletonComponent, CommonModule, RouterLink],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })

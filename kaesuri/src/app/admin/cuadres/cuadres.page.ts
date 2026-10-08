@@ -9,6 +9,7 @@ import { ETIQUETA_METODO, efectivoDe, llevaComprobante, transferenciaDe } from '
 import { diaColombiaDe, formatoFechaCO, hoyColombiaISO } from '../../shared/fecha-colombia';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
 
 interface PedidoDelCuadre {
@@ -44,7 +45,7 @@ interface Domiciliario {
 @Component({
   selector: 'app-admin-cuadres',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImagenPreviewComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, ImagenPreviewComponent],
   templateUrl: './cuadres.page.html',
   styleUrls: ['./cuadres.page.scss'],
 })

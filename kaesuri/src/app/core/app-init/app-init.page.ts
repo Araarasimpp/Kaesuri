@@ -5,20 +5,8 @@ import { SupabaseService } from '../services/supabase.service';
 @Component({
   selector: 'app-init',
   standalone: true,
-  template: `<div class="app-init"><p>Cargando...</p></div>`,
-  styles: [
-    `
-      .app-init {
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--k-text-soft);
-        font-family: var(--k-font);
-        font-size: 14px;
-      }
-    `,
-  ],
+  // Mientras decide a dónde ir, se ve el skeleton de arranque de AppComponent.
+  template: '',
 })
 export class AppInitPage implements OnInit {
   constructor(private supabase: SupabaseService, private router: Router) {}

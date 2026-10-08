@@ -30,7 +30,35 @@
 </head>
 
 <body>
-  <app-root></app-root>
+  <!-- Aplica el tema guardado antes de pintar nada (mismo criterio que ThemeService) -->
+  <script>
+    try {
+      var t = localStorage.getItem('kaesuri-theme');
+      if (t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add('dark');
+    } catch (e) {}
+  </script>
+  <app-root>
+    <!-- Se ve mientras descarga la app; Angular lo reemplaza al arrancar -->
+    <style>
+      .arranque { box-sizing: border-box; min-height: 100vh; padding: 28px 16px; max-width: 640px; margin: 0 auto; }
+      .arranque i { display: block; position: relative; overflow: hidden; background: var(--k-bg-alt, #f1f1f3); border-radius: 6px; }
+      .arranque i::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent); animation: arranque 1.4s ease-in-out infinite; }
+      body.dark .arranque i::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent); }
+      .arranque .t { width: 45%; height: 26px; margin-bottom: 22px; }
+      .arranque div { background: var(--k-card-bg, #fff); border: 1px solid var(--k-border, #e6e6ea); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+      .arranque div i { height: 12px; margin-bottom: 10px; }
+      .arranque div i:first-child { height: 18px; width: 60%; margin-bottom: 16px; }
+      @keyframes arranque { to { transform: translateX(100%); } }
+      @media (prefers-reduced-motion: reduce) { .arranque i::after { animation: none; } }
+    </style>
+    <div class="arranque" role="status" aria-label="Cargando">
+      <i class="t"></i>
+      <div><i></i><i style="width: 85%"></i><i style="width: 70%"></i><i style="width: 50%"></i></div>
+      <div><i></i><i style="width: 75%"></i><i style="width: 80%"></i><i style="width: 40%"></i></div>
+      <div><i></i><i style="width: 90%"></i><i style="width: 60%"></i><i style="width: 55%"></i></div>
+    </div>
+  </app-root>
 </body>
 
 </html>

@@ -1,0 +1,35 @@
+// Skeleton de arranque: tapa la pantalla mientras se revisa la sesión.
+.arranque {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  background: var(--k-bg);
+  padding: 28px 16px;
+}
+
+.arranque-contenido {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.arranque-titulo {
+  width: 45%;
+  height: 26px;
+  margin-bottom: 22px;
+  border-radius: 6px;
+  background: var(--k-bg-alt);
+  animation: arranque-pulso 1.6s ease-in-out infinite;
+}
+
+@keyframes arranque-pulso {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arranque-titulo {
+    animation: none;
+  }
+}

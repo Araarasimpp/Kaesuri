@@ -105,7 +105,7 @@
     </ng-container>
 
     <ng-template #cargando>
-      <p class="empty-msg">Cargando productos...</p>
+      <app-skeleton variante="filas" [cantidad]="8"></app-skeleton>
     </ng-template>
 
     <footer class="table-footer" *ngIf="filtrados.length">

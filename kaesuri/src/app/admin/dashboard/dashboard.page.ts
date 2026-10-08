@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface PedidoResumen {
   id: string;
@@ -42,7 +43,7 @@ interface DomiciliarioActivo {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [SkeletonComponent, CommonModule, RouterLink],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
 })

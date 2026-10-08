@@ -7,6 +7,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { LOGO_ROTULO, RotuloService } from '../../shared/rotulo.service';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface Configuracion {
   nombre_negocio: string;
   telefonos: string | null;
@@ -24,7 +25,7 @@ interface Zona {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './configuracion.page.html',
   styleUrls: ['./configuracion.page.scss'],
 })

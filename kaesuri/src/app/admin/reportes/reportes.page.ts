@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface FilaReporte {
   pedidoId: string;
@@ -33,7 +34,7 @@ type FiltroEstado = 'todos' | EstadoPedido;
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './reportes.page.html',
   styleUrls: ['./reportes.page.scss'],
 })

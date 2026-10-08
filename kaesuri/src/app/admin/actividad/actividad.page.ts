@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { finDiaColombia, hoyColombiaISO, inicioDiaColombia } from '../../shared/fecha-colombia';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface Registro {
   id: number;
@@ -91,7 +92,7 @@ const OCULTOS = new Set(['id', 'created_at', 'total_general', 'total_a_entregar'
 @Component({
   selector: 'app-actividad',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './actividad.page.html',
   styleUrls: ['./actividad.page.scss'],
 })

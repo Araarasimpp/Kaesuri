@@ -5,6 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService, UserRole } from '../../core/services/supabase.service';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface UsuarioFila {
   id: string;
   nombre: string;
@@ -17,7 +18,7 @@ interface UsuarioFila {
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './usuarios.page.html',
   styleUrls: ['./usuarios.page.scss'],
 })

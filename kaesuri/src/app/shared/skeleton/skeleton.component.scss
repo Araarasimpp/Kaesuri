@@ -1,0 +1,173 @@
+:host {
+  display: block;
+  --sk-hueso: var(--k-bg-alt);
+  --sk-brillo: rgba(255, 255, 255, 0.65);
+}
+
+:host-context(body.dark) {
+  --sk-brillo: rgba(255, 255, 255, 0.06);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sk-bone {
+  position: relative;
+  overflow: hidden;
+  background: var(--sk-hueso);
+  border-radius: 6px;
+}
+
+.sk-bone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--sk-brillo), transparent);
+  animation: sk-brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes sk-brillo {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-bone::after {
+    animation: none;
+  }
+  .sk-bone {
+    animation: sk-pulso 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sk-pulso {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.sk-card {
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.sk-titulo {
+  height: 18px;
+  margin-bottom: 16px;
+}
+
+.sk-linea {
+  height: 12px;
+  margin-bottom: 10px;
+}
+
+.sk-tenue {
+  opacity: 0.7;
+  margin-bottom: 0;
+}
+
+/* Tarjetas */
+.sk-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sk-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sk-boton {
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+}
+
+/* Stats */
+.sk-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sk-stat {
+  padding: 16px;
+}
+
+.sk-numero {
+  height: 26px;
+  margin-top: 6px;
+}
+
+.sk-bloque {
+  height: 160px;
+  border-radius: 10px;
+}
+
+/* Filas */
+.sk-filas {
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-card);
+  overflow: hidden;
+}
+
+.sk-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--k-row-line);
+}
+
+.sk-fila:last-child {
+  border-bottom: none;
+}
+
+.sk-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.sk-fila-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.sk-monto {
+  width: 72px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Formulario */
+.sk-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sk-etiqueta {
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.sk-input {
+  height: 42px;
+  border-radius: 9px;
+}

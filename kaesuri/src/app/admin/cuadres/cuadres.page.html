@@ -80,7 +80,7 @@
           </div>
 
           <div class="cuadre-detalle" *ngIf="expandidoId === c.id">
-            <p class="detalle-cargando" *ngIf="cargandoDetalle">Cargando pedidos...</p>
+            <app-skeleton *ngIf="cargandoDetalle" variante="filas" [cantidad]="3"></app-skeleton>
 
             <div class="pedido-detalle-row" *ngFor="let p of pedidosDe(c.id)">
               <div class="pd-linea-principal">
@@ -124,7 +124,7 @@
     </ng-container>
 
     <ng-template #cargando>
-      <p class="empty-msg">Cargando cuadres...</p>
+      <app-skeleton variante="filas" [cantidad]="6"></app-skeleton>
     </ng-template>
   </div>
 </div>

@@ -1,0 +1,53 @@
+<div class="skeleton" role="status" aria-live="polite" aria-busy="true">
+  <span class="sr-only">Cargando…</span>
+
+  <ng-container [ngSwitch]="variante">
+    <!-- Tarjetas -->
+    <div class="sk-tarjetas" *ngSwitchCase="'tarjetas'">
+      <div class="sk-card" *ngFor="let i of items">
+        <div class="sk-bone sk-titulo" [style.width]="ancho(i, 70)"></div>
+        <div class="sk-bone sk-linea" [style.width]="ancho(i + 1, 90)"></div>
+        <div class="sk-bone sk-linea" [style.width]="ancho(i + 2, 80)"></div>
+        <div class="sk-bone sk-linea" [style.width]="ancho(i + 3, 60)"></div>
+        <div class="sk-acciones">
+          <div class="sk-bone sk-boton"></div>
+          <div class="sk-bone sk-boton"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fichas de números + panel -->
+    <div class="sk-stats" *ngSwitchCase="'stats'">
+      <div class="sk-stats-grid">
+        <div class="sk-card sk-stat" *ngFor="let i of [0, 1, 2, 3]">
+          <div class="sk-bone sk-linea" [style.width]="ancho(i, 60)"></div>
+          <div class="sk-bone sk-numero" [style.width]="ancho(i + 1, 75)"></div>
+        </div>
+      </div>
+      <div class="sk-card sk-panel">
+        <div class="sk-bone sk-titulo" style="width: 40%"></div>
+        <div class="sk-bone sk-bloque"></div>
+      </div>
+    </div>
+
+    <!-- Filas de tabla / lista -->
+    <div class="sk-filas" *ngSwitchCase="'filas'">
+      <div class="sk-fila" *ngFor="let i of items">
+        <div class="sk-bone sk-avatar"></div>
+        <div class="sk-fila-texto">
+          <div class="sk-bone sk-linea" [style.width]="ancho(i, 65)"></div>
+          <div class="sk-bone sk-linea sk-tenue" [style.width]="ancho(i + 2, 45)"></div>
+        </div>
+        <div class="sk-bone sk-monto"></div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="sk-formulario" *ngSwitchCase="'formulario'">
+      <div class="sk-campo" *ngFor="let i of items">
+        <div class="sk-bone sk-etiqueta" [style.width]="ancho(i, 35)"></div>
+        <div class="sk-bone sk-input"></div>
+      </div>
+    </div>
+  </ng-container>
+</div>

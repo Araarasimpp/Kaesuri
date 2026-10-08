@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface PedidoPropio {
   id: string;
@@ -25,7 +26,7 @@ interface BarraDia {
 @Component({
   selector: 'app-inicio-vendedor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [SkeletonComponent, CommonModule],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })

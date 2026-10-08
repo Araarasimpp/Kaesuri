@@ -8,12 +8,13 @@ import { ProductoFormComponent } from './producto-form/producto-form.component';
 import { Producto } from '../../shared/models/models';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 type TabFiltro = 'activos' | 'todos';
 
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductoFormComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, ProductoFormComponent],
   templateUrl: './productos.page.html',
   styleUrls: ['./productos.page.scss'],
 })

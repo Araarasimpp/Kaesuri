@@ -14,6 +14,7 @@ import {
 } from '../../shared/fecha-colombia';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface PedidoSinCuadrar {
   id: string;
   numero: number;
@@ -33,7 +34,7 @@ interface PedidoSinCuadrar {
 @Component({
   selector: 'app-cuadres',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImagenPreviewComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, ImagenPreviewComponent],
   templateUrl: './cuadres.page.html',
   styleUrls: ['./cuadres.page.scss'],
 })

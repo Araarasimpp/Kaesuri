@@ -6,6 +6,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { Producto } from '../../shared/models/models';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface ItemCarrito {
   producto: Producto;
   cantidad: number;
@@ -17,7 +18,7 @@ interface ItemCarrito {
 @Component({
   selector: 'app-nuevo-pedido',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './nuevo-pedido.page.html',
   styleUrls: ['./nuevo-pedido.page.scss'],
 })

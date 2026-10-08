@@ -16,6 +16,7 @@ import { EstadoPedido } from '../../shared/models/models';
 import { RotuloService } from '../../shared/rotulo.service';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface ItemFila {
   nombre: string;
@@ -57,7 +58,7 @@ const COLUMNAS =
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ImagenPreviewComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, RouterLink, ImagenPreviewComponent],
   templateUrl: './pedidos.page.html',
   styleUrls: ['./pedidos.page.scss'],
 })

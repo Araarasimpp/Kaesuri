@@ -6,6 +6,7 @@ import { callOutline, logoWhatsapp, navigateOutline } from 'ionicons/icons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EntregarPedidoComponent } from '../entregar-pedido/entregar-pedido.component';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface PedidoRuta {
   id: string;
@@ -23,7 +24,7 @@ interface PedidoRuta {
 @Component({
   selector: 'app-inicio-domiciliario',
   standalone: true,
-  imports: [CommonModule, IonIcon, EntregarPedidoComponent],
+  imports: [SkeletonComponent, CommonModule, IonIcon, EntregarPedidoComponent],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
