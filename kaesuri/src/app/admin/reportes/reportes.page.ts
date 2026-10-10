@@ -53,11 +53,6 @@ export class ReportesPage implements OnInit {
   // Totales a nivel de PEDIDO (no se duplican aunque el pedido tenga varias filas de producto)
   private pedidosUnicos: { estado: EstadoPedido; total: number; valorDomicilio: number; comision: number }[] = [];
 
-  /**
-   * Con "Todos" los estados, las ganancias solo cuentan lo que de verdad se ganó:
-   * los cancelados no se cobraron y los que van en ruta todavía no se entregan.
-   */
-  private static readonly SIN_GANANCIA_EN_TODOS: EstadoPedido[] = ['cancelado', 'en_ruta'];
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: 'todos', etiqueta: 'Todos' },
@@ -220,9 +215,12 @@ export class ReportesPage implements OnInit {
     return this.pedidosUnicos.reduce((s, p) => s + p.valorDomicilio, 0);
   }
 
-  /** Si el pedido entra en los totales de ganancia (tienda y vendedor). */
+  /**
+   * Si el pedido entra en los totales de ganancia (tienda y vendedor). Con "Todos"
+   * los estados solo cuenta lo que de verdad se ganó: los pedidos entregados.
+   */
   sumaGanancia(estado: EstadoPedido): boolean {
-    return this.estado !== 'todos' || !ReportesPage.SIN_GANANCIA_EN_TODOS.includes(estado);
+    return this.estado !== 'todos' || estado === 'entregado';
   }
 
   /** Hay filas en pantalla que no entran en las ganancias (para avisarlo). */
