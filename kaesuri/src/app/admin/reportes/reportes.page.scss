@@ -143,6 +143,21 @@ tbody tr:last-child td {
   font-weight: 600;
 }
 
+// Cancelados y en ruta (con "Todos"): se muestran, pero no entran en los totales
+.ganancia.sin-sumar,
+.comision.sin-sumar {
+  color: var(--k-text-muted);
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.nota-ganancias {
+  margin: 0;
+  padding: 10px 16px 14px;
+  font-size: 12px;
+  color: var(--k-text-soft);
+}
+
 .badge {
   font-size: 11px;
   font-weight: 600;

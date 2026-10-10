@@ -51,7 +51,13 @@ export class ReportesPage implements OnInit {
   filas: FilaReporte[] = [];
 
   // Totales a nivel de PEDIDO (no se duplican aunque el pedido tenga varias filas de producto)
-  private pedidosUnicos: { total: number; valorDomicilio: number; comision: number }[] = [];
+  private pedidosUnicos: { estado: EstadoPedido; total: number; valorDomicilio: number; comision: number }[] = [];
+
+  /**
+   * Con "Todos" los estados, las ganancias solo cuentan lo que de verdad se ganó:
+   * los cancelados no se cobraron y los que van en ruta todavía no se entregan.
+   */
+  private static readonly SIN_GANANCIA_EN_TODOS: EstadoPedido[] = ['cancelado', 'en_ruta'];
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: 'todos', etiqueta: 'Todos' },
@@ -140,6 +146,7 @@ export class ReportesPage implements OnInit {
     const nombresPorId = new Map((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre]));
 
     this.pedidosUnicos = pedidos.map((p: any) => ({
+      estado: p.estado,
       total: Number(p.total ?? 0),
       valorDomicilio: Number(p.valor_domicilio ?? 0),
       comision: Number(p.comision ?? 0),
@@ -213,12 +220,22 @@ export class ReportesPage implements OnInit {
     return this.pedidosUnicos.reduce((s, p) => s + p.valorDomicilio, 0);
   }
 
+  /** Si el pedido entra en los totales de ganancia (tienda y vendedor). */
+  sumaGanancia(estado: EstadoPedido): boolean {
+    return this.estado !== 'todos' || !ReportesPage.SIN_GANANCIA_EN_TODOS.includes(estado);
+  }
+
+  /** Hay filas en pantalla que no entran en las ganancias (para avisarlo). */
+  get hayExcluidosDeGanancia(): boolean {
+    return this.filas.some((f) => !this.sumaGanancia(f.estado));
+  }
+
   get totalComision(): number {
-    return this.pedidosUnicos.reduce((s, p) => s + p.comision, 0);
+    return this.pedidosUnicos.reduce((s, p) => s + (this.sumaGanancia(p.estado) ? p.comision : 0), 0);
   }
 
   get totalGananciaTienda(): number {
-    return this.filas.reduce((s, f) => s + f.gananciaItem, 0);
+    return this.filas.reduce((s, f) => s + (this.sumaGanancia(f.estado) ? f.gananciaItem : 0), 0);
   }
 
   get totalCantidad(): number {

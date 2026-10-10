@@ -66,10 +66,10 @@
             <td class="text-soft">{{ f.costo != null ? formatoMoneda(f.costo) : '—' }}</td>
             <td class="text-soft">{{ formatoMoneda(f.precioVenta) }}</td>
             <td class="text-soft">{{ f.cantidad }}</td>
-            <td class="ganancia">{{ formatoMoneda(f.gananciaItem) }}</td>
+            <td class="ganancia" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.gananciaItem) }}</td>
             <td>{{ formatoMoneda(f.total) }}</td>
             <td class="text-soft">{{ formatoMoneda(f.valorDomicilio) }}</td>
-            <td class="comision">{{ formatoMoneda(f.comision) }}</td>
+            <td class="comision" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.comision) }}</td>
           </tr>
         </tbody>
         <tfoot>
@@ -83,6 +83,9 @@
           </tr>
         </tfoot>
       </table>
+      <p class="nota-ganancias" *ngIf="filas.length && hayExcluidosDeGanancia">
+        Las ganancias de tienda y vendedor no incluyen los pedidos cancelados ni los que van en ruta.
+      </p>
 
       <ng-template #vacio>
         <p class="empty-msg">No hay pedidos que coincidan con estos filtros.</p>
