@@ -46,6 +46,8 @@ const CAMPOS: Record<string, string> = {
   confirmado_por: 'Recibido por',
   confirmado_at: 'Recibido el',
   rotulo_impreso_at: 'Rótulo impreso',
+  alistado_at: 'Alistado el',
+  alistado_por: 'Alistado por',
   entregado_at: 'Entregado el',
   metodo_pago: 'Método de pago',
   monto_efectivo: 'Pagado en efectivo',
@@ -85,8 +87,8 @@ const CAMPOS: Record<string, string> = {
 };
 
 const DINERO = new Set(['total', 'valor_domicilio', 'comision', 'costo', 'precio_base', 'precio_sugerido', 'valor', 'total_efectivo', 'total_transferencia', 'total_domicilios', 'monto_efectivo', 'monto_transferencia']);
-const PERSONAS = new Set(['domiciliario_id', 'vendedor_id', 'confirmado_por']);
-const FECHAS = new Set(['confirmado_at', 'rotulo_impreso_at', 'entregado_at']);
+const PERSONAS = new Set(['domiciliario_id', 'vendedor_id', 'confirmado_por', 'alistado_por']);
+const FECHAS = new Set(['confirmado_at', 'rotulo_impreso_at', 'entregado_at', 'alistado_at']);
 const OCULTOS = new Set(['id', 'created_at', 'total_general', 'total_a_entregar', 'cerrado_at', 'numero']);
 
 @Component({

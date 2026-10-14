@@ -426,3 +426,45 @@ tbody tr.seleccionada td {
 .btn-mas {
   height: 34px;
 }
+
+/* ---------- Alistamiento */
+.badge.estado-alistado {
+  background: var(--k-violeta-soft);
+  color: var(--k-violeta);
+}
+
+.orden-alistado {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--k-violeta-soft);
+  color: var(--k-violeta);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-alistar {
+  display: block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--k-violeta);
+  background: transparent;
+  color: var(--k-violeta);
+  font-family: var(--k-font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-alistar:hover:not(:disabled) {
+  background: var(--k-violeta-soft);
+}
+
+.btn-alistar:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

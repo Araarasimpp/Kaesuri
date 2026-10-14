@@ -37,6 +37,7 @@ interface PedidoFila {
   total: number;
   domiciliario_id: string | null;
   rotulo_impreso_at: string | null;
+  alistado_at: string | null;
   created_at: string;
   productos: string;
   items: ItemFila[];
@@ -47,12 +48,17 @@ interface Domiciliario {
   nombre: string;
 }
 
-type FiltroEstado = 'todos' | EstadoPedido;
+/**
+ * "alistado" no es un estado del pedido en la base de datos: es un pedido
+ * pendiente que ya se empacó (alistado_at). Tiene su propia pestaña para ver
+ * qué falta por alistar y para imprimir los rótulos en el orden en que se alistaron.
+ */
+type FiltroEstado = 'todos' | EstadoPedido | 'alistado';
 type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
-  'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, created_at, ' +
+  'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, ' +
   'pedido_items(cantidad, producto:productos(nombre, imagen_url))';
 
 @Component({
@@ -80,7 +86,12 @@ export class PedidosPage implements OnInit, OnDestroy {
   seleccionados = new Set<string>();
   menuAbiertoId: string | null = null;
   imprimiendo = false;
+  alistando = false;
   imagenAbierta: string | null = null;
+  /** Posición (1°, 2°, ...) de cada pedido alistado según el orden en que se alistó. */
+  ordenAlistado = new Map<string, number>();
+  /** Alistados a los que todavía no se les imprime el rótulo. */
+  alistadosSinRotulo = 0;
 
   private canal: RealtimeChannel | null = null;
   private temporizadorRecarga: ReturnType<typeof setTimeout> | null = null;
@@ -89,6 +100,7 @@ export class PedidosPage implements OnInit, OnDestroy {
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: 'pendiente', etiqueta: 'Pendiente' },
+    { valor: 'alistado', etiqueta: 'Alistados' },
     { valor: 'en_ruta', etiqueta: 'En ruta' },
     { valor: 'entregado', etiqueta: 'Entregado' },
     { valor: 'cancelado', etiqueta: 'Cancelado' },
@@ -136,8 +148,23 @@ export class PedidosPage implements OnInit, OnDestroy {
     return this.busqueda.trim().replace(/[,()%*\\]/g, ' ').trim();
   }
 
+  /** Filtro de estado; "pendiente" y "alistado" separan los pendientes según si ya se alistaron. */
+  private filtrarEstado(query: any, valor: FiltroEstado): any {
+    if (valor === 'todos') return query;
+    if (valor === 'pendiente') return query.eq('estado', 'pendiente').is('alistado_at', null);
+    if (valor === 'alistado') return query.eq('estado', 'pendiente').not('alistado_at', 'is', null);
+    return query.eq('estado', valor);
+  }
+
+  /** Los alistados se muestran en el orden en que se alistaron; el resto, del más nuevo al más viejo. */
+  private ordenar(query: any): any {
+    return this.filtroEstado === 'alistado'
+      ? query.order('alistado_at', { ascending: true })
+      : query.order('created_at', { ascending: false });
+  }
+
   private aplicarFiltros(query: any, incluirEstado = true): any {
-    if (incluirEstado && this.filtroEstado !== 'todos') query = query.eq('estado', this.filtroEstado);
+    if (incluirEstado) query = this.filtrarEstado(query, this.filtroEstado);
     if (this.filtroRotulo === 'pendiente') query = query.is('rotulo_impreso_at', null);
     if (this.filtroRotulo === 'impreso') query = query.not('rotulo_impreso_at', 'is', null);
 
@@ -156,11 +183,9 @@ export class PedidosPage implements OnInit, OnDestroy {
     const consulta = ++this.consultaActual;
     this.loading = !this.pedidos.length;
 
-    const query = this.aplicarFiltros(
-      this.supabase.client.from('pedidos').select(COLUMNAS, { count: 'exact' })
-    )
-      .order('created_at', { ascending: false })
-      .range(0, cantidad - 1);
+    const query = this.ordenar(
+      this.aplicarFiltros(this.supabase.client.from('pedidos').select(COLUMNAS, { count: 'exact' }))
+    ).range(0, cantidad - 1);
 
     const { data, count, error } = await query;
     if (consulta !== this.consultaActual) return; // llegó una consulta más nueva
@@ -183,8 +208,7 @@ export class PedidosPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     const desde = this.pedidos.length;
-    const { data, error } = await this.aplicarFiltros(this.supabase.client.from('pedidos').select(COLUMNAS))
-      .order('created_at', { ascending: false })
+    const { data, error } = await this.ordenar(this.aplicarFiltros(this.supabase.client.from('pedidos').select(COLUMNAS)))
       .range(desde, desde + TAMANO_PAGINA - 1);
 
     if (!error && data) {
@@ -197,15 +221,26 @@ export class PedidosPage implements OnInit, OnDestroy {
 
   /** Cuántos pedidos hay en cada pestaña (consultas livianas que solo cuentan). */
   async cargarConteos(): Promise<void> {
-    const valores: FiltroEstado[] = ['pendiente', 'en_ruta', 'entregado', 'cancelado', 'todos'];
-    const resultados = await Promise.all(
-      valores.map((v) => {
-        let query = this.supabase.client.from('pedidos').select('id', { count: 'exact', head: true });
-        if (v !== 'todos') query = query.eq('estado', v);
-        return query;
-      })
-    );
-    valores.forEach((v, i) => (this.conteos[v] = resultados[i].count ?? 0));
+    const valores: FiltroEstado[] = ['pendiente', 'alistado', 'en_ruta', 'entregado', 'cancelado', 'todos'];
+    const [resultados, alistados] = await Promise.all([
+      Promise.all(
+        valores.map((v) =>
+          this.filtrarEstado(this.supabase.client.from('pedidos').select('id', { count: 'exact', head: true }), v)
+        )
+      ),
+      // Lista liviana de todos los alistados en orden, para numerarlos (1°, 2°...)
+      // aunque la búsqueda o la paginación solo muestren algunos.
+      this.supabase.client
+        .from('pedidos')
+        .select('id, rotulo_impreso_at')
+        .eq('estado', 'pendiente')
+        .not('alistado_at', 'is', null)
+        .order('alistado_at', { ascending: true }),
+    ]);
+    valores.forEach((v, i) => (this.conteos[v] = (resultados[i] as any).count ?? 0));
+    const filas = (alistados.data ?? []) as { id: string; rotulo_impreso_at: string | null }[];
+    this.ordenAlistado = new Map(filas.map((f, i) => [f.id, i + 1]));
+    this.alistadosSinRotulo = filas.filter((f) => !f.rotulo_impreso_at).length;
     this.cdr.detectChanges();
   }
 
@@ -281,18 +316,35 @@ export class PedidosPage implements OnInit, OnDestroy {
     if (url) this.imagenAbierta = url;
   }
 
-  etiquetaEstado(estado: EstadoPedido): string {
-    return this.estados.find((e) => e.valor === estado)?.etiqueta ?? estado;
+  esAlistado(p: PedidoFila): boolean {
+    return p.estado === 'pendiente' && !!p.alistado_at;
   }
 
-  claseEstado(estado: EstadoPedido): string {
+  etiquetaEstado(p: PedidoFila): string {
+    if (this.esAlistado(p)) return 'Alistado';
+    return this.estados.find((e) => e.valor === p.estado)?.etiqueta ?? p.estado;
+  }
+
+  claseEstado(p: PedidoFila): string {
+    if (this.esAlistado(p)) return 'estado-alistado';
     const clases: Record<EstadoPedido, string> = {
       pendiente: 'estado-bajo',
       en_ruta: 'estado-info',
       entregado: 'estado-ok',
       cancelado: 'estado-agotado',
     };
-    return clases[estado];
+    return clases[p.estado];
+  }
+
+  /** "1°", "2°"... según el orden en que se alistó; vacío si no está alistado. */
+  ordinalAlistado(p: PedidoFila): string {
+    const n = this.esAlistado(p) ? this.ordenAlistado.get(p.id) : undefined;
+    return n ? `${n}°` : '';
+  }
+
+  /** Pedidos seleccionados que todavía se pueden alistar (pendientes sin alistar). */
+  get seleccionadosPorAlistar(): PedidoFila[] {
+    return this.pedidos.filter((p) => this.seleccionados.has(p.id) && p.estado === 'pendiente' && !p.alistado_at);
   }
 
   // ---------- Acciones ----------
@@ -313,6 +365,97 @@ export class PedidosPage implements OnInit, OnDestroy {
     this.guardandoId = null;
 
     if (error) avisar('No se pudo asignar el domiciliario: ' + error.message);
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  // ---------- Alistamiento ----------
+
+  /**
+   * Marca pedidos como alistados. Van uno por uno, del más viejo al más nuevo,
+   * para que el orden de alistamiento (lo pone el servidor) quede igual que el
+   * orden en que se tomaron los pedidos.
+   */
+  async alistar(pedidos: PedidoFila[]): Promise<void> {
+    if (!pedidos.length || this.alistando) return;
+    this.alistando = true;
+    this.menuAbiertoId = null;
+    this.cdr.detectChanges();
+
+    const enOrden = [...pedidos].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    let error: string | null = null;
+    for (const p of enOrden) {
+      const res = await this.supabase.client
+        .from('pedidos')
+        .update({ alistado_at: new Date().toISOString() })
+        .eq('id', p.id)
+        .eq('estado', 'pendiente')
+        .is('alistado_at', null);
+      if (res.error) {
+        error = res.error.message;
+        break;
+      }
+      this.seleccionados.delete(p.id);
+    }
+
+    this.alistando = false;
+    if (error) avisar('No se pudo alistar: ' + error);
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  async quitarAlistado(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    const { error } = await this.supabase.client
+      .from('pedidos')
+      .update({ alistado_at: null })
+      .eq('id', pedido.id)
+      .eq('estado', 'pendiente');
+    if (error) avisar('No se pudo quitar de alistados: ' + error.message);
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  /** Imprime los rótulos de TODOS los alistados que no lo tienen, en el orden en que se alistaron. */
+  async imprimirAlistados(): Promise<void> {
+    if (this.imprimiendo || !this.alistadosSinRotulo) return;
+    this.imprimiendo = true;
+    this.cdr.detectChanges();
+
+    const { data, error } = await this.supabase.client
+      .from('pedidos')
+      .select(COLUMNAS)
+      .eq('estado', 'pendiente')
+      .not('alistado_at', 'is', null)
+      .is('rotulo_impreso_at', null)
+      .order('alistado_at', { ascending: true });
+
+    if (error || !data?.length) {
+      this.imprimiendo = false;
+      if (error) avisar('No se pudieron cargar los alistados: ' + error.message);
+      await this.cargarConteos();
+      return;
+    }
+
+    await this.imprimirEnOrden(data.map((p: any) => this.aFila(p)));
+  }
+
+  /** Imprime los rótulos de esos pedidos tal cual vienen ordenados y los marca como impresos. */
+  private async imprimirEnOrden(pedidos: PedidoFila[]): Promise<void> {
+    const ids = pedidos.map((p) => p.id);
+    const items = pedidos.flatMap((p) =>
+      (p.items ?? []).map((i) => ({ pedido_id: p.id, cantidad: i.cantidad, producto: { nombre: i.nombre } }))
+    );
+
+    const impreso = await this.rotulos.imprimir(pedidos, items);
+
+    if (impreso) {
+      // Se marca como impreso al abrir el diálogo de impresión (el navegador no
+      // avisa de forma confiable si la persona lo canceló).
+      await this.supabase.client.from('pedidos').update({ rotulo_impreso_at: new Date().toISOString() }).in('id', ids);
+      this.seleccionados.clear();
+    } else {
+      avisar('No se pudo abrir la impresión. Intenta de nuevo.');
+    }
+
+    this.imprimiendo = false;
     await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
   }
 
@@ -365,25 +508,15 @@ export class PedidosPage implements OnInit, OnDestroy {
     this.imprimiendo = true;
     this.cdr.detectChanges();
 
-    const ids = Array.from(this.seleccionados);
-    const pedidosSeleccionados = this.pedidos.filter((p) => this.seleccionados.has(p.id));
-    const items = pedidosSeleccionados.flatMap((p) =>
-      (p.items ?? []).map((i) => ({ pedido_id: p.id, cantidad: i.cantidad, producto: { nombre: i.nombre } }))
-    );
+    // Los alistados salen primero y en el orden en que se alistaron; el resto
+    // sigue en el orden de la tabla (sort es estable).
+    const orden = (p: PedidoFila) =>
+      (this.esAlistado(p) && this.ordenAlistado.get(p.id)) || Number.MAX_SAFE_INTEGER;
+    const pedidosSeleccionados = this.pedidos
+      .filter((p) => this.seleccionados.has(p.id))
+      .sort((a, b) => orden(a) - orden(b));
 
-    const impreso = await this.rotulos.imprimir(pedidosSeleccionados, items);
-
-    if (impreso) {
-      // Se marca como impreso al abrir el diálogo de impresión (el navegador no
-      // avisa de forma confiable si la persona lo canceló).
-      await this.supabase.client.from('pedidos').update({ rotulo_impreso_at: new Date().toISOString() }).in('id', ids);
-      this.seleccionados.clear();
-    } else {
-      avisar('No se pudo abrir la impresión. Intenta de nuevo.');
-    }
-
-    this.imprimiendo = false;
-    await this.cargarPedidos(this.pedidos.length);
+    await this.imprimirEnOrden(pedidosSeleccionados);
   }
 
   formatoMoneda(valor: number): string {

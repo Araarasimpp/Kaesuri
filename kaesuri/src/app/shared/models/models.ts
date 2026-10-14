@@ -45,6 +45,9 @@ export interface Pedido {
   monto_transferencia?: number | null;
   comprobante_url?: string | null;
   rotulo_impreso_at?: string | null;
+  /** Cuándo y quién empacó el pedido (pendiente alistado, listo para despachar). */
+  alistado_at?: string | null;
+  alistado_por?: string | null;
   cuadre_id?: string | null;
   created_at: string;
   entregado_at?: string | null;
