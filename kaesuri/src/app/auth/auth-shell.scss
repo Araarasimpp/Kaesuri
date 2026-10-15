@@ -114,6 +114,13 @@
   cursor: pointer;
 }
 
+.submit-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .submit-btn:hover:not(:disabled) {
   background: var(--k-role-hover);
 }

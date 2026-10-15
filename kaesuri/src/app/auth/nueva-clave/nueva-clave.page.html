@@ -1,0 +1,38 @@
+<div class="auth-shell">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <img class="auth-logo" src="assets/icon/logo.png" alt="Variedades JYB" />
+      <h1>Crea tu contraseña nueva</h1>
+      <p>La usarás desde ahora para entrar a la app</p>
+    </div>
+
+    <div class="auth-card" *ngIf="verificando">
+      <p class="nota">Verificando el enlace...</p>
+    </div>
+
+    <div class="auth-card" *ngIf="!verificando && sinSesion">
+      <p class="error-msg">El enlace ya venció o ya se usó. Pide uno nuevo desde el inicio de sesión.</p>
+      <a class="submit-btn submit-link" routerLink="/auth/login">Ir a iniciar sesión</a>
+    </div>
+
+    <form class="auth-card" *ngIf="!verificando && !sinSesion" (ngSubmit)="onGuardar()">
+      <input type="email" name="username" autocomplete="username" [value]="correo" readonly hidden />
+      <p class="nota" *ngIf="correo">Cuenta: {{ correo }}</p>
+      <div class="field">
+        <label for="password">Contraseña nueva</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" [(ngModel)]="password" placeholder="Mínimo 6 caracteres" />
+      </div>
+
+      <div class="field">
+        <label for="confirmar">Repite la contraseña</label>
+        <input id="confirmar" name="confirmar" type="password" autocomplete="new-password" [(ngModel)]="confirmar" placeholder="••••••••" />
+      </div>
+
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+      <button class="submit-btn" type="submit" [disabled]="guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar y entrar' }}
+      </button>
+    </form>
+  </div>
+</div>

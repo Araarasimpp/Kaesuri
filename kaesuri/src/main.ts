@@ -4,6 +4,11 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
+import { leerEnlaceDeCorreo } from './app/auth/enlace-correo';
+
+// Antes de arrancar: si se abrió un enlace del correo (recuperar contraseña o
+// un enlace vencido), se anota para llevar a la persona a la pantalla correcta.
+leerEnlaceDeCorreo();
 
 bootstrapApplication(AppComponent, {
   providers: [

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { tomarErrorDeEnlace } from '../enlace-correo';
 
 @Component({
   selector: 'app-login',
@@ -14,8 +15,10 @@ import { SupabaseService } from '../../core/services/supabase.service';
 export class LoginPage {
   email = '';
   password = '';
-  errorMsg = '';
+  errorMsg = tomarErrorDeEnlace() ?? '';
+  avisoMsg = '';
   loading = false;
+  enviandoCorreo = false;
 
   constructor(
     private supabase: SupabaseService,
@@ -23,8 +26,35 @@ export class LoginPage {
     private cdr: ChangeDetectorRef
   ) {}
 
+  /** "¿Olvidaste tu contraseña?": manda el enlace para ponerse una nueva. */
+  async onOlvideClave() {
+    this.errorMsg = '';
+    this.avisoMsg = '';
+    const email = this.email.trim();
+    if (!email) {
+      this.errorMsg = 'Escribe tu correo arriba y vuelve a tocar "¿Olvidaste tu contraseña?".';
+      return;
+    }
+
+    this.enviandoCorreo = true;
+    const { error } = await this.supabase.enviarRecuperacion(email);
+    this.enviandoCorreo = false;
+
+    if (error) {
+      this.errorMsg =
+        error.status === 429
+          ? 'Ya se enviaron varios correos hace poco. Espera unos minutos y vuelve a intentarlo.'
+          : 'No se pudo enviar el correo. Intenta de nuevo.';
+    } else {
+      // No se confirma si el correo existe, por seguridad.
+      this.avisoMsg = `Si ${email} está registrado, te llegará un correo con un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.`;
+    }
+    this.cdr.detectChanges();
+  }
+
   async onLogin() {
     this.errorMsg = '';
+    this.avisoMsg = '';
 
     if (!this.email || !this.password) {
       this.errorMsg = 'Ingresa tu correo y contraseña.';

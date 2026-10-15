@@ -47,7 +47,9 @@ export class SupabaseService {
         // usuario cierre sesión explícitamente (funciona igual en PC y móvil).
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: false,
+        // Lee la sesión que traen los enlaces del correo (recuperar contraseña,
+        // enlace mágico). Sin esto, esos enlaces dejaban a la persona en el login.
+        detectSessionInUrl: true,
       },
       global: { fetch: fetchConLimite },
     });
@@ -63,6 +65,15 @@ export class SupabaseService {
       password,
       options: { data: { nombre, telefono } },
     });
+  }
+
+  /** Manda el correo con el enlace para poner una contraseña nueva. */
+  async enviarRecuperacion(email: string) {
+    return this.client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/' });
+  }
+
+  async cambiarClave(password: string) {
+    return this.client.auth.updateUser({ password });
   }
 
   async logout() {

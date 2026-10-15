@@ -18,9 +18,13 @@
       </div>
 
       <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+      <p class="nota" *ngIf="avisoMsg">{{ avisoMsg }}</p>
 
       <button class="submit-btn" type="submit" [disabled]="loading">
         {{ loading ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+      <button class="olvide-link" type="button" (click)="onOlvideClave()" [disabled]="enviandoCorreo">
+        {{ enviandoCorreo ? 'Enviando correo...' : '¿Olvidaste tu contraseña?' }}
       </button>
     </form>
 
