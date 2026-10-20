@@ -28,6 +28,12 @@ export function transferenciaDe(p: PagoDePedido): number {
   return 0;
 }
 
+/** Fotos del comprobante: todas las que se subieron (o la única, en pedidos anteriores). */
+export function comprobantesDe(p: { comprobante_url?: string | null; comprobantes?: string[] | null }): string[] {
+  if (p.comprobantes?.length) return p.comprobantes;
+  return p.comprobante_url ? [p.comprobante_url] : [];
+}
+
 /** Transferencia y mixto llevan foto del comprobante. */
 export function llevaComprobante(metodo: MetodoPago | null | undefined): boolean {
   return metodo === 'transferencia' || metodo === 'mixto';

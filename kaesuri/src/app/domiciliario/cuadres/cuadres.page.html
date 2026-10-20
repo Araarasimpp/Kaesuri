@@ -42,13 +42,15 @@
           <p class="pedido-linea"><strong>Productos:</strong> {{ p.productos || '—' }}</p>
           <p class="pedido-linea"><strong>Dirección:</strong> {{ p.direccion }}</p>
           <p class="pedido-linea" *ngIf="p.barrio"><strong>Barrio:</strong> {{ p.barrio }}</p>
-          <button
-            class="ver-comprobante"
-            *ngIf="llevaComprobante(p)"
-            (click)="verComprobante(p)"
-          >
-            Ver comprobante
-          </button>
+          <ng-container *ngIf="llevaComprobante(p)">
+            <button
+              class="ver-comprobante"
+              *ngFor="let ruta of comprobantesDe(p); let i = index; let total = count"
+              (click)="verComprobante(ruta)"
+            >
+              {{ total > 1 ? 'Comprobante ' + (i + 1) : 'Ver comprobante' }}
+            </button>
+          </ng-container>
 
           <div class="mini-stats">
             <div class="mini-stat">

@@ -5,7 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
-import { ETIQUETA_METODO, efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
+import { ETIQUETA_METODO, comprobantesDe, efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
 import { diaColombiaDe, formatoFechaCO, hoyColombiaISO } from '../../shared/fecha-colombia';
 
 import { avisar, confirmar } from '../../shared/dialogo';
@@ -25,6 +25,7 @@ interface PedidoDelCuadre {
   monto_efectivo: number | null;
   monto_transferencia: number | null;
   comprobante_url: string | null;
+  comprobantes: string[] | null;
 }
 
 /** Entregas de un domiciliario en un día que todavía no están en ningún cuadre. */
@@ -293,7 +294,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
       const { data, error } = await this.supabase.client
         .from('pedidos')
         .select(
-          'id, numero, cliente_nombre, cliente_telefono, direccion, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url'
+          'id, numero, cliente_nombre, cliente_telefono, direccion, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, comprobantes'
         )
         .eq('cuadre_id', cuadre.id)
         .order('numero');
@@ -319,6 +320,8 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     return transferenciaDe(p);
   }
 
+  comprobantesDe = comprobantesDe;
+
   llevaComprobante(p: PedidoDelCuadre): boolean {
     return llevaComprobante(p.metodo_pago);
   }
@@ -329,12 +332,12 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
 
   previewUrl: string | null = null;
 
-  async verComprobante(pedido: PedidoDelCuadre): Promise<void> {
-    if (!pedido.comprobante_url) return;
+  async verComprobante(ruta: string): Promise<void> {
+    if (!ruta) return;
 
     const { data, error } = await this.supabase.client.storage
       .from('comprobantes')
-      .createSignedUrl(pedido.comprobante_url, 60);
+      .createSignedUrl(ruta, 60);
 
     if (!error && data?.signedUrl) {
       this.previewUrl = data.signedUrl;
