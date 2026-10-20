@@ -44,6 +44,8 @@ export interface Pedido {
   monto_efectivo?: number | null;
   monto_transferencia?: number | null;
   comprobante_url?: string | null;
+  /** Todas las fotos del comprobante (puede haber varias); comprobante_url es la primera. */
+  comprobantes?: string[] | null;
   rotulo_impreso_at?: string | null;
   /** Cuándo y quién empacó el pedido (pendiente alistado, listo para despachar). */
   alistado_at?: string | null;

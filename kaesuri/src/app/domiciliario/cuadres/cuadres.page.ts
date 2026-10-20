@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
-import { efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
+import { comprobantesDe, efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
 import {
   hoyColombiaISO,
   inicioDiaColombia,
@@ -27,6 +27,7 @@ interface PedidoSinCuadrar {
   monto_efectivo: number | null;
   monto_transferencia: number | null;
   comprobante_url: string | null;
+  comprobantes: string[] | null;
   entregado_at: string;
   productos: string;
 }
@@ -73,7 +74,7 @@ export class CuadresPage implements OnInit {
       this.supabase.client
         .from('pedidos')
         .select(
-          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, entregado_at'
+          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, comprobantes, entregado_at'
         )
         .eq('domiciliario_id', user.id)
         .eq('estado', 'entregado')
@@ -129,6 +130,8 @@ export class CuadresPage implements OnInit {
   transferenciaDe(p: PedidoSinCuadrar): number {
     return transferenciaDe(p);
   }
+
+  comprobantesDe = comprobantesDe;
 
   llevaComprobante(p: PedidoSinCuadrar): boolean {
     return llevaComprobante(p.metodo_pago);
@@ -232,11 +235,11 @@ export class CuadresPage implements OnInit {
 
   previewUrl: string | null = null;
 
-  async verComprobante(p: PedidoSinCuadrar): Promise<void> {
-    if (!p.comprobante_url) return;
+  async verComprobante(ruta: string): Promise<void> {
+    if (!ruta) return;
     const { data, error } = await this.supabase.client.storage
       .from('comprobantes')
-      .createSignedUrl(p.comprobante_url, 60);
+      .createSignedUrl(ruta, 60);
 
     if (!error && data?.signedUrl) {
       this.previewUrl = data.signedUrl;

@@ -93,13 +93,15 @@
                 >
                   {{ etiquetaMetodo(p) }}
                 </span>
-                <button
-                  class="pd-comprobante"
-                  *ngIf="llevaComprobante(p)"
-                  (click)="verComprobante(p)"
-                >
-                  Ver comprobante
-                </button>
+                <ng-container *ngIf="llevaComprobante(p)">
+                  <button
+                    class="pd-comprobante"
+                    *ngFor="let ruta of comprobantesDe(p); let i = index; let total = count"
+                    (click)="verComprobante(ruta)"
+                  >
+                    {{ total > 1 ? 'Comprobante ' + (i + 1) : 'Ver comprobante' }}
+                  </button>
+                </ng-container>
                 <span class="pd-total">{{ formatoMoneda(p.total) }}</span>
               </div>
               <div class="pd-linea-secundaria">
