@@ -11,6 +11,7 @@ import { diaColombiaDe, formatoFechaCO, hoyColombiaISO } from '../../shared/fech
 import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 type FiltroCuadre = 'todos' | 'pendiente' | 'confirmado';
+const TAMANO_LISTA = 60;
 
 interface PedidoDelCuadre {
   id: string;
@@ -54,8 +55,12 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   cuadres: Cuadre[] = [];
   domiciliarios: Domiciliario[] = [];
   nombresPorId = new Map<string, string>();
-  filtro: FiltroCuadre = 'pendiente';
-  fecha = hoyColombiaISO();
+  // Por defecto se ve TODO el historial (los pendientes van primero). Antes abría
+  // con "pendientes de hoy" y parecía que el historial se había perdido.
+  filtro: FiltroCuadre = 'todos';
+  fecha = '';
+  /** Cuántos cuadres se pintan; el resto aparece con "Ver más". */
+  visibles = TAMANO_LISTA;
   domiciliarioId = 'todos';
   confirmandoId: string | null = null;
 
@@ -109,7 +114,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     if (!this.cuadres.length) this.loading = true;
 
     const [cuadresRes, perfilesRes, abiertosRes] = await Promise.all([
-      this.supabase.client.from('cuadres').select('*').order('fecha', { ascending: false }),
+      this.traerTodosLosCuadres(),
       this.supabase.client.from('profiles').select('id, nombre, role'),
       this.supabase.client
         .from('pedidos')
@@ -123,8 +128,8 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     }
 
 
-    if (!cuadresRes.error && cuadresRes.data) {
-      this.cuadres = cuadresRes.data as Cuadre[];
+    if (cuadresRes) {
+      this.cuadres = cuadresRes;
     }
     if (!perfilesRes.error && perfilesRes.data) {
       this.nombresPorId = new Map(perfilesRes.data.map((p: any) => [p.id, p.nombre]));
@@ -137,6 +142,26 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     this.loading = false;
     this.cdr.detectChanges();
   }
+  /**
+   * Todo el historial de cuadres, en bloques de 1000 (Supabase no devuelve más
+   * de 1000 filas por consulta). null si falló, para no vaciar lo que ya se ve.
+   */
+  private async traerTodosLosCuadres(): Promise<Cuadre[] | null> {
+    const todos: Cuadre[] = [];
+    const bloque = 1000;
+    for (let desde = 0; ; desde += bloque) {
+      const { data, error } = await this.supabase.client
+        .from('cuadres')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .order('cerrado_at', { ascending: false })
+        .range(desde, desde + bloque - 1);
+      if (error || !data) return desde === 0 ? null : todos;
+      todos.push(...(data as Cuadre[]));
+      if (data.length < bloque) return todos;
+    }
+  }
+
   private calcularSinCerrar(filas: any[]): void {
     const grupos = new Map<string, SinCerrar>();
     const enRuta = new Map<string, number>();
@@ -225,13 +250,24 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
   }
 
 
+  /** Pendientes primero; dentro de cada grupo, del día más reciente al más viejo. */
   get filtrados(): Cuadre[] {
-    return this.cuadres.filter((c) => {
-      if (this.filtro !== 'todos' && c.estado !== this.filtro) return false;
-      if (this.domiciliarioId !== 'todos' && c.domiciliario_id !== this.domiciliarioId) return false;
-      if (this.fecha && c.fecha !== this.fecha) return false;
-      return true;
-    });
+    return this.cuadres
+      .filter((c) => {
+        if (this.filtro !== 'todos' && c.estado !== this.filtro) return false;
+        if (this.domiciliarioId !== 'todos' && c.domiciliario_id !== this.domiciliarioId) return false;
+        if (this.fecha && c.fecha !== this.fecha) return false;
+        return true;
+      })
+      .sort((a, b) => Number(b.estado === 'pendiente') - Number(a.estado === 'pendiente') || b.fecha.localeCompare(a.fecha));
+  }
+
+  get filtradosVisibles(): Cuadre[] {
+    return this.filtrados.slice(0, this.visibles);
+  }
+
+  verMas(): void {
+    this.visibles += TAMANO_LISTA;
   }
 
   get pendientesCount(): number {

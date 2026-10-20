@@ -7,6 +7,15 @@ import { EstadoPedido } from '../../shared/models/models';
 import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
+interface ItemReporte {
+  nombre: string;
+  costo: number | null;
+  precioVenta: number;
+  cantidad: number;
+  ganancia: number;
+}
+
+/** Un pedido por fila; sus productos van listados dentro de la misma fila. */
 interface FilaReporte {
   pedidoId: string;
   numero: number;
@@ -16,11 +25,9 @@ interface FilaReporte {
   total: number;
   valorDomicilio: number;
   comision: number;
-  productoNombre: string;
-  costo: number | null;
-  precioVenta: number;
+  items: ItemReporte[];
   cantidad: number;
-  gananciaItem: number;
+  gananciaTienda: number;
 }
 
 interface Vendedor {
@@ -50,8 +57,6 @@ export class ReportesPage implements OnInit {
   vendedores: Vendedor[] = [];
   filas: FilaReporte[] = [];
 
-  // Totales a nivel de PEDIDO (no se duplican aunque el pedido tenga varias filas de producto)
-  private pedidosUnicos: { estado: EstadoPedido; total: number; valorDomicilio: number; comision: number }[] = [];
 
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
@@ -140,43 +145,35 @@ export class ReportesPage implements OnInit {
 
     const nombresPorId = new Map((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre]));
 
-    this.pedidosUnicos = pedidos.map((p: any) => ({
-      estado: p.estado,
-      total: Number(p.total ?? 0),
-      valorDomicilio: Number(p.valor_domicilio ?? 0),
-      comision: Number(p.comision ?? 0),
-    }));
-
-    const filasNuevas: FilaReporte[] = [];
-    for (const p of pedidos) {
-      for (const item of p.pedido_items ?? []) {
+    this.filas = pedidos.map((p: any): FilaReporte => {
+      const items: ItemReporte[] = (p.pedido_items ?? []).map((item: any) => {
         const costo = item.producto?.costo ?? null;
-        const precioVenta = item.precio_unitario;
-        const precioBase = item.precio_base;
-        const cantidad = item.cantidad;
-        // Ganancia de la TIENDA = precio_base - costo (no precio_unitario,
-        // que ya trae la comisión del vendedor mezclada adentro).
-        const gananciaItem = cantidad * (precioBase - (costo != null ? costo : precioBase));
-
-        filasNuevas.push({
-          pedidoId: p.id,
-          numero: p.numero,
-          estado: p.estado,
-          created_at: p.created_at,
-          vendedorNombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
-          total: Number(p.total ?? 0),
-          valorDomicilio: Number(p.valor_domicilio ?? 0),
-          comision: Number(p.comision ?? 0),
-          productoNombre: item.producto?.nombre ?? 'Producto',
+        const precioBase = Number(item.precio_base ?? 0);
+        const cantidad = Number(item.cantidad ?? 0);
+        return {
+          nombre: item.producto?.nombre ?? 'Producto',
           costo,
-          precioVenta,
+          precioVenta: Number(item.precio_unitario ?? 0),
           cantidad,
-          gananciaItem,
-        });
-      }
-    }
-
-    this.filas = filasNuevas;
+          // Ganancia de la TIENDA = precio_base - costo (no precio_unitario,
+          // que ya trae la comisión del vendedor mezclada adentro).
+          ganancia: cantidad * (precioBase - (costo != null ? costo : precioBase)),
+        };
+      });
+      return {
+        pedidoId: p.id,
+        numero: p.numero,
+        estado: p.estado,
+        created_at: p.created_at,
+        vendedorNombre: nombresPorId.get(p.vendedor_id) ?? 'Vendedor',
+        total: Number(p.total ?? 0),
+        valorDomicilio: Number(p.valor_domicilio ?? 0),
+        comision: Number(p.comision ?? 0),
+        items,
+        cantidad: items.reduce((s, i) => s + i.cantidad, 0),
+        gananciaTienda: items.reduce((s, i) => s + i.ganancia, 0),
+      };
+    });
     this.loading = false;
     this.cdr.detectChanges();
   }
@@ -208,11 +205,11 @@ export class ReportesPage implements OnInit {
 
 
   get totalPedido(): number {
-    return this.pedidosUnicos.reduce((s, p) => s + p.total, 0);
+    return this.filas.reduce((s, p) => s + p.total, 0);
   }
 
   get totalDomicilio(): number {
-    return this.pedidosUnicos.reduce((s, p) => s + p.valorDomicilio, 0);
+    return this.filas.reduce((s, p) => s + p.valorDomicilio, 0);
   }
 
   /**
@@ -229,11 +226,11 @@ export class ReportesPage implements OnInit {
   }
 
   get totalComision(): number {
-    return this.pedidosUnicos.reduce((s, p) => s + (this.sumaGanancia(p.estado) ? p.comision : 0), 0);
+    return this.filas.reduce((s, p) => s + (this.sumaGanancia(p.estado) ? p.comision : 0), 0);
   }
 
   get totalGananciaTienda(): number {
-    return this.filas.reduce((s, f) => s + (this.sumaGanancia(f.estado) ? f.gananciaItem : 0), 0);
+    return this.filas.reduce((s, f) => s + (this.sumaGanancia(f.estado) ? f.gananciaTienda : 0), 0);
   }
 
   get totalCantidad(): number {
@@ -244,16 +241,17 @@ export class ReportesPage implements OnInit {
     if (!this.filas.length) return;
     this.descargando = true;
 
+    // Una fila por pedido, igual que en pantalla; los productos van en una sola celda.
     const datos = this.filas.map((f) => ({
       Pedido: f.numero,
       Estado: this.etiquetaEstado(f.estado),
       Fecha: formatoFechaCO(f.created_at, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       Vendedor: f.vendedorNombre,
-      Producto: f.productoNombre,
-      Costo: f.costo ?? '',
-      'Precio venta': f.precioVenta,
+      Productos: f.items
+        .map((i) => `${i.nombre} x${i.cantidad} (venta ${this.formatoMoneda(i.precioVenta)}${i.costo != null ? ', costo ' + this.formatoMoneda(i.costo) : ''})`)
+        .join('; '),
       Cantidad: f.cantidad,
-      'Ganancia tienda': f.gananciaItem,
+      'Ganancia tienda': f.gananciaTienda,
       'Total pedido': f.total,
       Domicilio: f.valorDomicilio,
       'Ganancia vendedor': f.comision,
@@ -264,9 +262,7 @@ export class ReportesPage implements OnInit {
       Estado: '' as any,
       Fecha: '' as any,
       Vendedor: '' as any,
-      Producto: 'TOTALES',
-      Costo: '' as any,
-      'Precio venta': '' as any,
+      Productos: 'TOTALES',
       Cantidad: this.totalCantidad,
       'Ganancia tienda': this.totalGananciaTienda,
       'Total pedido': this.totalPedido,

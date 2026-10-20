@@ -334,3 +334,13 @@
     gap: 4px;
   }
 }
+
+.ver-mas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--k-row-line);
+  font-size: 13px;
+}

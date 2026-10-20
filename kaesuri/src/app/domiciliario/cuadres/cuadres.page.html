@@ -82,7 +82,7 @@
       </div>
 
       <div class="lista" *ngIf="porDia.length; else vacioHist">
-        <div class="dia-grupo" *ngFor="let dia of porDia">
+        <div class="dia-grupo" *ngFor="let dia of diasVisiblesLista">
           <div class="dia-header" (click)="toggleDia(dia.fecha)">
             <div class="fila-info">
               <span class="cliente">{{ formatoFecha(dia.fecha) }}</span>
@@ -117,8 +117,14 @@
         </div>
       </div>
 
+      <button class="ver-mas" *ngIf="porDia.length > diasVisibles" (click)="verMasDias()">
+        Ver más días ({{ porDia.length - diasVisibles }})
+      </button>
+
       <ng-template #vacioHist>
-        <p class="empty-msg">Todavía no has cerrado ningún cuadre.</p>
+        <p class="empty-msg">
+          {{ filtroFecha ? 'No tienes cuadres del ' + formatoFecha(filtroFecha) + '.' : 'Todavía no has cerrado ningún cuadre.' }}
+        </p>
       </ng-template>
     </section>
   </ng-container>
