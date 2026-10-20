@@ -218,3 +218,34 @@ tfoot td {
     width: 100%;
   }
 }
+/* Productos del pedido, listados dentro de su fila */
+td {
+  vertical-align: top;
+}
+
+.col-productos {
+  min-width: 220px;
+}
+
+.productos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.productos-lista li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prod-nombre {
+  font-weight: 500;
+}
+
+.prod-precios {
+  font-size: 12px;
+}

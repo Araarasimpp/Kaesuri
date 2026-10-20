@@ -46,9 +46,7 @@
             <th>Estado</th>
             <th>Fecha</th>
             <th>Vendedor</th>
-            <th>Producto</th>
-            <th>Costo</th>
-            <th>Precio venta</th>
+            <th>Productos</th>
             <th>Cant.</th>
             <th>Ganancia tienda</th>
             <th>Total pedido</th>
@@ -62,11 +60,19 @@
             <td><span class="badge" [ngClass]="claseEstado(f.estado)">{{ etiquetaEstado(f.estado) }}</span></td>
             <td class="text-soft">{{ formatoFecha(f.created_at) }}</td>
             <td>{{ f.vendedorNombre }}</td>
-            <td>{{ f.productoNombre }}</td>
-            <td class="text-soft">{{ f.costo != null ? formatoMoneda(f.costo) : '—' }}</td>
-            <td class="text-soft">{{ formatoMoneda(f.precioVenta) }}</td>
+            <td class="col-productos">
+              <ul class="productos-lista">
+                <li *ngFor="let i of f.items">
+                  <span class="prod-nombre">{{ i.nombre }} <span class="text-soft">x{{ i.cantidad }}</span></span>
+                  <span class="prod-precios text-soft">
+                    Venta {{ formatoMoneda(i.precioVenta) }}<ng-container *ngIf="i.costo != null"> · Costo {{ formatoMoneda(i.costo) }}</ng-container>
+                  </span>
+                </li>
+                <li class="text-soft" *ngIf="!f.items.length">—</li>
+              </ul>
+            </td>
             <td class="text-soft">{{ f.cantidad }}</td>
-            <td class="ganancia" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.gananciaItem) }}</td>
+            <td class="ganancia" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.gananciaTienda) }}</td>
             <td>{{ formatoMoneda(f.total) }}</td>
             <td class="text-soft">{{ formatoMoneda(f.valorDomicilio) }}</td>
             <td class="comision" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.comision) }}</td>
@@ -74,7 +80,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="7">Totales del período</td>
+            <td colspan="5">Totales del período</td>
             <td>{{ totalCantidad }}</td>
             <td class="ganancia">{{ formatoMoneda(totalGananciaTienda) }}</td>
             <td>{{ formatoMoneda(totalPedido) }}</td>

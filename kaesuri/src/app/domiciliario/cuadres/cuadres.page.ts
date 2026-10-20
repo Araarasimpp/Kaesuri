@@ -42,7 +42,11 @@ export class CuadresPage implements OnInit {
   loading = true;
   pedidosHoy: PedidoSinCuadrar[] = [];
   historial: Cuadre[] = [];
-  filtroFecha = hoyColombiaISO();
+  // Sin fecha por defecto: se ve todo el historial (antes abría en "hoy" y
+  // parecía vacío). Con fecha, solo ese día.
+  filtroFecha = '';
+  /** Días que se pintan; el resto aparece con "Ver más días". */
+  diasVisibles = 30;
   diasExpandidos = new Set<string>();
   cerrando = false;
   errorMsg = '';
@@ -82,7 +86,8 @@ export class CuadresPage implements OnInit {
         .select('*')
         .eq('domiciliario_id', user.id)
         .order('fecha', { ascending: false })
-        .limit(20),
+        .order('cerrado_at', { ascending: false })
+        .limit(1000),
     ]);
 
     let pedidos = (pedidosRes.data as any[]) ?? [];
@@ -185,6 +190,14 @@ export class CuadresPage implements OnInit {
         todoConfirmado: cuadres.every((c) => c.estado === 'confirmado'),
       }))
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  }
+
+  get diasVisiblesLista() {
+    return this.porDia.slice(0, this.diasVisibles);
+  }
+
+  verMasDias(): void {
+    this.diasVisibles += 30;
   }
 
   toggleDia(fecha: string): void {

@@ -53,7 +53,7 @@
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
       <div class="lista" *ngIf="filtrados.length; else vacio">
-        <div class="cuadre-grupo" *ngFor="let c of filtrados">
+        <div class="cuadre-grupo" *ngFor="let c of filtradosVisibles">
           <div class="cuadre-fila" (click)="toggleDetalle(c)">
             <span class="col-dom">{{ nombreDomiciliario(c.domiciliario_id) }}</span>
             <span class="col-fecha text-soft">{{ formatoFecha(c.fecha) }}</span>
@@ -116,6 +116,10 @@
         </div>
       </div>
 
+      <div class="ver-mas" *ngIf="filtrados.length > visibles">
+        <span class="text-soft">Mostrando {{ visibles }} de {{ filtrados.length }} cuadres</span>
+        <button class="btn-fecha" (click)="verMas()">Ver más</button>
+      </div>
       <ng-template #vacio>
         <p class="empty-msg">
           {{ fecha ? 'No hay cuadres ' + (fecha === hoy ? 'de hoy' : 'del ' + formatoFecha(fecha)) + ' en este filtro.' : 'No hay cuadres en este filtro.' }}

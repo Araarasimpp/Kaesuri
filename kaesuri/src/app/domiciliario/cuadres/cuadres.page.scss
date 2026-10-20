@@ -302,3 +302,16 @@
   font-size: 14px;
   padding: 24px 0;
 }
+.ver-mas {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  background: var(--k-card-bg);
+  color: var(--k-text);
+  font-family: var(--k-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
