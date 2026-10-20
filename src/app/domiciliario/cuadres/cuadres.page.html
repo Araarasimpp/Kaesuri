@@ -5,6 +5,9 @@
 
   <ng-container *ngIf="!loading; else cargando">
     <section class="bloque">
+      <div class="bloque-header" *ngIf="jasta?.vinculado">
+        <h2>Por cuadrar Variedades JYB</h2>
+      </div>
       <div class="stats-grid" *ngIf="pedidosHoy.length">
         <div class="stat-card">
           <span class="stat-label">Efectivo</span>
@@ -74,6 +77,74 @@
       </div>
 
       <p class="empty-msg" *ngIf="!pedidosHoy.length">No tienes pedidos entregados pendientes de cuadrar.</p>
+    </section>
+
+    <section class="bloque" *ngIf="jasta?.vinculado">
+      <div class="bloque-header">
+        <h2>Por cuadrar Jasta</h2>
+      </div>
+
+      <div class="esperando" *ngFor="let pc of jasta.por_confirmar ?? []">
+        <span class="esperando-titulo">Cuadre entregado · esperando confirmación</span>
+        <span class="esperando-monto">{{ formatoMoneda(pc.total_a_entregar) }}</span>
+        <span class="esperando-detalle">{{ pc.cantidad_pedidos }} pedido(s) · Jasta debe confirmar que recibió la plata</span>
+      </div>
+
+      <ng-container *ngIf="pendienteJasta as c">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Efectivo</span>
+            <span class="stat-valor">{{ formatoMoneda(c.efectivo) }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Transferencia</span>
+            <span class="stat-valor">{{ formatoMoneda(c.transferencia) }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Domicilio</span>
+            <span class="stat-valor">{{ formatoMoneda(c.domicilios) }}</span>
+          </div>
+          <div class="stat-card destacada">
+            <span class="stat-label">Cuadre</span>
+            <span class="stat-valor">{{ formatoMoneda(c.efectivo - c.domicilios) }}</span>
+          </div>
+        </div>
+
+        <button class="btn-cerrar" (click)="cerrarCuadreJasta()" [disabled]="cerrandoJasta">
+          {{ cerrandoJasta ? 'Entregando...' : 'Entregar mi cuadre de Jasta (' + c.pedidos + (c.pedidos === 1 ? ' pedido)' : ' pedidos)') }}
+        </button>
+      </ng-container>
+      <p class="error-msg" *ngIf="errorJasta">{{ errorJasta }}</p>
+
+      <div class="pedidos-lista">
+        <div class="pedido-card" *ngFor="let p of entregadasJasta">
+          <div class="pedido-card-header">
+            <span class="pedido-titulo">Pedido #{{ p.id }} - {{ formatoHora(p.entregado_at) }}</span>
+          </div>
+          <p class="pedido-linea"><strong>Cliente:</strong> {{ p.cliente_nombre }}</p>
+          <p class="pedido-linea" *ngIf="p.barrio"><strong>Barrio:</strong> {{ p.barrio }}</p>
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <span class="mini-label">Efectivo</span>
+              <span class="mini-valor">{{ formatoMoneda(p.efectivo) }}</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Transferencia</span>
+              <span class="mini-valor">{{ formatoMoneda(p.transferencia) }}</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Domicilio</span>
+              <span class="mini-valor">{{ formatoMoneda(p.valor_domicilio) }}</span>
+            </div>
+            <div class="mini-stat" [class.positivo]="p.efectivo - p.valor_domicilio < 0" [class.negativo]="p.efectivo - p.valor_domicilio >= 0">
+              <span class="mini-label">Cuadre</span>
+              <span class="mini-valor">{{ formatoMoneda(p.efectivo - p.valor_domicilio) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="empty-msg" *ngIf="!pendienteJasta && !jasta.por_confirmar?.length">No tienes entregas de Jasta pendientes de cuadrar.</p>
     </section>
 
     <section class="bloque">

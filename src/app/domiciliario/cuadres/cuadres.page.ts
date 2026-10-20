@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { EntregadoJasta, JastaService, ResumenJasta } from '../../core/services/jasta.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import { comprobantesDe, efectivoDe, llevaComprobante, transferenciaDe } from '../../shared/pago';
@@ -52,10 +53,55 @@ export class CuadresPage implements OnInit {
   cerrando = false;
   errorMsg = '';
 
-  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
+  /** Cuadre de Jasta (separado: el efectivo va a otra caja). null = no reparte allá o no se sabe */
+  jasta: ResumenJasta | null = null;
+  entregadasJasta: EntregadoJasta[] = [];
+  cerrandoJasta = false;
+  errorJasta = '';
+
+  constructor(private supabase: SupabaseService, private jastas: JastaService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
+    void this.cargarJasta();
     await this.cargarTodo();
+  }
+
+  get pendienteJasta() {
+    const c = this.jasta?.por_cuadrar;
+    return c && c.pedidos > 0 ? c : null;
+  }
+
+  async cargarJasta(): Promise<void> {
+    try {
+      const r = await this.jastas.resumen();
+      const desde = r.por_cuadrar?.pedidos ? r.por_cuadrar.desde : null;
+      this.entregadasJasta = desde ? (await this.jastas.entregadas(desde, null)).filter((p) => p.cuadre === 'por_cuadrar') : [];
+      this.jasta = r;
+    } catch {
+      /* sin conexión con Jasta: no se muestra esa parte */
+    }
+    this.cdr.detectChanges();
+  }
+
+  async cerrarCuadreJasta(): Promise<void> {
+    const c = this.pendienteJasta;
+    if (!c) return;
+    this.errorJasta = '';
+    const confirmado = await confirmar(
+      `¿Entregar tu cuadre de Jasta? ${c.pedidos} pedido(s) · entregas ${this.formatoMoneda(c.efectivo - c.domicilios)} en efectivo. Jasta debe confirmar que recibió la plata.`
+    );
+    if (!confirmado) return;
+
+    this.cerrandoJasta = true;
+    this.cdr.detectChanges();
+    try {
+      await this.jastas.cerrarCuadre();
+      await this.cargarJasta();
+    } catch (e) {
+      this.errorJasta = (e as Error)?.message || 'No se pudo entregar el cuadre de Jasta';
+    }
+    this.cerrandoJasta = false;
+    this.cdr.detectChanges();
   }
 
   async cargarTodo(): Promise<void> {

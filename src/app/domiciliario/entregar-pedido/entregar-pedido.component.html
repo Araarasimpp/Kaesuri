@@ -1,7 +1,7 @@
 <div class="modal-backdrop" (click)="onCerrar()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <header class="modal-header">
-      <h2>Entregar pedido #{{ pedido.numero }}</h2>
+      <h2>Entregar pedido #{{ pedido.numero }}<ng-container *ngIf="negocio"> · {{ negocio }}</ng-container></h2>
       <button class="close-btn" (click)="onCerrar()">✕</button>
     </header>
 

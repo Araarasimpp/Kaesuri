@@ -14,6 +14,36 @@
   margin-bottom: 28px;
 }
 
+.esperando {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--k-bg-alt);
+  border: 1px solid var(--k-border);
+}
+
+.esperando-titulo {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k-text-soft);
+}
+
+.esperando-monto {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.esperando-detalle {
+  font-size: 12.5px;
+  color: var(--k-text-soft);
+}
+
 .bloque-header {
   display: flex;
   align-items: center;

@@ -29,10 +29,16 @@ auditoría. La seguridad la dan las políticas RLS y las funciones de la base (`
 
 ## Con Jasta
 
-El domiciliario que también reparte para Jasta (con el mismo correo en las dos apps) ve sus pedidos de
-Variedades JYB en "Mis entregas" de Jasta y los entrega desde allá. Lo hace la función `jasta-puente`
-con las funciones `jasta_*` de la base (ver `supabase/sql/entregas_desde_jasta*.sql`). Los cuadres
-siguen separados por negocio.
+Quien reparte para los dos negocios (con el mismo correo en las dos apps) ve los pedidos de ambos en
+una sola ruta, en cualquiera de las dos apps, y entrega cada uno en el sistema que corresponde. Los
+cuadres siguen separados por negocio ("Por cuadrar Variedades JYB" y "Por cuadrar Jasta"), porque el
+efectivo va a cajas distintas.
+
+- Pedidos de Variedades JYB en la app de Jasta: función `jasta-puente` de este proyecto y funciones
+  `jasta_*` de la base (`supabase/sql/entregas_desde_jasta*.sql`).
+- Pedidos de Jasta en esta app: función `kaesuri-puente` y funciones `kaesuri_*` del proyecto de Jasta
+  (están en el repositorio de Jasta). Aquí los usa `JastaService`.
+- Cada lado avisa al instante al otro cuando cambia un pedido o un cuadre del domiciliario.
 
 ## Probar en tu computador
 

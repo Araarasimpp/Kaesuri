@@ -6,6 +6,7 @@ import { MetodoPago } from '../../shared/models/models';
 import { llevaComprobante } from '../../shared/pago';
 
 interface PedidoResumen {
+  /** Se usa para nombrar la foto del comprobante */
   id: string;
   numero: number;
   cliente_nombre: string;
@@ -21,6 +22,13 @@ interface PedidoResumen {
 })
 export class EntregarPedidoComponent {
   @Input() pedido!: PedidoResumen;
+  /** Pedido de otro negocio (Jasta): se muestra en el título */
+  @Input() negocio: string | null = null;
+  /**
+   * Para pedidos de otro negocio: guarda la entrega allá en vez de en Kaesuri.
+   * Recibe la ruta de la foto ya subida al bucket de comprobantes de Kaesuri.
+   */
+  @Input() alConfirmar?: (metodo: MetodoPago, efectivo: number, transferencia: number, comprobante: string | null) => Promise<void>;
   @Output() cerrar = new EventEmitter<void>();
   @Output() entregado = new EventEmitter<void>();
 
@@ -80,6 +88,21 @@ export class EntregarPedidoComponent {
 
       if (this.llevaComprobante && this.archivoComprobante) {
         comprobanteUrl = await this.subirComprobante(this.archivoComprobante);
+      }
+
+      if (this.alConfirmar) {
+        const efectivo = this.metodoPago === 'efectivo' ? this.pedido.total : this.metodoPago === 'mixto' ? this.montoEfectivo ?? 0 : 0;
+        try {
+          await this.alConfirmar(this.metodoPago, efectivo, this.pedido.total - efectivo, comprobanteUrl);
+        } catch (e) {
+          this.guardando = false;
+          this.errorMsg = (e as Error)?.message || 'No se pudo confirmar la entrega. Intenta de nuevo.';
+          this.cdr.detectChanges();
+          return;
+        }
+        this.guardando = false;
+        this.entregado.emit();
+        return;
       }
 
       const { error } = await this.supabase.client.rpc('entregar_pedido', {
