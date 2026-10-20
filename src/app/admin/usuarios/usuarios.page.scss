@@ -137,26 +137,38 @@ tbody tr:last-child td {
   cursor: default;
 }
 
-.rol-select {
-  padding: 8px 12px;
-  border-radius: 9px;
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rol-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
   border: 1px solid var(--k-border);
   background: var(--k-bg-alt);
-  color: var(--k-text);
-  font-size: 13px;
+  color: var(--k-text-soft);
+  font-size: 12.5px;
   font-family: var(--k-font);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.rol-select:disabled {
+.rol-chip.on {
+  border-color: var(--k-role-ink);
+  background: var(--k-role-soft, var(--k-bg-alt));
+  color: var(--k-role-ink);
+}
+
+.rol-chip:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.rol-select:focus {
-  outline: none;
-  border-color: var(--k-role-ink);
+.rol-chip:focus-visible {
+  outline: 2px solid var(--k-role-ink);
+  outline-offset: 1px;
 }
 
 .empty-msg {

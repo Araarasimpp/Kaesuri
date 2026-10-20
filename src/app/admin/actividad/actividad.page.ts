@@ -71,7 +71,9 @@ const CAMPOS: Record<string, string> = {
   precio_sugerido: 'Precio sugerido',
   activo: 'Activo',
   imagen_url: 'Foto',
-  role: 'Rol',
+  role: 'Rol principal',
+  roles: 'Roles',
+  comprobantes: 'Comprobantes',
   telefono: 'Teléfono',
   email: 'Correo',
   valor: 'Valor',
@@ -182,6 +184,7 @@ export class ActividadPage implements OnInit {
     if (r.tabla === 'productos' && Object.keys(c).length === 1 && c['stock']) {
       return `cambió el stock (${c['stock'].antes} → ${c['stock'].despues}) de`;
     }
+    if (r.tabla === 'profiles' && c['roles']) return `cambió los roles a ${this.valor('roles', c['roles'].despues)} de`;
     if (r.tabla === 'profiles' && c['role']) return `cambió el rol a ${this.valor('role', c['role'].despues)} de`;
     return 'editó';
   }
@@ -210,7 +213,9 @@ export class ActividadPage implements OnInit {
       return e[v] ?? v;
     }
     if (campo === 'role') return this.etiquetaRol(v);
+    if (campo === 'roles' && Array.isArray(v)) return v.map((x) => this.etiquetaRol(x)).join(', ');
     if (campo === 'imagen_url' || campo === 'comprobante_url') return 'archivo';
+    if (campo === 'comprobantes' && Array.isArray(v)) return v.length === 1 ? '1 foto' : `${v.length} fotos`;
     if (campo === 'cuadre_id') return 'asignado';
     if (typeof v === 'boolean') return v ? 'Sí' : 'No';
     return String(v);

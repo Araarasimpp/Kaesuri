@@ -23,6 +23,7 @@ import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
 import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
+import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -32,7 +33,7 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../../shared/pill-nav.scss', './admin-layout.component.scss'],
 })

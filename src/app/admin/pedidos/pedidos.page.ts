@@ -256,12 +256,12 @@ export class PedidosPage implements OnInit, OnDestroy {
   }
 
   async cargarDomiciliarios(): Promise<void> {
-    const { data, error } = await this.supabase.client.from('profiles').select('id, nombre, role');
+    const { data, error } = await this.supabase.client.from('profiles').select('id, nombre, roles');
 
     if (!error && data) {
       this.nombresPorId = new Map(data.map((p: any) => [p.id, p.nombre]));
       this.domiciliarios = (data as any[])
-        .filter((p) => p.role === 'domiciliario')
+        .filter((p) => p.roles?.includes('domiciliario'))
         .map((p) => ({ id: p.id, nombre: p.nombre }))
         .sort((a, b) => a.nombre.localeCompare(b.nombre));
     }

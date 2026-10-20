@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
-import { SupabaseService, UserRole } from '../services/supabase.service';
+import { SupabaseService, UserRole, rolesDe } from '../services/supabase.service';
 
 @Injectable({ providedIn: 'root' })
 export class RoleGuard implements CanActivate {
@@ -28,8 +28,8 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
-    // El rol del usuario no está en la lista permitida → afuera
-    if (!allowedRoles.includes(profile.role)) {
+    // Ninguno de sus roles está en la lista permitida → afuera
+    if (!rolesDe(profile).some((r) => allowedRoles.includes(r))) {
       this.router.navigate(['/auth/no-autorizado']);
       return false;
     }

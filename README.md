@@ -12,6 +12,11 @@ y cuadres. Hecha con Ionic + Angular sobre Supabase.
 | Despachador | Alista pedidos, los despacha con un domiciliario y confirma cuadres |
 | Domiciliario | Ve sus pedidos en ruta, los entrega con el método de pago y entrega su cuadre |
 
+Una persona puede tener varios roles (por ejemplo vendedor y domiciliario): el admin los marca en
+Usuarios. Entra al área de su rol con más permisos y cambia de área con el botón de las flechas.
+En la base, `profiles.roles` guarda todos y `tiene_rol(...)` es lo que revisan las políticas RLS y las
+funciones; `profiles.role` queda como rol principal (lo calcula la base).
+
 ## Datos
 
 Todo vive en Supabase (proyecto Kaesuri): pedidos, productos, perfiles, cuadres, notificaciones y

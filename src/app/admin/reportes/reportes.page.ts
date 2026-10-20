@@ -92,7 +92,7 @@ export class ReportesPage implements OnInit {
     const { data, error } = await this.supabase.client
       .from('profiles')
       .select('id, nombre, role')
-      .in('role', ['vendedor', 'admin', 'despachador'])
+      .overlaps('roles', ['vendedor', 'admin', 'despachador'])
       .order('nombre');
 
     if (!error && data) {

@@ -22,7 +22,7 @@
             <th>Nombre</th>
             <th>Correo</th>
             <th>Teléfono</th>
-            <th>Rol</th>
+            <th>Roles</th>
             <th>Estado</th>
             <th></th>
           </tr>
@@ -39,14 +39,19 @@
             <td class="text-soft">{{ u.email || '—' }}</td>
             <td class="text-soft">{{ u.telefono || '—' }}</td>
             <td>
-              <select
-                class="rol-select"
-                [ngModel]="u.role"
-                (ngModelChange)="cambiarRol(u, $event)"
-                [disabled]="u.id === miId || guardandoId === u.id"
-              >
-                <option *ngFor="let r of roles" [value]="r.valor">{{ r.etiqueta }}</option>
-              </select>
+              <div class="roles" role="group" [attr.aria-label]="'Roles de ' + u.nombre">
+                <button
+                  type="button"
+                  *ngFor="let r of roles"
+                  class="rol-chip"
+                  [class.on]="u.roles.includes(r.valor)"
+                  [attr.aria-pressed]="u.roles.includes(r.valor)"
+                  [disabled]="u.id === miId || guardandoId === u.id"
+                  (click)="alternarRol(u, r.valor)"
+                >
+                  {{ r.etiqueta }}
+                </button>
+              </div>
             </td>
             <td>
               <span class="badge" [class.activo]="u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>

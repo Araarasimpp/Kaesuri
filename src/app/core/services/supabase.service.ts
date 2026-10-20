@@ -31,8 +31,33 @@ export interface Profile {
   nombre: string;
   email?: string;
   telefono?: string;
+  /** Rol principal (el de más permisos); lo calcula la base a partir de roles */
   role: UserRole;
+  /** Todos los roles de la persona (puede tener varios, por ejemplo vendedor y domiciliario) */
+  roles: UserRole[];
   activo: boolean;
+}
+
+/** Áreas de la app, de más permisos a menos: la primera que tenga la persona es donde entra */
+export const AREAS: { rol: UserRole; ruta: string; etiqueta: string }[] = [
+  { rol: 'admin', ruta: '/admin', etiqueta: 'Administración' },
+  { rol: 'despachador', ruta: '/despachador', etiqueta: 'Despacho' },
+  { rol: 'vendedor', ruta: '/vendedor', etiqueta: 'Ventas' },
+  { rol: 'domiciliario', ruta: '/domiciliario', etiqueta: 'Entregas' },
+];
+
+export function rolesDe(p: Pick<Profile, 'role' | 'roles'>): UserRole[] {
+  return p.roles?.length ? p.roles : [p.role];
+}
+
+export function areasDe(p: Pick<Profile, 'role' | 'roles'>): typeof AREAS {
+  const roles = rolesDe(p);
+  return AREAS.filter((a) => roles.includes(a.rol));
+}
+
+/** Pantalla de inicio según los roles */
+export function inicioDe(p: Pick<Profile, 'role' | 'roles'>): string {
+  return areasDe(p)[0]?.ruta ?? '/auth/login';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -113,7 +138,7 @@ export class SupabaseService {
 
     const { data, error } = await this.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role, activo')
+      .select('id, nombre, email, telefono, role, roles, activo')
       .eq('id', user.id)
       .single();
 

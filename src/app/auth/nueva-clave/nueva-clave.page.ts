@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, inicioDe } from '../../core/services/supabase.service';
 import { terminarRecuperacion } from '../enlace-correo';
 
 /**
@@ -74,12 +74,6 @@ export class NuevaClavePage implements OnInit {
       this.router.navigateByUrl('/auth/login', { replaceUrl: true });
       return;
     }
-    const inicio: Record<string, string> = {
-      admin: '/admin',
-      vendedor: '/vendedor',
-      domiciliario: '/domiciliario',
-      despachador: '/despachador',
-    };
-    this.router.navigateByUrl(inicio[perfil.role] ?? '/auth/login', { replaceUrl: true });
+    this.router.navigateByUrl(inicioDe(perfil), { replaceUrl: true });
   }
 }

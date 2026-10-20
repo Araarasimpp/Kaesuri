@@ -12,6 +12,7 @@ interface UsuarioFila {
   email: string | null;
   telefono: string | null;
   role: UserRole;
+  roles: UserRole[];
   activo: boolean;
 }
 
@@ -70,7 +71,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role, activo')
+      .select('id, nombre, email, telefono, role, roles, activo')
       .order('nombre');
 
     if (!error && data) {
@@ -90,13 +91,20 @@ export class UsuariosPage implements OnInit, OnDestroy {
     );
   }
 
-  async cambiarRol(usuario: UsuarioFila, nuevoRol: UserRole): Promise<void> {
-    if (usuario.id === this.miId || nuevoRol === usuario.role) return;
+  /** Una persona puede tener varios roles (por ejemplo vendedor y domiciliario), pero al menos uno */
+  async alternarRol(usuario: UsuarioFila, rol: UserRole): Promise<void> {
+    if (usuario.id === this.miId) return;
+    const roles = usuario.roles.includes(rol) ? usuario.roles.filter((r) => r !== rol) : [...usuario.roles, rol];
+    if (!roles.length) {
+      await avisar('Cada usuario necesita al menos un rol.');
+      return;
+    }
 
     this.guardandoId = usuario.id;
+    usuario.roles = roles;
     const { error } = await this.supabase.client
       .from('profiles')
-      .update({ role: nuevoRol })
+      .update({ roles })
       .eq('id', usuario.id);
 
     this.guardandoId = null;

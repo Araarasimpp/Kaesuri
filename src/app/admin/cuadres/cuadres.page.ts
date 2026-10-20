@@ -116,7 +116,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
 
     const [cuadresRes, perfilesRes, abiertosRes] = await Promise.all([
       this.traerTodosLosCuadres(),
-      this.supabase.client.from('profiles').select('id, nombre, role'),
+      this.supabase.client.from('profiles').select('id, nombre, roles'),
       this.supabase.client
         .from('pedidos')
         .select('domiciliario_id, estado, entregado_at, total, metodo_pago, monto_efectivo, monto_transferencia, valor_domicilio')
@@ -135,7 +135,7 @@ export class AdminCuadresPage implements OnInit, OnDestroy {
     if (!perfilesRes.error && perfilesRes.data) {
       this.nombresPorId = new Map(perfilesRes.data.map((p: any) => [p.id, p.nombre]));
       this.domiciliarios = (perfilesRes.data as any[])
-        .filter((p) => p.role === 'domiciliario')
+        .filter((p) => p.roles?.includes('domiciliario'))
         .map((p) => ({ id: p.id, nombre: p.nombre }))
         .sort((a, b) => a.nombre.localeCompare(b.nombre));
     }

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, inicioDe } from '../../core/services/supabase.service';
 import { tomarErrorDeEnlace } from '../enlace-correo';
 
 @Component({
@@ -87,19 +87,6 @@ export class LoginPage {
       return;
     }
 
-    switch (profile.role) {
-      case 'admin':
-        this.router.navigateByUrl('/admin');
-        break;
-      case 'vendedor':
-        this.router.navigateByUrl('/vendedor');
-        break;
-      case 'domiciliario':
-        this.router.navigateByUrl('/domiciliario');
-        break;
-      case 'despachador':
-        this.router.navigateByUrl('/despachador');
-        break;
-    }
+    this.router.navigateByUrl(inicioDe(profile));
   }
 }

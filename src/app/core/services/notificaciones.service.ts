@@ -7,7 +7,7 @@
 
 import { Injectable, computed, signal } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { SupabaseService, UserRole } from './supabase.service';
+import { SupabaseService, UserRole, rolesDe } from './supabase.service';
 
 export interface Notificacion {
   id: string;
@@ -25,7 +25,7 @@ export class NotificacionesService {
   readonly noLeidas = computed(() => this.lista().filter((n) => !n.leida).length);
 
   private usuarioId: string | null = null;
-  private rol: UserRole | null = null;
+  private roles: UserRole[] = [];
   private canal: RealtimeChannel | null = null;
   private iniciando: Promise<void> | null = null;
 
@@ -48,7 +48,7 @@ export class NotificacionesService {
       return;
     }
     this.usuarioId = perfil.id;
-    this.rol = perfil.role;
+    this.roles = rolesDe(perfil);
 
     const { data } = await this.supabase.client
       .from('notificaciones')
@@ -76,7 +76,7 @@ export class NotificacionesService {
     this.canal = null;
     this.iniciando = null;
     this.usuarioId = null;
-    this.rol = null;
+    this.roles = [];
     this.lista.set([]);
   }
 
@@ -96,7 +96,10 @@ export class NotificacionesService {
       .eq('leida', false);
   }
 
-  /** Convierte el enlace guardado ("pedidos", "cuadres", "inicio") en la ruta del rol actual. */
+  /**
+   * Convierte el enlace guardado ("pedidos", "cuadres", "inicio") en una ruta.
+   * Con varios roles se usa el área donde está la persona; si no, la de su rol principal.
+   */
   rutaPara(n: Notificacion): string | null {
     const base: Record<UserRole, string> = {
       admin: '/admin',
@@ -104,10 +107,12 @@ export class NotificacionesService {
       vendedor: '/vendedor',
       domiciliario: '/domiciliario',
     };
-    if (!this.rol) return null;
-    const raiz = base[this.rol];
-    if (this.rol === 'vendedor') return raiz;
-    if (this.rol === 'domiciliario') return n.enlace === 'cuadres' ? raiz + '/cuadres' : raiz;
+    const aqui = location.pathname.split('/')[1] as UserRole;
+    const rol = this.roles.includes(aqui) ? aqui : (Object.keys(base) as UserRole[]).find((r) => this.roles.includes(r));
+    if (!rol) return null;
+    const raiz = base[rol];
+    if (rol === 'vendedor') return raiz;
+    if (rol === 'domiciliario') return n.enlace === 'cuadres' ? raiz + '/cuadres' : raiz;
     if (n.enlace === 'pedidos' || n.enlace === 'cuadres') return `${raiz}/${n.enlace}`;
     return raiz;
   }
