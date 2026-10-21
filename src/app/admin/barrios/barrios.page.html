@@ -1,0 +1,50 @@
+<div class="barrios-page">
+  <header class="page-header">
+    <h1>Barrios <small *ngIf="!loading">{{ zonas.length }}</small></h1>
+    <p class="subtitle">Tarifas de domicilio. Al crear un pedido, el vendedor elige el barrio y el domicilio se autocompleta.</p>
+  </header>
+
+  <ng-container *ngIf="!loading; else cargando">
+    <div class="barra">
+      <input type="search" class="buscar" [(ngModel)]="busqueda" placeholder="Buscar barrio" aria-label="Buscar barrio" />
+    </div>
+
+    <div class="zonas">
+      <div class="zona-row zona-nueva">
+        <input type="text" [(ngModel)]="nuevaZonaNombre" placeholder="Barrio nuevo" aria-label="Nombre del barrio nuevo"
+          (keydown.enter)="agregarZona()" />
+        <input type="number" [(ngModel)]="nuevaZonaValor" placeholder="Valor" min="0" aria-label="Valor del domicilio del barrio nuevo"
+          (keydown.enter)="agregarZona()" />
+        <button
+          class="btn-agregar-zona"
+          type="button"
+          (click)="agregarZona()"
+          [disabled]="guardandoZona || !nuevaZonaNombre.trim() || nuevaZonaValor == null"
+          aria-label="Agregar barrio"
+        >
+          +
+        </button>
+      </div>
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+      <div class="zona-head">
+        <span>Barrio</span>
+        <span>Valor del domicilio</span>
+        <span></span>
+      </div>
+      <div class="zona-row" *ngFor="let z of filtradas; trackBy: porId">
+        <input type="text" [(ngModel)]="z.nombre" (change)="actualizarZona(z)" aria-label="Barrio" />
+        <input type="number" [(ngModel)]="z.valor" (change)="actualizarZona(z)" min="0" aria-label="Valor del domicilio" />
+        <button class="btn-eliminar-zona" type="button" (click)="eliminarZona(z)" [attr.aria-label]="'Eliminar ' + z.nombre">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg>
+        </button>
+      </div>
+      <p class="empty-msg" *ngIf="!filtradas.length">
+        {{ zonas.length ? 'Ningún barrio coincide con "' + busqueda + '".' : 'Todavía no has agregado ningún barrio.' }}
+      </p>
+    </div>
+  </ng-container>
+
+  <ng-template #cargando>
+    <app-skeleton variante="filas" [cantidad]="8"></app-skeleton>
+  </ng-template>
+</div>

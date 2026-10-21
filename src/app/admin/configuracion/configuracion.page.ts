@@ -2,12 +2,11 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { TelegramPanelComponent } from '../../shared/telegram/telegram-panel.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import * as XLSX from 'xlsx';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { LOGO_ROTULO, RotuloService } from '../../shared/rotulo.service';
+import { LOGO_ROTULO, RotuloService, qrPedido } from '../../shared/rotulo.service';
 
-import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface Configuracion {
   nombre_negocio: string;
@@ -15,12 +14,6 @@ interface Configuracion {
   redes: string | null;
   texto_garantia: string | null;
   stock_bajo_umbral: number;
-}
-
-interface Zona {
-  id: string;
-  nombre: string;
-  valor: number;
 }
 
 @Component({
@@ -44,15 +37,12 @@ export class ConfiguracionPage implements OnInit {
     stock_bajo_umbral: 5,
   };
 
-  zonas: Zona[] = [];
-  nuevaZonaNombre = '';
-  nuevaZonaValor: number | null = null;
-  guardandoZona = false;
-
   exportando = false;
 
   /** Logo que se imprime en el rótulo (vista previa). */
   readonly logoRotulo: SafeUrl;
+  /** Código QR de ejemplo (el que lee el bot de Telegram); lo arma la app, no viene de afuera */
+  readonly qrEjemplo: SafeHtml;
   readonly hoy = new Date().toISOString();
 
   constructor(
@@ -63,10 +53,11 @@ export class ConfiguracionPage implements OnInit {
   ) {
     // El logo es una imagen embebida (data URL); se marca como segura para la vista previa.
     this.logoRotulo = sanitizer.bypassSecurityTrustUrl(LOGO_ROTULO);
+    this.qrEjemplo = sanitizer.bypassSecurityTrustHtml(qrPedido(0));
   }
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.cargar(), this.cargarZonas()]);
+    await this.cargar();
   }
 
   async cargar(): Promise<void> {
@@ -118,50 +109,6 @@ export class ConfiguracionPage implements OnInit {
 
   fechaRotulo(): string {
     return this.rotulos.fecha(this.hoy);
-  }
-
-  // ---------- Zonas de domicilio ----------
-
-  async cargarZonas(): Promise<void> {
-    const { data, error } = await this.supabase.client.from('zonas_domicilio').select('id, nombre, valor').order('nombre');
-
-    if (!error && data) {
-      this.zonas = data as Zona[];
-    }
-    this.cdr.detectChanges();
-  }
-
-  async agregarZona(): Promise<void> {
-    if (!this.nuevaZonaNombre.trim() || this.nuevaZonaValor == null) return;
-
-    this.guardandoZona = true;
-    const { error } = await this.supabase.client.from('zonas_domicilio').insert({
-      nombre: this.nuevaZonaNombre.trim(),
-      valor: this.nuevaZonaValor,
-    });
-    this.guardandoZona = false;
-
-    if (!error) {
-      this.nuevaZonaNombre = '';
-      this.nuevaZonaValor = null;
-      await this.cargarZonas();
-    }
-    this.cdr.detectChanges();
-  }
-
-  async actualizarZona(zona: Zona): Promise<void> {
-    await this.supabase.client.from('zonas_domicilio').update({ nombre: zona.nombre, valor: zona.valor }).eq('id', zona.id);
-  }
-
-  async eliminarZona(zona: Zona): Promise<void> {
-    const confirmado = await confirmar(`¿Eliminar la zona "${zona.nombre}"?`);
-    if (!confirmado) return;
-
-    const { error } = await this.supabase.client.from('zonas_domicilio').delete().eq('id', zona.id);
-
-    if (!error) {
-      await this.cargarZonas();
-    }
   }
 
   // ---------- Exportar datos ----------

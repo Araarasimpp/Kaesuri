@@ -1,7 +1,7 @@
 <div class="configuracion-page">
   <header class="page-header">
     <h1>Configuración</h1>
-    <p class="subtitle">Datos de tu negocio, rótulo de entrega y tarifas de domicilio</p>
+    <p class="subtitle">Datos de tu negocio, rótulo de entrega, Telegram y respaldo. Las tarifas de domicilio están en Barrios.</p>
   </header>
 
   <ng-container *ngIf="!loading; else cargando">
@@ -55,6 +55,7 @@
           <div class="rotulo">
             <div class="rotulo-header">
               <img class="marca-logo" [src]="logoRotulo" [alt]="form.nombre_negocio" />
+              <div class="qr"><span class="qr-svg" [innerHTML]="qrEjemplo"></span><span>#000</span></div>
               <div class="cabecera-derecha">
                 <div class="contacto">
                   <div *ngIf="form.telefonos">{{ form.telefonos }}</div>
@@ -78,43 +79,6 @@
             </table>
             <p class="garantia" *ngIf="form.texto_garantia">{{ form.texto_garantia }}</p>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Zonas -->
-    <section class="panel">
-      <div class="panel-info">
-        <h2>Zonas y tarifas de domicilio</h2>
-        <p>Al crear un pedido, el vendedor elige el barrio y el domicilio se autocompleta.</p>
-      </div>
-
-      <div class="zonas">
-        <div class="zona-head">
-          <span>Barrio</span>
-          <span>Valor del domicilio</span>
-          <span></span>
-        </div>
-        <div class="zona-row" *ngFor="let z of zonas">
-          <input type="text" [(ngModel)]="z.nombre" (change)="actualizarZona(z)" aria-label="Barrio" />
-          <input type="number" [(ngModel)]="z.valor" (change)="actualizarZona(z)" min="0" aria-label="Valor del domicilio" />
-          <button class="btn-eliminar-zona" type="button" (click)="eliminarZona(z)" [attr.aria-label]="'Eliminar ' + z.nombre">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg>
-          </button>
-        </div>
-        <p class="empty-msg" *ngIf="!zonas.length">Todavía no has agregado ninguna zona.</p>
-        <div class="zona-row zona-nueva">
-          <input type="text" [(ngModel)]="nuevaZonaNombre" placeholder="Nombre del barrio" aria-label="Nombre del barrio nuevo" />
-          <input type="number" [(ngModel)]="nuevaZonaValor" placeholder="Valor" min="0" aria-label="Valor de la zona nueva" />
-          <button
-            class="btn-agregar-zona"
-            type="button"
-            (click)="agregarZona()"
-            [disabled]="guardandoZona || !nuevaZonaNombre.trim() || nuevaZonaValor == null"
-            aria-label="Agregar zona"
-          >
-            +
-          </button>
         </div>
       </div>
     </section>

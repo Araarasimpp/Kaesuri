@@ -23,6 +23,7 @@ import {
   bookOutline,
   trophyOutline,
   storefrontOutline,
+  mapOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -59,6 +60,7 @@ export class AdminLayoutComponent {
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
     { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
     { label: 'Configuración', path: '/admin/configuracion', icon: 'settings-outline' },
+    { label: 'Barrios', path: '/admin/barrios', icon: 'map-outline' },
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
   ];
 
@@ -68,6 +70,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      mapOutline,
       storefrontOutline,
       trophyOutline,
       bookOutline,
