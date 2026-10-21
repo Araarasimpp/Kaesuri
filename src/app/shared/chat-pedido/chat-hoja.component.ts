@@ -50,6 +50,7 @@ interface Contacto {
       .wa-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
       .wa-txt strong { font-size: 16px; font-weight: 650; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .wa-txt span { font-size: 12.5px; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .wa-txt span.escribe { color: var(--accent); font-weight: 600; }
       .chat-cab { display: flex; flex-direction: column; gap: 2px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
       .chat-cab strong { font-size: 15.5px; font-weight: 650; }
       .chat-cab span { font-size: 13px; color: var(--text-soft); }
@@ -67,7 +68,11 @@ interface Contacto {
           </span>
           <span class="wa-txt">
             <strong id="t-chat">{{ titulo() }}</strong>
-            <span>{{ subtitulo() }}</span>
+            @if (escribe(); as q) {
+              <span class="escribe">{{ contactos().length > 1 ? q + ' está escribiendo…' : 'escribiendo…' }}</span>
+            } @else {
+              <span>{{ subtitulo() }}</span>
+            }
           </span>
         </div>
         <button class="b b-icono" aria-label="Cerrar" (click)="cerrar.emit()"><ion-icon name="close-outline"></ion-icon></button>
@@ -78,7 +83,7 @@ interface Contacto {
           <span><span class="num">{{ pesos(p.total) }}</span>@if (p.barrio) { · {{ p.barrio }} }</span>
         </div>
       }
-      <app-chat-pedido [pedidoId]="pedidoId" [completo]="true"></app-chat-pedido>
+      <app-chat-pedido [pedidoId]="pedidoId" [completo]="true" (escribiendo)="escribe.set($event)"></app-chat-pedido>
     </aside>
   `,
 })
@@ -89,6 +94,8 @@ export class ChatHojaComponent implements OnInit {
   private sb = inject(SupabaseService);
   pedido = signal<PedidoChat | null>(null);
   private yo = signal<string | null>(null);
+  /** Quién está escribiendo ahora (lo avisa el chat) */
+  escribe = signal<string | null>(null);
   pesos = pesos;
 
   /** Con quién se habla (foto y nombre de la cabecera), según quién abre el chat */
