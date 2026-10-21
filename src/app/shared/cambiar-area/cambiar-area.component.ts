@@ -1,41 +1,46 @@
 // src/app/shared/cambiar-area/cambiar-area.component.ts
-// Para quien tiene varios roles (por ejemplo vendedor y domiciliario): pasar de un área a otra.
-// Solo se muestra si la persona tiene más de un área.
+// Menú de la cuenta: la foto de la persona, "Mi perfil" y, para quien tiene varios roles
+// (por ejemplo vendedor y domiciliario), pasar de un área a otra.
 // modo="sidebar": dentro del menú lateral (PC). modo="flotante": botón fijo arriba a la derecha.
 
-import { Component, ElementRef, HostListener, Input, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { swapHorizontalOutline, checkmarkOutline } from 'ionicons/icons';
-import { AREAS, SupabaseService, areasDe } from '../../core/services/supabase.service';
+import { checkmarkOutline, personCircleOutline } from 'ionicons/icons';
+import { SupabaseService, areasDe } from '../../core/services/supabase.service';
+import { AvatarComponent } from '../avatar/avatar.component';
 
 @Component({
   selector: 'app-cambiar-area',
   standalone: true,
-  imports: [CommonModule, IonIcon],
+  imports: [CommonModule, IonIcon, AvatarComponent],
   template: `
-    <div class="area" [ngClass]="modo" [style.right.px]="modo === 'flotante' ? derecha : null" *ngIf="areas().length > 1">
+    <div class="area" [ngClass]="modo" [style.right.px]="modo === 'flotante' ? derecha : null" *ngIf="perfil() as p">
       <button
         type="button"
         class="boton"
         (click)="abierto.set(!abierto())"
         [attr.aria-expanded]="abierto()"
         aria-haspopup="menu"
-        [attr.aria-label]="'Cambiar de área (estás en ' + actual + ')'"
-        [attr.title]="compacto ? 'Cambiar de área' : null"
+        [attr.aria-label]="'Mi cuenta (' + p.nombre + ')'"
+        [attr.title]="compacto ? p.nombre : null"
       >
-        <ion-icon name="swap-horizontal-outline"></ion-icon>
-        <span *ngIf="modo === 'sidebar' && !compacto">Cambiar de área</span>
+        <app-avatar [nombre]="p.nombre" [foto]="p.avatar_url" [tam]="modo === 'sidebar' ? 26 : 34"></app-avatar>
+        <span class="nombre" *ngIf="modo === 'sidebar' && !compacto">{{ p.nombre }}</span>
       </button>
       <div class="panel" *ngIf="abierto()" role="menu">
-        <p class="titulo">Estás en {{ actual }}</p>
+        <button type="button" role="menuitem" class="opcion" (click)="ir(raiz + '/perfil')">
+          <span>Mi perfil</span>
+          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <p class="titulo" *ngIf="areas().length > 1">Estás en {{ actual }}</p>
         <button
           type="button"
           role="menuitem"
           class="opcion"
-          *ngFor="let a of areas()"
+          *ngFor="let a of areas().length > 1 ? areas() : []"
           [class.actual]="a.etiqueta === actual"
           (click)="ir(a.ruta)"
         >
@@ -52,7 +57,8 @@ import { AREAS, SupabaseService, areasDe } from '../../core/services/supabase.se
       .boton { display: flex; align-items: center; gap: 10px; border: none; background: transparent; color: var(--k-text-soft);
         font-family: var(--k-font); font-size: 14px; font-weight: 500; cursor: pointer; }
       .boton ion-icon { font-size: 18px; flex-shrink: 0; }
-      .sidebar .boton { width: 100%; padding: 9px 10px; border-radius: 8px; white-space: nowrap; }
+      .nombre { overflow: hidden; text-overflow: ellipsis; }
+      .sidebar .boton { width: 100%; padding: 6px 8px; border-radius: 8px; white-space: nowrap; }
       .sidebar .boton:hover { background: var(--k-hover); color: var(--k-text); }
       .flotante { position: fixed; top: calc(env(safe-area-inset-top) + 12px); z-index: 95; }
       .flotante .boton { width: 44px; height: 44px; justify-content: center; border-radius: 10px; border: 1px solid var(--k-border);
@@ -77,21 +83,28 @@ export class CambiarAreaComponent implements OnInit {
   /** Oculta el texto (menú lateral contraído) */
   @Input() compacto = false;
 
-  areas = signal<typeof AREAS>([]);
+  perfil = this.supabase.perfil;
+  areas = computed(() => {
+    const p = this.perfil();
+    return p ? areasDe(p) : [];
+  });
   abierto = signal(false);
 
   constructor(private supabase: SupabaseService, private router: Router, private host: ElementRef<HTMLElement>) {
-    addIcons({ swapHorizontalOutline, checkmarkOutline });
+    addIcons({ checkmarkOutline, personCircleOutline });
   }
 
   async ngOnInit(): Promise<void> {
-    const perfil = await this.supabase.getCurrentProfile();
-    if (perfil) this.areas.set(areasDe(perfil));
+    await this.supabase.getCurrentProfile();
+  }
+
+  /** Área donde está ahora ("/vendedor", "/admin"…) */
+  get raiz(): string {
+    return '/' + this.router.url.split(/[/?#]/)[1];
   }
 
   get actual(): string {
-    const raiz = '/' + this.router.url.split('/')[1];
-    return this.areas().find((a) => a.ruta === raiz)?.etiqueta ?? '';
+    return this.areas().find((a) => a.ruta === this.raiz)?.etiqueta ?? '';
   }
 
   ir(ruta: string): void {

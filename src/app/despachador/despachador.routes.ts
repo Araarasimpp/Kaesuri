@@ -11,6 +11,10 @@ export const DESPACHADOR_ROUTES: Routes = [
     component: DespachadorLayoutComponent,
     children: [
       {
+        path: 'perfil',
+        loadComponent: () => import('../paginas/perfil/perfil.page').then((m) => m.PerfilPage),
+      },
+      {
         path: '',
         loadComponent: () =>
           import('./inicio/inicio.page').then((m) => m.InicioDespachadorPage),

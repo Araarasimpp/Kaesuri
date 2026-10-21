@@ -11,6 +11,10 @@ export const DOMICILIARIO_ROUTES: Routes = [
     component: DomiciliarioLayoutComponent,
     children: [
       {
+        path: 'perfil',
+        loadComponent: () => import('../paginas/perfil/perfil.page').then((m) => m.PerfilPage),
+      },
+      {
         path: '',
         loadComponent: () =>
           import('./inicio/inicio.page').then((m) => m.InicioDomiciliarioPage),

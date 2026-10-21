@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { createClient, isAuthRetryableFetchError, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
 
@@ -36,6 +36,7 @@ export interface Profile {
   /** Todos los roles de la persona (puede tener varios, por ejemplo vendedor y domiciliario) */
   roles: UserRole[];
   activo: boolean;
+  avatar_url?: string | null;
 }
 
 /** Áreas de la app, de más permisos a menos: la primera que tenga la persona es donde entra */
@@ -64,6 +65,8 @@ export function inicioDe(p: Pick<Profile, 'role' | 'roles'>): string {
 export class SupabaseService {
   public client: SupabaseClient;
   private currentProfile: Profile | null = null;
+  /** Perfil cargado (para mostrar el nombre y la foto donde haga falta) */
+  readonly perfil = signal<Profile | null>(null);
 
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseKey, {
@@ -103,6 +106,7 @@ export class SupabaseService {
 
   async logout() {
     this.currentProfile = null;
+    this.perfil.set(null);
     await this.quitarPushDeEsteDispositivo();
     return this.client.auth.signOut();
   }
@@ -138,7 +142,7 @@ export class SupabaseService {
 
     const { data, error } = await this.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role, roles, activo')
+      .select('id, nombre, email, telefono, role, roles, activo, avatar_url')
       .eq('id', user.id)
       .single();
 
@@ -148,10 +152,18 @@ export class SupabaseService {
     }
 
     this.currentProfile = data as Profile;
+    this.perfil.set(this.currentProfile);
     return this.currentProfile;
+  }
+
+  /** Vuelve a leer el perfil (después de cambiar nombre o foto) sin dejar de mostrar el anterior mientras tanto */
+  async recargarPerfil(): Promise<Profile | null> {
+    this.currentProfile = null;
+    return this.getCurrentProfile();
   }
 
   clearCachedProfile() {
     this.currentProfile = null;
+    this.perfil.set(null);
   }
 }

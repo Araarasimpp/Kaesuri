@@ -11,6 +11,10 @@ export const ADMIN_ROUTES: Routes = [
     component: AdminLayoutComponent,
     children: [
       {
+        path: 'perfil',
+        loadComponent: () => import('../paginas/perfil/perfil.page').then((m) => m.PerfilPage),
+      },
+      {
         path: '',
         loadComponent: () =>
           import('./dashboard/dashboard.page').then((m) => m.DashboardPage),

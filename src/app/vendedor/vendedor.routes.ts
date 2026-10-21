@@ -11,6 +11,10 @@ export const VENDEDOR_ROUTES: Routes = [
     component: VendedorLayoutComponent,
     children: [
       {
+        path: 'perfil',
+        loadComponent: () => import('../paginas/perfil/perfil.page').then((m) => m.PerfilPage),
+      },
+      {
         path: '',
         loadComponent: () => import('../paginas/mi-panel/mi-panel.page').then((m) => m.MiPanelPage),
       },
