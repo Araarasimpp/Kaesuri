@@ -87,6 +87,10 @@ export const ADMIN_ROUTES: Routes = [
         data: { modo: 'local', volverA: '/admin/ventas-local' },
         loadComponent: () => import('../vendedor/nuevo-pedido/nuevo-pedido.page').then((m) => m.NuevoPedidoPage),
       },
+      {
+        path: 'recolector',
+        loadComponent: () => import('../paginas/recolector/recolector.page').then((m) => m.RecolectorPage),
+      },
     ],
   },
 ];

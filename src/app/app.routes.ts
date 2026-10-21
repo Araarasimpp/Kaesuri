@@ -39,4 +39,8 @@ export const routes: Routes = [
     path: 'local',
     loadChildren: () => import('./local/local.routes').then((m) => m.LOCAL_ROUTES),
   },
+  {
+    path: 'recolector',
+    loadChildren: () => import('./recolector/recolector.routes').then((m) => m.RECOLECTOR_ROUTES),
+  },
 ];

@@ -38,6 +38,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
     { valor: 'vendedor', etiqueta: 'Vendedor' },
     { valor: 'domiciliario', etiqueta: 'Domiciliario' },
     { valor: 'venta_local', etiqueta: 'Venta local' },
+    { valor: 'recolector', etiqueta: 'Recolector' },
   ];
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}

@@ -51,6 +51,7 @@ export class AdminLayoutComponent {
     { label: 'Ventas del local', path: '/admin/ventas-local', icon: 'storefront-outline' },
     { label: 'Clientes', path: '/admin/clientes', icon: 'people-circle-outline' },
     { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
+    { label: 'Recolector', path: '/admin/recolector', icon: 'wallet-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },

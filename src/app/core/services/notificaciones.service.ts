@@ -125,6 +125,7 @@ export class NotificacionesService {
       vendedor: '/vendedor',
       domiciliario: '/domiciliario',
       venta_local: '/local',
+      recolector: '/recolector',
     };
     const aqui = (Object.keys(base) as UserRole[]).find((r) => base[r] === '/' + location.pathname.split('/')[1]);
     const rol = aqui && this.roles.includes(aqui) ? aqui : (Object.keys(base) as UserRole[]).find((r) => this.roles.includes(r));
@@ -137,6 +138,7 @@ export class NotificacionesService {
     }
     if (rol === 'vendedor') return raiz;
     if (rol === 'domiciliario') return n.enlace === 'cuadres' ? raiz + '/cuadres' : raiz;
+    if (n.enlace === 'recolector') return rol === 'recolector' ? raiz : `${raiz}/recolector`;
     if (n.enlace === 'pedidos' || n.enlace === 'cuadres') return `${raiz}/${n.enlace}`;
     return raiz;
   }

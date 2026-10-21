@@ -24,7 +24,7 @@ function fetchConLimite(input: RequestInfo | URL, init?: RequestInit): Promise<R
   return fetch(input, { ...init, signal: control.signal }).finally(() => clearTimeout(temporizador));
 }
 
-export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador' | 'venta_local';
+export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador' | 'venta_local' | 'recolector';
 
 export interface Profile {
   id: string;
@@ -46,6 +46,7 @@ export const AREAS: { rol: UserRole; ruta: string; etiqueta: string }[] = [
   { rol: 'vendedor', ruta: '/vendedor', etiqueta: 'Ventas' },
   { rol: 'domiciliario', ruta: '/domiciliario', etiqueta: 'Entregas' },
   { rol: 'venta_local', ruta: '/local', etiqueta: 'Venta local' },
+  { rol: 'recolector', ruta: '/recolector', etiqueta: 'Recolector' },
 ];
 
 export function rolesDe(p: Pick<Profile, 'role' | 'roles'>): UserRole[] {

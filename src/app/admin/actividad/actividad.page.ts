@@ -166,7 +166,7 @@ export class ActividadPage implements OnInit {
   }
 
   etiquetaRol(rol: string | null): string {
-    const r: Record<string, string> = { admin: 'Admin', vendedor: 'Vendedor', domiciliario: 'Domiciliario', despachador: 'Despachador', venta_local: 'Venta local' };
+    const r: Record<string, string> = { admin: 'Admin', vendedor: 'Vendedor', domiciliario: 'Domiciliario', despachador: 'Despachador', venta_local: 'Venta local', recolector: 'Recolector' };
     return rol ? r[rol] ?? rol : '';
   }
 
