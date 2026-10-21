@@ -18,6 +18,12 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "allowedCommonJsDependencies": [
+              "core-js",
+              "html2canvas",
+              "raf",
+              "rgbcolor"
+            ],
             "outputPath": {
               "base": "www",
               "browser": ""

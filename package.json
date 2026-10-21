@@ -27,6 +27,7 @@
     "@ionic/angular": "^9.0.0",
     "@supabase/supabase-js": "^2.116.0",
     "ionicons": "^8.1.0",
+    "jspdf": "3.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5"

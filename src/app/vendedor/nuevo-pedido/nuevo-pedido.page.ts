@@ -66,6 +66,19 @@ export class NuevoPedidoPage implements OnInit {
     await this.cargarProductos();
     await this.cargarZonas();
     if (this.editarId) this.armarCarritoDelPedido();
+    else this.agregarDesdeCatalogo();
+  }
+
+  /** Desde el catálogo llega ?producto=…&color=…: el producto ya queda en el carrito */
+  private agregarDesdeCatalogo(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const producto = this.productos.find((p) => p.id === q.get('producto'));
+    if (!producto) return;
+    this.agregarProducto(producto);
+    const linea = this.carrito.at(-1);
+    const color = q.get('color');
+    if (linea && color && producto.colores?.some((c) => c.nombre === color)) linea.color = color;
+    this.cdr.detectChanges();
   }
 
   private itemsDelPedido: { producto_id: string; cantidad: number; precio_unitario: number; color: string | null; talla: string | null }[] = [];

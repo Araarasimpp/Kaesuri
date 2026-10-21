@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -37,6 +38,8 @@ export class ProductosPage implements OnInit, OnDestroy {
 
   private canal: RealtimeChannel | null = null;
 
+  private route = inject(ActivatedRoute);
+
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   stockBajoUmbral = 5;
@@ -51,6 +54,14 @@ export class ProductosPage implements OnInit, OnDestroy {
 
     await this.cargarProductos();
     this.suscribirRealtime();
+
+    // Desde el catálogo ("Editar producto") llega ?editar=<producto>
+    const editar = this.route.snapshot.queryParamMap.get('editar');
+    const producto = editar ? this.productos.find((p) => p.id === editar) : null;
+    if (producto) {
+      this.abrirEditar(producto);
+      this.cdr.detectChanges();
+    }
   }
 
   ngOnDestroy(): void {
