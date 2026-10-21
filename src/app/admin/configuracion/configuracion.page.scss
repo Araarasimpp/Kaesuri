@@ -79,8 +79,7 @@
 }
 
 .field input,
-.field textarea,
-.zona-row input {
+.field textarea {
   height: 42px;
   padding: 0 12px;
   border-radius: 8px;
@@ -226,6 +225,33 @@
   flex-shrink: 0;
 }
 
+.qr {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6mm;
+}
+
+.qr-svg {
+  display: block;
+  width: 24mm;
+  height: 24mm;
+  margin: -2mm;
+}
+
+.qr-svg ::ng-deep svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.qr span:last-child {
+  font-size: 7pt;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+}
+
 .cabecera-derecha {
   display: flex;
   flex-direction: column;
@@ -287,86 +313,6 @@
   padding-top: 1.5mm;
 }
 
-/* ---------- Zonas */
-.zonas {
-  border: 1px solid var(--k-border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.zona-head,
-.zona-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px 40px;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 12px;
-}
-
-.zona-head {
-  background: var(--k-thead-bg);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--k-text-muted);
-}
-
-.zona-row {
-  border-top: 1px solid var(--k-row-line);
-}
-
-.zona-row input {
-  height: 38px;
-}
-
-.zona-row input[type='number'] {
-  text-align: right;
-}
-
-.zona-nueva {
-  background: var(--k-thead-bg);
-  border-top: 1px solid var(--k-border);
-}
-
-.btn-eliminar-zona,
-.btn-agregar-zona {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-eliminar-zona {
-  background: transparent;
-  color: var(--k-coral);
-}
-
-.btn-eliminar-zona:hover {
-  background: var(--k-coral-soft);
-}
-
-.btn-agregar-zona {
-  background: var(--k-role);
-  color: var(--k-on-role);
-  font-size: 20px;
-}
-
-.btn-agregar-zona:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.empty-msg {
-  margin: 0;
-  padding: 14px 12px;
-  font-size: 14px;
-  color: var(--k-text-soft);
-  border-top: 1px solid var(--k-row-line);
-}
-
 .export-row {
   display: flex;
   align-items: center;
@@ -396,10 +342,5 @@
 
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .zona-head,
-  .zona-row {
-    grid-template-columns: minmax(0, 1fr) 110px 40px;
   }
 }

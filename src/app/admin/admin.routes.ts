@@ -91,6 +91,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'recolector',
         loadComponent: () => import('../paginas/recolector/recolector.page').then((m) => m.RecolectorPage),
       },
+      {
+        path: 'barrios',
+        loadComponent: () => import('./barrios/barrios.page').then((m) => m.BarriosPage),
+      },
     ],
   },
 ];

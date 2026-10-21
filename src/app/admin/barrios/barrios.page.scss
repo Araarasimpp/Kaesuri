@@ -1,0 +1,143 @@
+.barrios-page {
+  padding: 28px 36px 40px;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--k-text);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.page-header h1 small {
+  margin-left: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--k-text-muted);
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--k-text-soft);
+}
+
+.buscar,
+.zona-row input {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--k-border-strong);
+  background: var(--k-card-bg);
+  color: var(--k-text);
+  font-size: 14px;
+  font-family: var(--k-font);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.error-msg {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--k-coral);
+}
+
+/* ---------- Zonas */
+.zonas {
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.zona-head,
+.zona-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px 40px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.zona-head {
+  background: var(--k-thead-bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-text-muted);
+}
+
+.zona-row {
+  border-top: 1px solid var(--k-row-line);
+}
+
+.zona-row input {
+  height: 38px;
+}
+
+.zona-row input[type='number'] {
+  text-align: right;
+}
+
+.zona-nueva {
+  background: var(--k-thead-bg);
+}
+
+.btn-eliminar-zona,
+.btn-agregar-zona {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-eliminar-zona {
+  background: transparent;
+  color: var(--k-coral);
+}
+
+.btn-eliminar-zona:hover {
+  background: var(--k-coral-soft);
+}
+
+.btn-agregar-zona {
+  background: var(--k-role);
+  color: var(--k-on-role);
+  font-size: 20px;
+}
+
+.btn-agregar-zona:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.empty-msg {
+  margin: 0;
+  padding: 14px 12px;
+  font-size: 14px;
+  color: var(--k-text-soft);
+  border-top: 1px solid var(--k-row-line);
+}
+
+.zonas {
+  background: var(--k-card-bg);
+}
+
+@media (max-width: 860px) {
+  .barrios-page {
+    padding: 16px 14px 24px;
+  }
+
+  .zona-head,
+  .zona-row {
+    grid-template-columns: minmax(0, 1fr) 110px 40px;
+  }
+}

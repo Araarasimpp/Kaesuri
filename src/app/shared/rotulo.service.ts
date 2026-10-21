@@ -182,7 +182,7 @@ export class RotuloService {
 <div class="rotulo">
   <div class="rotulo-header">
     <img class="marca-logo" src="${LOGO_ROTULO}" alt="${esc(negocio.nombre_negocio)}" />
-    ${p.numero ? `<div class="qr">${qrPedido(p.numero)}<span>#${esc(p.numero)}</span></div>` : ''}
+    ${p.numero != null ? `<div class="qr">${qrPedido(p.numero)}<span>#${esc(p.numero)}</span></div>` : ''}
     <div class="cabecera-derecha">
       <div class="contacto">
         ${negocio.telefonos ? `<div>${esc(negocio.telefonos)}</div>` : ''}
