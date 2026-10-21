@@ -1,0 +1,154 @@
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { SupabaseService, UserRole } from '../../core/services/supabase.service';
+
+import { avisar, confirmar } from '../../shared/dialogo';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+interface UsuarioFila {
+  id: string;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+  role: UserRole;
+  roles: UserRole[];
+  activo: boolean;
+}
+
+@Component({
+  selector: 'app-usuarios',
+  standalone: true,
+  imports: [SkeletonComponent, CommonModule, FormsModule],
+  templateUrl: './usuarios.page.html',
+  styleUrls: ['./usuarios.page.scss'],
+})
+export class UsuariosPage implements OnInit, OnDestroy {
+  loading = true;
+  usuarios: UsuarioFila[] = [];
+  busqueda = '';
+  miId: string | null = null;
+  guardandoId: string | null = null;
+
+  private canal: RealtimeChannel | null = null;
+
+  readonly roles: { valor: UserRole; etiqueta: string }[] = [
+    { valor: 'admin', etiqueta: 'Admin' },
+    { valor: 'despachador', etiqueta: 'Despachador' },
+    { valor: 'vendedor', etiqueta: 'Vendedor' },
+    { valor: 'domiciliario', etiqueta: 'Domiciliario' },
+    { valor: 'venta_local', etiqueta: 'Venta local' },
+    { valor: 'recolector', etiqueta: 'Recolector' },
+  ];
+
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
+
+  async ngOnInit(): Promise<void> {
+    const user = await this.supabase.getCurrentUser();
+    this.miId = user?.id ?? null;
+    await this.cargarUsuarios();
+    this.suscribirRealtime();
+  }
+
+  ngOnDestroy(): void {
+    if (this.canal) {
+      this.supabase.client.removeChannel(this.canal);
+    }
+  }
+
+  private suscribirRealtime(): void {
+    this.canal = this.supabase.client
+      .channel('usuarios-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          this.cargarUsuarios();
+        }
+      )
+      .subscribe();
+  }
+
+  async cargarUsuarios(): Promise<void> {
+    this.loading = true;
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('id, nombre, email, telefono, role, roles, activo')
+      .order('nombre');
+
+    if (!error && data) {
+      this.usuarios = data as UsuarioFila[];
+    }
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
+
+  get filtrados(): UsuarioFila[] {
+    if (!this.busqueda.trim()) return this.usuarios;
+    const q = this.busqueda.trim().toLowerCase();
+    return this.usuarios.filter(
+      (u) =>
+        u.nombre.toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  /** Una persona puede tener varios roles (por ejemplo vendedor y domiciliario), pero al menos uno */
+  async alternarRol(usuario: UsuarioFila, rol: UserRole): Promise<void> {
+    if (usuario.id === this.miId) return;
+    const roles = usuario.roles.includes(rol) ? usuario.roles.filter((r) => r !== rol) : [...usuario.roles, rol];
+    if (!roles.length) {
+      await avisar('Cada usuario necesita al menos un rol.');
+      return;
+    }
+
+    this.guardandoId = usuario.id;
+    usuario.roles = roles;
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({ roles })
+      .eq('id', usuario.id);
+
+    this.guardandoId = null;
+
+    if (error) {
+      await this.cargarUsuarios();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  async toggleActivo(usuario: UsuarioFila): Promise<void> {
+    if (usuario.id === this.miId) return;
+
+    const nuevoEstado = !usuario.activo;
+    const confirmado = await confirmar(
+      nuevoEstado
+        ? `¿Reactivar a ${usuario.nombre}?`
+        : `¿Desactivar a ${usuario.nombre}? No podrá iniciar sesión hasta que lo reactives.`
+    );
+    if (!confirmado) return;
+
+    this.guardandoId = usuario.id;
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({ activo: nuevoEstado })
+      .eq('id', usuario.id);
+
+    this.guardandoId = null;
+
+    if (!error) {
+      await this.cargarUsuarios();
+    } else {
+      this.cdr.detectChanges();
+    }
+  }
+
+  etiquetaRol(role: UserRole): string {
+    return this.roles.find((r) => r.valor === role)?.etiqueta ?? role;
+  }
+
+  inicial(nombre: string): string {
+    return nombre.charAt(0).toUpperCase();
+  }
+}

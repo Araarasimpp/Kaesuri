@@ -1,0 +1,209 @@
+<div class="pedido-page">
+  <header class="page-header">
+    <button class="btn-volver" (click)="volver()" aria-label="Volver">←</button>
+    <h1>{{ editarId ? 'Editar pedido #' + numeroEditando : local ? 'Venta en el local' : 'Nuevo pedido' }}</h1>
+  </header>
+
+  <div class="layout">
+    <!-- Columna izquierda: selector de productos -->
+    <section class="panel">
+      <h2>Productos</h2>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="busquedaProducto"
+        placeholder="Buscar producto por nombre o SKU..."
+      />
+
+      <div class="producto-lista" *ngIf="!loadingProductos; else cargandoProd">
+        <div
+          class="producto-item"
+          *ngFor="let p of productosFiltrados"
+          (click)="agregarProducto(p)"
+        >
+          <img class="producto-foto" *ngIf="urlMini(p.imagen_url) as u" [src]="u" alt="" loading="lazy" />
+          <div class="producto-info">
+            <span class="producto-nombre">{{ p.nombre }}</span>
+            <span class="producto-meta">{{ p.sku }} · Stock: {{ disponible(p) }}</span>
+          </div>
+          <span class="producto-precio">{{ formatoMoneda(p.precio_sugerido) }}</span>
+        </div>
+
+        <p class="empty-msg" *ngIf="!productosFiltrados.length">
+          No hay productos disponibles con ese criterio.
+        </p>
+      </div>
+
+      <ng-template #cargandoProd>
+        <app-skeleton variante="filas" [cantidad]="6"></app-skeleton>
+      </ng-template>
+    </section>
+
+    <!-- Columna derecha: carrito + datos del cliente -->
+    <section class="panel">
+      <h2>Carrito</h2>
+
+      <div class="carrito" *ngIf="carrito.length; else carritoVacio">
+        <div class="carrito-item" *ngFor="let item of carrito" [class.falta]="faltaVariante(item)">
+          <div class="carrito-fila-top">
+            <div class="carrito-info">
+              <span class="producto-nombre">{{ item.producto.nombre }}</span>
+              <span class="producto-meta">Precio base: {{ formatoMoneda(item.producto.precio_base) }}</span>
+            </div>
+            <div class="cantidad-control">
+              <button (click)="decrementar(item)">−</button>
+              <span>{{ item.cantidad }}</span>
+              <button (click)="incrementar(item)" [disabled]="cantidadEnCarrito(item.producto.id) >= disponible(item.producto)">
+                +
+              </button>
+            </div>
+          </div>
+          <div class="variantes" *ngIf="item.producto.colores?.length" role="radiogroup" aria-label="Color">
+            <span class="var-etq" [class.pide]="!item.color">Color</span>
+            <button
+              type="button"
+              class="var"
+              *ngFor="let c of item.producto.colores"
+              role="radio"
+              [attr.aria-checked]="item.color === c.nombre"
+              [class.on]="item.color === c.nombre"
+              (click)="elegir(item, 'color', c.nombre)"
+            >
+              <span class="tono" *ngIf="c.hex" [style.background]="c.hex"></span>{{ c.nombre }}
+            </button>
+          </div>
+          <div class="variantes" *ngIf="item.producto.tallas?.length" role="radiogroup" aria-label="Talla">
+            <span class="var-etq" [class.pide]="!item.talla">Talla</span>
+            <button
+              type="button"
+              class="var talla"
+              *ngFor="let t of item.producto.tallas"
+              role="radio"
+              [attr.aria-checked]="item.talla === t"
+              [class.on]="item.talla === t"
+              (click)="elegir(item, 'talla', t)"
+            >
+              {{ t }}
+            </button>
+          </div>
+          <div class="carrito-fila-precio">
+            <label>
+              Precio de venta
+              <input type="number" [(ngModel)]="item.precioUnitario" min="0" />
+            </label>
+            <div class="carrito-montos">
+              <span class="carrito-subtotal">{{ formatoMoneda(item.cantidad * item.precioUnitario) }}</span>
+              <span class="carrito-comision" [class.negativa]="comisionDe(item) < 0">
+                Comisión: {{ formatoMoneda(comisionDe(item)) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #carritoVacio>
+        <p class="empty-msg">Toca un producto de la izquierda para agregarlo.</p>
+      </ng-template>
+
+      <div class="divider"></div>
+
+      <h2>Datos del cliente</h2>
+
+      <div class="field">
+        <label>{{ local ? 'Nombre (opcional)' : 'Nombre *' }}</label>
+        <input type="text" [(ngModel)]="clienteNombre" [placeholder]="local ? 'Cliente del local' : ''" />
+      </div>
+
+      <div class="fields-row">
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="tel" [(ngModel)]="clienteTelefono" />
+        </div>
+        <div class="field combo-field" *ngIf="!local">
+          <label>Barrio</label>
+          <div class="combo-wrap">
+            <input
+              type="text"
+              [(ngModel)]="barrio"
+              (focus)="mostrarSugerenciasBarrio = true"
+              (blur)="cerrarSugerenciasBarrio()"
+              placeholder="Escribe o elige uno sugerido"
+              autocomplete="off"
+            />
+            <div class="combo-dropdown" *ngIf="mostrarSugerenciasBarrio && sugerenciasBarrio.length">
+              <button
+                type="button"
+                *ngFor="let z of sugerenciasBarrio"
+                (mousedown)="seleccionarZona(z)"
+              >
+                <span>{{ z.nombre }}</span>
+                <span class="combo-valor">{{ formatoMoneda(z.valor) }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!local">
+        <div class="field">
+          <label>Dirección *</label>
+          <input type="text" [(ngModel)]="direccion" />
+        </div>
+
+        <div class="field">
+          <label>Valor del domicilio</label>
+          <input type="number" [(ngModel)]="valorDomicilio" min="0" />
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="local">
+        <div class="field">
+          <label>Vendedor</label>
+          <select [(ngModel)]="vendedorId">
+            <option [ngValue]="null">Sin vendedor (sin comisión)</option>
+            <option *ngFor="let v of vendedores" [ngValue]="v.id">{{ v.nombre }}</option>
+          </select>
+        </div>
+        <div class="variantes" role="radiogroup" aria-label="Forma de pago">
+          <span class="var-etq">Pago</span>
+          <button type="button" class="var" *ngFor="let m of metodos" role="radio" [attr.aria-checked]="metodo === m.id"
+            [class.on]="metodo === m.id" (click)="metodo = m.id">{{ m.label }}</button>
+        </div>
+        <div class="field" *ngIf="metodo === 'mixto'">
+          <label>¿Cuánto en efectivo? (el resto, transferencia)</label>
+          <input type="number" [(ngModel)]="efectivo" min="0" />
+        </div>
+      </ng-container>
+
+      <div class="field">
+        <label>Observaciones</label>
+        <textarea [(ngModel)]="observaciones" rows="2"></textarea>
+      </div>
+
+      <div class="totales">
+        <div class="totales-linea">
+          <span>Subtotal</span>
+          <span>{{ formatoMoneda(subtotal) }}</span>
+        </div>
+        <div class="totales-linea" *ngIf="!local">
+          <span>Domicilio</span>
+          <span>{{ formatoMoneda(valorDomicilio || 0) }}</span>
+        </div>
+        <div class="totales-linea total">
+          <span>Total a cobrar</span>
+          <span>{{ formatoMoneda(total) }}</span>
+        </div>
+        <div class="totales-linea comision-linea" *ngIf="!local || vendedorId">
+          <span>{{ local ? 'Comisión del vendedor' : 'Tu comisión (ya incluida arriba)' }}</span>
+          <span>{{ formatoMoneda(comisionTotal) }}</span>
+        </div>
+      </div>
+
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+      <button class="btn-primary" (click)="onCrearPedido()" [disabled]="guardando">
+        {{ editarId ? (guardando ? 'Guardando...' : 'Guardar cambios') : guardando ? 'Guardando...' : local ? 'Registrar venta' : 'Crear pedido' }}
+      </button>
+    </section>
+  </div>
+</div>

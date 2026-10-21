@@ -1,0 +1,201 @@
+.domiciliario-page {
+  padding: 20px 16px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.domiciliario-page h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pedido-card {
+  background: var(--k-card-bg);
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.negocio {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--k-role-soft);
+  color: var(--k-role-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.negocio.jasta {
+  background: var(--k-bg-alt);
+  color: var(--k-text);
+  border: 1px solid var(--k-border);
+}
+
+.pedido-card.jasta {
+  border-left: 4px solid var(--k-text-soft);
+}
+
+.pedido-titulo {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.datos p {
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.link-telefono {
+  color: var(--k-teal);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-direccion {
+  color: var(--k-azul-ink);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.observacion {
+  color: var(--k-coral);
+  font-weight: 600;
+}
+
+.divider {
+  height: 1px;
+  background: var(--k-border);
+  margin: 14px 0;
+}
+
+.productos p {
+  font-size: 13px;
+  color: var(--k-text-soft);
+  margin: 4px 0;
+}
+
+.acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.accion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.accion ion-icon {
+  font-size: 20px;
+}
+
+.accion:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.accion-llamar {
+  background: var(--k-azul);
+}
+
+.accion-whatsapp {
+  background: var(--k-whatsapp);
+}
+
+.accion-navegar {
+  background: var(--k-sol);
+  color: var(--k-on-sol);
+}
+
+.btn-entregar {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--k-role);
+  color: var(--k-on-role);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty-msg {
+  text-align: center;
+  color: var(--k-text-soft);
+  font-size: 14px;
+  padding: 40px 0;
+}
+/* Chat del pedido: burbuja con "?" (o "!" si hay mensaje nuevo), como en Jasta */
+.titulo-fila {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chat-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--k-border);
+  border-radius: 50%;
+  background: var(--k-role-soft);
+  color: var(--k-role-ink);
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.chat-q {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 2px solid var(--k-card-bg);
+  background: var(--k-role);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chat-btn.nuevo {
+  background: var(--k-coral-soft);
+  color: var(--k-coral);
+}
+
+.chat-btn.nuevo .chat-q {
+  background: var(--k-coral);
+}

@@ -1,0 +1,34 @@
+<div class="layout">
+  <app-notificaciones modo="flotante" [junto]="true"></app-notificaciones>
+  <app-cambiar-area modo="flotante" [derecha]="120"></app-cambiar-area>
+  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme.isDark() ? 'Modo claro' : 'Modo oscuro'">
+    <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+  </button>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <nav class="pill-nav">
+    <a routerLink="/vendedor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Inicio">
+      <ion-icon name="home-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+    <a routerLink="/vendedor/catalogo" routerLinkActive="active" aria-label="Catálogo">
+      <ion-icon name="book-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+    <a routerLink="/vendedor/ranking" routerLinkActive="active" aria-label="Ranking">
+      <ion-icon name="trophy-outline"></ion-icon>
+      <span class="dot"></span>
+    </a>
+    <div class="pill-center">
+      <a routerLink="/vendedor/nuevo-pedido" class="pill-action" aria-label="Nuevo pedido">
+        <ion-icon name="add"></ion-icon>
+      </a>
+    </div>
+    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
+      <ion-icon name="log-out-outline"></ion-icon>
+    </button>
+  </nav>
+</div>

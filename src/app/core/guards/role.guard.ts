@@ -1,0 +1,75 @@
+import { Injectable } from '@angular/core';
+import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
+import { SupabaseService, UserRole, rolesDe } from '../services/supabase.service';
+
+@Injectable({ providedIn: 'root' })
+export class RoleGuard implements CanActivate {
+  constructor(private supabase: SupabaseService, private router: Router) {}
+
+  async canActivate(route: ActivatedRouteSnapshot): Promise<boolean> {
+    const allowedRoles = route.data['roles'] as UserRole[] | undefined;
+
+    const profile = await this.supabase.getCurrentProfile();
+
+    // No hay sesión → al login
+    if (!profile) {
+      this.router.navigate(['/auth/login']);
+      return false;
+    }
+
+    // El profile queda cacheado en memoria durante la sesión, así que
+    // revisamos "activo" con una consulta fresca por si lo desactivaron
+    // mientras la persona ya tenía la sesión abierta. Va en segundo plano para
+    // no dejar la pantalla en blanco esperando la red.
+    this.revisarActivo(profile.id);
+
+    // La ruta no restringe roles → cualquier autenticado pasa
+    if (!allowedRoles || allowedRoles.length === 0) {
+      return true;
+    }
+
+    // Ninguno de sus roles está en la lista permitida → afuera
+    if (!rolesDe(profile).some((r) => allowedRoles.includes(r))) {
+      this.router.navigate(['/auth/no-autorizado']);
+      return false;
+    }
+
+    return true;
+  }
+
+  private async revisarActivo(perfilId: string): Promise<void> {
+    const { data: estadoActual } = await this.supabase.client
+      .from('profiles')
+      .select('activo')
+      .eq('id', perfilId)
+      .single();
+
+    if (estadoActual && !estadoActual.activo) {
+      await this.supabase.logout();
+      this.router.navigate(['/auth/login']);
+    }
+  }
+}
+
+/*
+ * Uso en app-routing.module.ts:
+ *
+ * {
+ *   path: 'admin',
+ *   loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+ *   canActivate: [RoleGuard],
+ *   data: { roles: ['admin'] }
+ * },
+ * {
+ *   path: 'vendedor',
+ *   loadChildren: () => import('./vendedor/vendedor.module').then(m => m.VendedorModule),
+ *   canActivate: [RoleGuard],
+ *   data: { roles: ['vendedor', 'admin'] }
+ * },
+ * {
+ *   path: 'domiciliario',
+ *   loadChildren: () => import('./domiciliario/domiciliario.module').then(m => m.DomiciliarioModule),
+ *   canActivate: [RoleGuard],
+ *   data: { roles: ['domiciliario', 'admin'] }
+ * },
+ */
