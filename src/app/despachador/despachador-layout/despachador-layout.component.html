@@ -37,39 +37,10 @@
     </div>
   </aside>
 
-  <app-notificaciones class="notif-movil" modo="flotante"></app-notificaciones>
-  <app-cambiar-area class="notif-movil" modo="flotante" [derecha]="68"></app-cambiar-area>
-
   <main class="content">
+    <app-barra-movil></app-barra-movil>
     <router-outlet></router-outlet>
   </main>
 
-  <nav class="pill-nav mobile-only">
-    <a routerLink="/despachador" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Inicio">
-      <ion-icon name="home-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <a routerLink="/despachador/pedidos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Pedidos">
-      <ion-icon name="receipt-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-
-    <div class="pill-center">
-      <a routerLink="/despachador/pedidos/nuevo" class="pill-action" aria-label="Nuevo pedido">
-        <ion-icon name="add"></ion-icon>
-      </a>
-    </div>
-
-    <a routerLink="/despachador/cuadres" routerLinkActive="active" aria-label="Cuadres">
-      <ion-icon name="wallet-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <a routerLink="/despachador/tablero" routerLinkActive="active" aria-label="Tablero">
-      <ion-icon name="grid-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
-      <ion-icon name="log-out-outline"></ion-icon>
-    </button>
-  </nav>
+  <app-nav-movil [principales]="navPrincipales" [todos]="menuItems" [accion]="{ path: '/despachador/pedidos/nuevo', label: 'Nuevo pedido' }" raiz="/despachador"></app-nav-movil>
 </div>

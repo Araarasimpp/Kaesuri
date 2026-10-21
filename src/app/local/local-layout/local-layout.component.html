@@ -1,34 +1,8 @@
 <div class="layout">
-  <app-notificaciones modo="flotante" [junto]="true"></app-notificaciones>
-  <app-cambiar-area modo="flotante" [derecha]="120"></app-cambiar-area>
-  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme.isDark() ? 'Modo claro' : 'Modo oscuro'">
-    <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
-  </button>
-
   <main class="content">
+    <app-barra-movil [siempre]="true"></app-barra-movil>
     <router-outlet></router-outlet>
   </main>
 
-  <nav class="pill-nav">
-    <a routerLink="/local" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Ventas del local">
-      <ion-icon name="receipt-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <a routerLink="/local/catalogo" routerLinkActive="active" aria-label="Catálogo">
-      <ion-icon name="book-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <a routerLink="/local/clientes" routerLinkActive="active" aria-label="Clientes">
-      <ion-icon name="people-circle-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <div class="pill-center">
-      <a routerLink="/local/nueva" class="pill-action" aria-label="Nueva venta">
-        <ion-icon name="add"></ion-icon>
-      </a>
-    </div>
-    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
-      <ion-icon name="log-out-outline"></ion-icon>
-    </button>
-  </nav>
+  <app-nav-movil [principales]="principales" [todos]="secciones" [accion]="{ path: '/local/nueva', label: 'Nueva venta' }" raiz="/local" [siempre]="true"></app-nav-movil>
 </div>

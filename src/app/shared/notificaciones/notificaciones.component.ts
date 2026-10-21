@@ -1,6 +1,6 @@
 // src/app/shared/notificaciones/notificaciones.component.ts
 // Campana de avisos. modo="sidebar": dentro del menú lateral (PC).
-// modo="flotante": botón fijo arriba a la derecha (celular / layouts sin menú lateral).
+// modo="flotante": botón fijo arriba a la derecha. modo="barra": dentro de la barra de arriba del celular.
 
 import { Component, ElementRef, HostListener, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,7 @@ import { PushService } from '../../core/services/push.service';
   styleUrls: ['./notificaciones.component.scss'],
 })
 export class NotificacionesComponent implements OnInit {
-  @Input() modo: 'sidebar' | 'flotante' = 'flotante';
+  @Input() modo: 'sidebar' | 'flotante' | 'barra' = 'flotante';
   /** En los layouts móviles con botón de tema arriba a la derecha, la campana se corre a su izquierda. */
   @Input() junto = false;
   /** Oculta el texto "Avisos" (menú lateral contraído). */

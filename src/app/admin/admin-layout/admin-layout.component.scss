@@ -87,6 +87,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Con muchas secciones la lista se desplaza y el pie (cuenta, avisos, salir) sigue visible */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .menu-item {
@@ -171,32 +176,13 @@
   color: var(--k-text);
 }
 
-.pill-nav.mobile-only {
-  display: none;
-}
-
 @media (max-width: 860px) {
   .sidebar {
     display: none;
   }
 
-  .pill-nav.mobile-only {
-    display: flex;
-  }
-
   .content {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px);
-  }
-}
-
-/* ---------- Campana de avisos en celular (en PC va dentro del menú lateral) */
-.notif-movil {
-  display: none;
-}
-
-@media (max-width: 860px) {
-  .notif-movil {
-    display: block;
+    /* Espacio para la barra flotante de abajo (64px + separación + barra de gestos del iPhone) */
+    padding-bottom: calc(64px + max(env(safe-area-inset-bottom), 8px) + 6px + 16px);
   }
 }
