@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -64,6 +64,13 @@ const RAPIDOS_TIENDA = [
         font-size: 14px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
       .msg.mio .burbuja { border-radius: 10px 10px 3px 10px; background: var(--accent-wash); border-color: var(--accent-soft); }
       .meta { font-size: 11px; color: var(--text-muted); }
+      /* La otra persona está escribiendo (tres puntos, como en WhatsApp) */
+      .puntos { display: flex; gap: 4px; align-items: center; padding: 11px 13px; }
+      .puntos i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); animation: salta 1.2s infinite ease-in-out; }
+      .puntos i:nth-child(2) { animation-delay: .15s; }
+      .puntos i:nth-child(3) { animation-delay: .3s; }
+      @keyframes salta { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { .puntos i { animation: none; } }
       .meta .hora { font-family: var(--mono-font); }
       .rapidos { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 0; }
       .rapidos::-webkit-scrollbar { display: none; }
@@ -91,7 +98,15 @@ const RAPIDOS_TIENDA = [
           </span>
         </div>
       } @empty {
+        @if (!quienEscribe()) {
         <p class="vacio">{{ cargando() ? 'Cargando mensajes…' : 'Sin mensajes. Escribe aquí lo que el otro necesite saber de este pedido.' }}</p>
+        }
+      }
+      @if (quienEscribe(); as q) {
+        <div class="msg" aria-live="polite">
+          <div class="burbuja puntos" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="meta">{{ q }} está escribiendo…</span>
+        </div>
       }
     </div>
 
@@ -103,7 +118,7 @@ const RAPIDOS_TIENDA = [
 
     <form class="escribir" (ngSubmit)="enviar(texto)">
       <textarea name="texto" rows="1" [(ngModel)]="texto" placeholder="Escribe un mensaje…" aria-label="Mensaje"
-        maxlength="1000" (keydown.enter)="enter($event)"></textarea>
+        maxlength="1000" (keydown.enter)="enter($event)" (input)="tecleando()"></textarea>
       <button type="submit" class="enviar" [disabled]="!texto.trim() || enviando()" aria-label="Enviar">
         <ion-icon name="send-outline"></ion-icon>
       </button>
@@ -117,6 +132,8 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Ocupa todo el alto disponible (ventana de chat aparte del pedido) */
   @Input() @HostBinding('class.completo') completo = false;
   @ViewChild('lista') lista?: ElementRef<HTMLElement>;
+  /** Quién está escribiendo en este momento (para mostrarlo en la cabecera), o null */
+  @Output() escribiendo = new EventEmitter<string | null>();
 
   private sb = inject(SupabaseService);
   private avisos = inject(NotificacionesService);
@@ -132,6 +149,14 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
   rapidos = computed(() => (this.soloDomiciliario() ? RAPIDOS_DOMICILIARIO : RAPIDOS_TIENDA));
 
   private canal: RealtimeChannel | null = null;
+  /** Canal aparte (solo broadcast) para avisar "está escribiendo…" */
+  private canalEscribe: RealtimeChannel | null = null;
+  quienEscribe = signal<string | null>(null);
+  private timerEscribe?: ReturnType<typeof setTimeout>;
+  private ultimoAviso = 0;
+  private respaldo?: ReturnType<typeof setInterval>;
+  private conectadoAntes = false;
+  private miNombre = '';
 
   constructor() {
     addIcons({ sendOutline });
@@ -142,6 +167,7 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!perfil) return;
       const roles = rolesDe(perfil);
       this.yo.set(perfil.id);
+      this.miNombre = perfil.nombre;
       this.soloDomiciliario.set(roles.includes('domiciliario') && !roles.some((r) => r !== 'domiciliario'));
     });
     void this.cargar();
@@ -155,7 +181,26 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
           void this.avisos.marcarMensajesLeidos(this.pedidoId);
         }
       )
+      // Al volver la conexión (el iPhone la corta cuando la app queda en segundo plano)
+      // se trae lo que llegó mientras tanto: Realtime no repite los mensajes perdidos
+      .subscribe((estado) => {
+        if (estado !== 'SUBSCRIBED') return;
+        if (this.conectadoAntes) void this.cargar(true);
+        this.conectadoAntes = true;
+      });
+    this.canalEscribe = this.sb.client
+      .channel(`escribiendo-${this.pedidoId}`, { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'escribiendo' }, ({ payload }) => {
+        const quien = payload as { id: unknown; nombre: string; escribiendo: boolean };
+        if (quien.id === this.yo()) return;
+        if (quien.escribiendo) this.mostrarEscribiendo(quien.nombre);
+        else this.ocultarEscribiendo();
+      })
       .subscribe();
+    // Respaldo: mientras el chat está abierto y a la vista, se revisa cada 20 s
+    this.respaldo = setInterval(() => {
+      if (document.visibilityState === 'visible') void this.cargar(true);
+    }, 20000);
   }
 
   ngAfterViewInit(): void {
@@ -167,9 +212,14 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.canal) this.sb.client.removeChannel(this.canal);
+    if (this.canalEscribe) this.sb.client.removeChannel(this.canalEscribe);
+    clearInterval(this.respaldo);
+    clearTimeout(this.timerEscribe);
+    this.escribiendo.emit(null);
   }
 
-  async cargar(): Promise<void> {
+  /** silencio: recargas automáticas (sin aviso de error si no hay señal) */
+  async cargar(silencio = false): Promise<void> {
     const { data, error } = await this.sb.client
       .from('pedido_mensajes')
       .select('id, pedido_id, autor_id, autor_nombre, texto, created_at')
@@ -178,16 +228,21 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
       .limit(200);
     this.cargando.set(false);
     if (error) {
-      this.toast.error('No se pudieron cargar los mensajes: ' + mensajeError(error));
+      if (!silencio) this.toast.error('No se pudieron cargar los mensajes: ' + mensajeError(error));
       return;
     }
-    this.mensajes.set((data ?? []) as Mensaje[]);
-    this.bajar();
+    const antes = this.mensajes().at(-1)?.id;
+    const lista = (data ?? []) as Mensaje[];
+    this.mensajes.set(lista);
+    // Solo baja al final si hay algo nuevo (así no salta mientras se leen mensajes viejos)
+    if (lista.at(-1)?.id !== antes) this.bajar();
     void this.avisos.marcarMensajesLeidos(this.pedidoId);
   }
 
   private agregar(m: Mensaje): void {
     if (this.mensajes().some((x) => x.id === m.id)) return;
+    // Quien escribía ya mandó su mensaje
+    if (m.autor_id !== this.yo()) this.ocultarEscribiendo();
     this.mensajes.update((l) => [...l, m]);
     this.bajar();
   }
@@ -211,8 +266,48 @@ export class ChatPedidoComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     if (t === this.texto.trim()) this.texto = '';
+    this.avisarEscribiendo(false);
     // Por si Realtime tarda: se recarga la conversación
     await this.cargar();
+  }
+
+  /** Al teclear se avisa a los demás (a lo sumo cada 2,5 s) */
+  tecleando(): void {
+    if (!this.texto.trim()) return this.avisarEscribiendo(false);
+    if (Date.now() - this.ultimoAviso < 2500) return;
+    this.avisarEscribiendo(true);
+  }
+
+  private avisarEscribiendo(escribiendo: boolean): void {
+    if (!this.canalEscribe || !this.yo()) return;
+    this.ultimoAviso = escribiendo ? Date.now() : 0;
+    const nombre = (this.miNombre).trim().split(/\s+/)[0] || 'Alguien';
+    void this.canalEscribe.send({ type: 'broadcast', event: 'escribiendo', payload: { id: this.yo(), nombre, escribiendo } });
+  }
+
+  private mostrarEscribiendo(nombre: string): void {
+    const yaEstaba = !!this.quienEscribe();
+    this.quienEscribe.set(nombre);
+    this.escribiendo.emit(nombre);
+    if (!yaEstaba) this.bajar();
+    // Si deja de llegar el aviso (dejó de escribir o se fue), se quita
+    clearTimeout(this.timerEscribe);
+    this.timerEscribe = setTimeout(() => this.ocultarEscribiendo(), 4500);
+  }
+
+  private ocultarEscribiendo(): void {
+    clearTimeout(this.timerEscribe);
+    if (!this.quienEscribe()) return;
+    this.quienEscribe.set(null);
+    this.escribiendo.emit(null);
+  }
+
+  /** Al volver a la app, al enfocar la ventana o al recuperar internet se trae lo nuevo */
+  @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
+  @HostListener('window:online')
+  alVolver(): void {
+    if (document.visibilityState === 'visible') void this.cargar(true);
   }
 
   private bajar(): void {
