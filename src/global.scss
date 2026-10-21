@@ -58,7 +58,9 @@ input[type='time']::-webkit-date-and-time-value {
   text-align: left;
 }
 
-/* El aviso de instalar la app vive fuera de ion-app y quedaría encima del menú "Más" */
-body.menu-movil-abierto app-instalar-app {
+/* El aviso de instalar la app vive fuera de ion-app y quedaría encima del menú "Más",
+   del chat y de cualquier hoja abierta (todas llevan el fondo .velo) */
+body.menu-movil-abierto app-instalar-app,
+body:has(.velo) app-instalar-app {
   display: none;
 }
