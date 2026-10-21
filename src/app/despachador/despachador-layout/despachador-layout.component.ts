@@ -13,6 +13,7 @@ import {
   chevronBackOutline,
   chevronForwardOutline,
   logOutOutline,
+  gridOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -39,6 +40,7 @@ export class DespachadorLayoutComponent {
     { label: 'Inicio', path: '/despachador', icon: 'home-outline' },
     { label: 'Pedidos', path: '/despachador/pedidos', icon: 'receipt-outline' },
     { label: 'Cuadres', path: '/despachador/cuadres', icon: 'wallet-outline' },
+    { label: 'Tablero', path: '/despachador/tablero', icon: 'grid-outline' },
   ];
 
   constructor(
@@ -47,6 +49,7 @@ export class DespachadorLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      gridOutline,
       homeOutline,
       receiptOutline,
       walletOutline,

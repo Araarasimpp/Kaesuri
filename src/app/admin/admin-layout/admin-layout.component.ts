@@ -18,6 +18,7 @@ import {
   chevronBackOutline,
   chevronForwardOutline,
   logOutOutline,
+  gridOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -49,6 +50,7 @@ export class AdminLayoutComponent {
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
     { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
     { label: 'Configuración', path: '/admin/configuracion', icon: 'settings-outline' },
+    { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
   ];
 
   constructor(
@@ -57,6 +59,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      gridOutline,
       homeOutline,
       receiptOutline,
       cubeOutline,

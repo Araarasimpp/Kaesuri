@@ -1,0 +1,231 @@
+// src/app/shared/ui.scss
+// Piezas de las pantallas tipo "tablero" (sistema "tiquete de caja") (Inicio, Mis entregas, Ranking, Perfil).
+// Se agrega en styleUrls junto al .scss propio de cada página. Los botones,
+// campos y el selector segmentado vienen de theme/gestion.scss (globales).
+
+:host {
+  display: block;
+  min-height: 100%;
+  background: var(--bg);
+}
+
+.page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--text);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.05;
+}
+
+.head h1 small {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.head h1 small::first-letter {
+  text-transform: uppercase;
+}
+
+.fecha {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.fecha::first-letter {
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+// ---------- KPIs: celdas de una sola grilla, separadas por rayas finas ----------
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+// Cada celda dibuja su raya derecha e inferior; las del borde las recorta el contenedor
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px;
+  min-width: 0;
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border);
+}
+
+.kpi-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.kpi-valor {
+  font-family: var(--mono-font);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-nota {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// El número que más importa en la pantalla: el TOTAL del tiquete, en oro
+.kpi-principal {
+  background: var(--oro-wash);
+}
+
+.kpi-principal .kpi-label {
+  color: var(--oro-texto);
+}
+
+// ---------- Panel ----------
+.panel {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -2px 0 14px;
+  padding-bottom: 12px;
+  border-bottom: var(--perfora);
+}
+
+.panel-sub {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.panel-sub strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.controles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.panel-head > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+// ---------- Vacío y carga ----------
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  border: var(--perfora);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+.vacio p {
+  margin: 0;
+  max-width: 340px;
+}
+
+.vacio .b {
+  margin-top: 8px;
+}
+
+.vacio-titulo {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.sk {
+  display: block;
+  border-radius: 4px;
+  background: var(--selected);
+  animation: pulso 1.2s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// ---------- Celular ----------
+@media (max-width: 640px) {
+  .page {
+    padding: 18px 14px 28px;
+    gap: 18px;
+  }
+
+  .head h1 {
+    font-size: 24px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi {
+    padding: 12px 14px;
+  }
+
+  .kpi-valor {
+    font-size: 18px;
+  }
+
+  .controles {
+    width: 100%;
+  }
+}

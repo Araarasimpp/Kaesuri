@@ -57,6 +57,10 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./configuracion/configuracion.page').then((m) => m.ConfiguracionPage),
       },
+      {
+        path: 'tablero',
+        loadComponent: () => import('../paginas/tablero/tablero.page').then((m) => m.TableroPage),
+      },
     ],
   },
 ];
