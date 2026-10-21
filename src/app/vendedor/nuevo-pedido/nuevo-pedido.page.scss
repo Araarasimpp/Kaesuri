@@ -390,3 +390,77 @@
     width: 100%;
   }
 }
+.producto-foto {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--k-border);
+  background: var(--k-bg-alt);
+}
+
+/* Color y talla de cada línea */
+.variantes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.var-etq {
+  min-width: 44px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--k-text-muted);
+}
+
+.var-etq.pide {
+  color: var(--k-coral);
+}
+
+.var {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--k-border-strong);
+  border-radius: 16px;
+  background: var(--k-card-bg);
+  color: var(--k-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.var.on {
+  border-color: var(--k-role);
+  background: var(--k-role);
+  color: var(--k-on-role);
+  font-weight: 600;
+}
+
+.var.talla {
+  min-width: 38px;
+  justify-content: center;
+}
+
+.tono {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.carrito-item.falta {
+  border-color: var(--k-coral);
+}
+
+.producto-item .producto-info {
+  flex: 1;
+  min-width: 0;
+}

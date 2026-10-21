@@ -4,12 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Producto } from '../../shared/models/models';
+import { urlMini } from '../../shared/formato';
 
 import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 interface ItemCarrito {
+  /** Cada línea es un producto con un color y una talla */
+  key: number;
   producto: Producto;
   cantidad: number;
+  color: string | null;
+  talla: string | null;
   // Precio al que se vende ESTE pedido. Arranca en precio_sugerido, pero el
   // vendedor lo puede subir si vende más caro — ahí su comisión sube también.
   precioUnitario: number;
@@ -28,6 +33,8 @@ export class NuevoPedidoPage implements OnInit {
   busquedaProducto = '';
 
   carrito: ItemCarrito[] = [];
+  private claves = 0;
+  urlMini = urlMini;
 
   clienteNombre = '';
   clienteTelefono = '';
@@ -94,14 +101,17 @@ export class NuevoPedidoPage implements OnInit {
     const { data, error } = await this.supabase.client
       .from('productos')
       .select(
-        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo'
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, colores:producto_colores(id, nombre, hex, imagen_url, orden)'
       )
       .eq('activo', true)
       .gt('stock', 0)
       .order('nombre');
 
     if (!error && data) {
-      this.productos = data as Producto[];
+      this.productos = (data as Producto[]).map((p) => ({
+        ...p,
+        colores: [...(p.colores ?? [])].sort((a, b) => a.orden - b.orden || a.id - b.id),
+      }));
     }
     this.loadingProductos = false;
     this.cdr.detectChanges();
@@ -117,23 +127,39 @@ export class NuevoPedidoPage implements OnInit {
 
   // Cuánto de un producto ya está en el carrito (para no dejar agregar más del stock disponible)
   cantidadEnCarrito(productoId: string): number {
-    return this.carrito.find((i) => i.producto.id === productoId)?.cantidad ?? 0;
+    return this.carrito.filter((i) => i.producto.id === productoId).reduce((s, i) => s + i.cantidad, 0);
+  }
+
+  tieneVariantes(p: Producto): boolean {
+    return !!(p.colores?.length || p.tallas?.length);
   }
 
   agregarProducto(producto: Producto): void {
-    const existente = this.carrito.find((i) => i.producto.id === producto.id);
+    if (this.cantidadEnCarrito(producto.id) >= producto.stock) return;
+    // Con colores o tallas, cada vez que se agrega es una línea nueva (puede ser otra variante)
+    const existente = this.tieneVariantes(producto) ? null : this.carrito.find((i) => i.producto.id === producto.id);
 
     if (existente) {
-      if (existente.cantidad < producto.stock) {
-        existente.cantidad++;
-      }
+      existente.cantidad++;
     } else {
-      this.carrito.push({ producto, cantidad: 1, precioUnitario: producto.precio_sugerido });
+      // Si solo hay un color o una talla, ya queda elegida
+      const color = producto.colores?.length === 1 ? producto.colores[0].nombre : null;
+      const talla = producto.tallas?.length === 1 ? producto.tallas[0] : null;
+      this.carrito.push({ key: ++this.claves, producto, cantidad: 1, color, talla, precioUnitario: producto.precio_sugerido });
     }
   }
 
+  elegir(item: ItemCarrito, campo: 'color' | 'talla', valor: string): void {
+    item[campo] = item[campo] === valor ? null : valor;
+  }
+
+  /** Le falta elegir color o talla */
+  faltaVariante(item: ItemCarrito): boolean {
+    return (!!item.producto.colores?.length && !item.color) || (!!item.producto.tallas?.length && !item.talla);
+  }
+
   incrementar(item: ItemCarrito): void {
-    if (item.cantidad < item.producto.stock) {
+    if (this.cantidadEnCarrito(item.producto.id) < item.producto.stock) {
       item.cantidad++;
     }
   }
@@ -146,7 +172,7 @@ export class NuevoPedidoPage implements OnInit {
   }
 
   quitarDelCarrito(item: ItemCarrito): void {
-    this.carrito = this.carrito.filter((i) => i.producto.id !== item.producto.id);
+    this.carrito = this.carrito.filter((i) => i.key !== item.key);
   }
 
   // Comisión que deja ESTE item con el precio actual (puede subir si el
@@ -175,6 +201,15 @@ export class NuevoPedidoPage implements OnInit {
       return;
     }
 
+    const sinVariante = this.carrito.find((i) => this.faltaVariante(i));
+    if (sinVariante) {
+      const falta = [!sinVariante.color && sinVariante.producto.colores?.length ? 'color' : '', !sinVariante.talla && sinVariante.producto.tallas?.length ? 'talla' : '']
+        .filter(Boolean)
+        .join(' y ');
+      this.errorMsg = `Elige ${falta} de ${sinVariante.producto.nombre}.`;
+      return;
+    }
+
     if (!this.clienteNombre || !this.direccion) {
       this.errorMsg = 'Nombre del cliente y dirección son obligatorios.';
       return;
@@ -187,6 +222,8 @@ export class NuevoPedidoPage implements OnInit {
       cantidad: i.cantidad,
       precio_unitario: i.precioUnitario,
       precio_base: i.producto.precio_base,
+      color: i.color,
+      talla: i.talla,
     }));
 
     const { data, error } = await this.supabase.client.rpc('crear_pedido', {

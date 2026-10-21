@@ -77,7 +77,7 @@ export class ProductosPage implements OnInit, OnDestroy {
     const { data, error } = await this.supabase.client
       .from('productos')
       .select(
-        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo'
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, imagenes, tallas, videos'
       )
       .order('nombre');
 

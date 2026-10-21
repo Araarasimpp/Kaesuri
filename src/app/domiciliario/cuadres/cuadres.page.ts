@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { nombreConVariante } from '../../shared/variante';
 import { EntregadoJasta, JastaService, ResumenJasta } from '../../core/services/jasta.service';
 import { Cuadre, MetodoPago } from '../../shared/models/models';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
@@ -142,7 +143,7 @@ export class CuadresPage implements OnInit {
     if (pedidos.length) {
       const { data: items } = await this.supabase.client
         .from('pedido_items')
-        .select('pedido_id, cantidad, producto:productos(nombre)')
+        .select('pedido_id, cantidad, color, talla, producto:productos(nombre)')
         .in(
           'pedido_id',
           pedidos.map((p) => p.id)
@@ -152,7 +153,7 @@ export class CuadresPage implements OnInit {
         ...p,
         productos: (items ?? [])
           .filter((i: any) => i.pedido_id === p.id)
-          .map((i: any) => `${i.producto?.nombre ?? 'Producto'} x${i.cantidad}`)
+          .map((i: any) => `${nombreConVariante(i.producto?.nombre ?? 'Producto', i)} x${i.cantidad}`)
           .join(', '),
       }));
     }

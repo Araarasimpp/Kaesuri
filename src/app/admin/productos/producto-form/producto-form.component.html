@@ -56,6 +56,27 @@
         </div>
       </div>
 
+      <section class="extra">
+        <h3>Fotos adicionales</h3>
+        <app-fotos-producto [fotos]="form.imagenes ?? []" [titulo]="form.nombre" (cambio)="form.imagenes = $event"></app-fotos-producto>
+      </section>
+
+      <section class="extra">
+        <h3>Colores</h3>
+        <app-colores-producto *ngIf="form.id; else sinId" [productoId]="form.id" [nombreProducto]="form.nombre"></app-colores-producto>
+        <ng-template #sinId><p class="hint">Guarda el producto primero y luego agrega sus colores, cada uno con su foto.</p></ng-template>
+      </section>
+
+      <section class="extra">
+        <h3>Tallas</h3>
+        <app-tallas-producto [tallas]="form.tallas ?? []" (cambio)="form.tallas = $event"></app-tallas-producto>
+      </section>
+
+      <section class="extra">
+        <h3>Videos</h3>
+        <app-videos-producto [videos]="form.videos ?? []" (cambio)="form.videos = $event"></app-videos-producto>
+      </section>
+
       <p class="hint comision-hint" [class.negativa]="comisionSugerida < 0">
         Comisión del vendedor con estos precios: <strong>{{ comisionSugerida | number: '1.0-0' }}</strong> por unidad
         <span *ngIf="comisionSugerida < 0"> — el precio sugerido es menor al precio base, revisa los valores.</span>

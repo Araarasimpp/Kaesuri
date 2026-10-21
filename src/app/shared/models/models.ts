@@ -14,6 +14,23 @@ export interface Producto {
   stock: number;
   categoria: string | null;
   activo: boolean;
+  /** Fotos aparte de la principal y de los colores (máx. 12) */
+  imagenes?: string[];
+  /** Tallas disponibles (vacío = no maneja tallas) */
+  tallas?: string[];
+  /** Videos (bucket público "videos", máx. 3) */
+  videos?: string[];
+  colores?: ProductoColor[];
+}
+
+/** Variante de color de un producto, con su propia foto */
+export interface ProductoColor {
+  id: number;
+  producto_id: string;
+  nombre: string;
+  hex: string | null;
+  imagen_url: string | null;
+  orden: number;
 }
 
 export interface PedidoItem {
@@ -23,6 +40,8 @@ export interface PedidoItem {
   cantidad: number;
   precio_unitario: number;
   precio_base: number;
+  color?: string | null;
+  talla?: string | null;
 }
 
 export interface Pedido {

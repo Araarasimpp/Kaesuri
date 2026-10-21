@@ -21,6 +21,7 @@
           *ngFor="let p of productosFiltrados"
           (click)="agregarProducto(p)"
         >
+          <img class="producto-foto" *ngIf="urlMini(p.imagen_url) as u" [src]="u" alt="" loading="lazy" />
           <div class="producto-info">
             <span class="producto-nombre">{{ p.nombre }}</span>
             <span class="producto-meta">{{ p.sku }} · Stock: {{ p.stock }}</span>
@@ -43,7 +44,7 @@
       <h2>Carrito</h2>
 
       <div class="carrito" *ngIf="carrito.length; else carritoVacio">
-        <div class="carrito-item" *ngFor="let item of carrito">
+        <div class="carrito-item" *ngFor="let item of carrito" [class.falta]="faltaVariante(item)">
           <div class="carrito-fila-top">
             <div class="carrito-info">
               <span class="producto-nombre">{{ item.producto.nombre }}</span>
@@ -52,10 +53,38 @@
             <div class="cantidad-control">
               <button (click)="decrementar(item)">−</button>
               <span>{{ item.cantidad }}</span>
-              <button (click)="incrementar(item)" [disabled]="item.cantidad >= item.producto.stock">
+              <button (click)="incrementar(item)" [disabled]="cantidadEnCarrito(item.producto.id) >= item.producto.stock">
                 +
               </button>
             </div>
+          </div>
+          <div class="variantes" *ngIf="item.producto.colores?.length" role="radiogroup" aria-label="Color">
+            <span class="var-etq" [class.pide]="!item.color">Color</span>
+            <button
+              type="button"
+              class="var"
+              *ngFor="let c of item.producto.colores"
+              role="radio"
+              [attr.aria-checked]="item.color === c.nombre"
+              [class.on]="item.color === c.nombre"
+              (click)="elegir(item, 'color', c.nombre)"
+            >
+              <span class="tono" *ngIf="c.hex" [style.background]="c.hex"></span>{{ c.nombre }}
+            </button>
+          </div>
+          <div class="variantes" *ngIf="item.producto.tallas?.length" role="radiogroup" aria-label="Talla">
+            <span class="var-etq" [class.pide]="!item.talla">Talla</span>
+            <button
+              type="button"
+              class="var talla"
+              *ngFor="let t of item.producto.tallas"
+              role="radio"
+              [attr.aria-checked]="item.talla === t"
+              [class.on]="item.talla === t"
+              (click)="elegir(item, 'talla', t)"
+            >
+              {{ t }}
+            </button>
           </div>
           <div class="carrito-fila-precio">
             <label>

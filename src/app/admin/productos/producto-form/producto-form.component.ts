@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { Producto } from '../../../shared/models/models';
+import { subirFoto } from '../../../shared/fotos';
+import { ColoresProductoComponent } from '../../../shared/colores-producto/colores-producto.component';
+import { TallasProductoComponent } from '../../../shared/tallas-producto/tallas-producto.component';
+import { FotosProductoComponent } from '../../../shared/fotos-producto/fotos-producto.component';
+import { VideosProductoComponent } from '../../../shared/videos-producto/videos-producto.component';
 
 // Para un producto nuevo aún no existe el id, así que lo hacemos opcional
 // solo dentro de este formulario (el resto de los campos usan el mismo
@@ -13,7 +18,7 @@ type ProductoForm = Omit<Producto, 'id'> & { id?: string };
 @Component({
   selector: 'app-producto-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ColoresProductoComponent, TallasProductoComponent, FotosProductoComponent, VideosProductoComponent],
   templateUrl: './producto-form.component.html',
   styleUrls: ['./producto-form.component.scss'],
 })
@@ -33,7 +38,9 @@ export class ProductoFormComponent implements OnChanges {
   constructor(private supabase: SupabaseService, private zone: NgZone) {}
 
   ngOnChanges(): void {
-    this.form = this.producto ? { ...this.producto } : this.formVacio();
+    this.form = this.producto
+      ? { ...this.producto, imagenes: this.producto.imagenes ?? [], tallas: this.producto.tallas ?? [], videos: this.producto.videos ?? [] }
+      : this.formVacio();
     this.previewUrl = this.producto?.imagen_url ?? null;
     this.archivoImagen = null;
     this.errorMsg = '';
@@ -86,6 +93,9 @@ export class ProductoFormComponent implements OnChanges {
         costo: this.form.costo ?? null,
         stock: this.form.stock ?? 0,
         imagen_url: imagenUrl || null,
+        imagenes: this.form.imagenes ?? [],
+        tallas: this.form.tallas ?? [],
+        videos: this.form.videos ?? [],
       };
 
       const query = this.esEdicion
@@ -115,18 +125,9 @@ export class ProductoFormComponent implements OnChanges {
     }
   }
 
-  private async subirImagen(file: File): Promise<string> {
-    const extension = file.name.split('.').pop();
-    const ruta = `${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
-
-    const { error } = await this.supabase.client.storage
-      .from('productos')
-      .upload(ruta, file, { upsert: false });
-
-    if (error) throw error;
-
-    const { data } = this.supabase.client.storage.from('productos').getPublicUrl(ruta);
-    return data.publicUrl;
+  /** Foto principal: se achica y se guarda con su miniatura, como las demás fotos */
+  private subirImagen(file: File): Promise<string> {
+    return subirFoto(this.supabase.client, file, 'productos');
   }
 
   onCerrar(): void {
@@ -145,6 +146,9 @@ export class ProductoFormComponent implements OnChanges {
       stock: 0,
       imagen_url: null,
       activo: true,
+      imagenes: [],
+      tallas: [],
+      videos: [],
     };
   }
 }

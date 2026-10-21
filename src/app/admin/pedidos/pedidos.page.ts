@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { nombreConVariante } from '../../shared/variante';
 import { EstadoPedido } from '../../shared/models/models';
 import { RotuloService } from '../../shared/rotulo.service';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
@@ -59,7 +60,7 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
   'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, ' +
-  'pedido_items(cantidad, producto:productos(nombre, imagen_url))';
+  'pedido_items(cantidad, color, talla, producto:productos(nombre, imagen_url))';
 
 @Component({
   selector: 'app-pedidos',
@@ -246,7 +247,8 @@ export class PedidosPage implements OnInit, OnDestroy {
 
   private aFila(p: any): PedidoFila {
     const items: ItemFila[] = (p.pedido_items ?? []).map((i: any) => ({
-      nombre: i.producto?.nombre ?? 'Producto',
+      // Con color y talla: "Camiseta (Negro · Talla M)" (así sale también en el rótulo)
+      nombre: nombreConVariante(i.producto?.nombre ?? 'Producto', i),
       cantidad: i.cantidad,
       imagen_url: i.producto?.imagen_url ?? null,
     }));

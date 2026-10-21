@@ -5,6 +5,7 @@ import { addIcons } from 'ionicons';
 import { callOutline, logoWhatsapp, navigateOutline } from 'ionicons/icons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { nombreConVariante } from '../../shared/variante';
 import { EntregarPedidoComponent } from '../entregar-pedido/entregar-pedido.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { JastaService, PedidoJasta, ResumenJasta } from '../../core/services/jasta.service';
@@ -171,7 +172,7 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
     if (!error && pedidos.length) {
       const { data: items } = await this.supabase.client
         .from('pedido_items')
-        .select('pedido_id, cantidad, producto:productos(nombre)')
+        .select('pedido_id, cantidad, color, talla, producto:productos(nombre)')
         .in(
           'pedido_id',
           pedidos.map((p) => p.id)
@@ -181,7 +182,7 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
         ...p,
         productos: (items ?? [])
           .filter((i: any) => i.pedido_id === p.id)
-          .map((i: any) => `${i.producto?.nombre ?? 'Producto'} — Cantidad: ${i.cantidad}`)
+          .map((i: any) => `${nombreConVariante(i.producto?.nombre ?? 'Producto', i)} — Cantidad: ${i.cantidad}`)
           .join('\n'),
       }));
     }
