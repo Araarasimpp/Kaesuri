@@ -43,12 +43,25 @@
           {{ etiquetaEstado(p.estado) }}
         </span>
         <span class="pedido-total">{{ formatoMoneda(p.total) }}</span>
+        <button
+          type="button"
+          class="chat-btn"
+          [class.nuevo]="avisos.pedidosConMensajes().has(p.id)"
+          (click)="chatId = p.id"
+          [attr.aria-label]="avisos.pedidosConMensajes().has(p.id) ? 'Mensaje nuevo: abrir chat del pedido ' + p.numero : 'Chat del pedido ' + p.numero"
+          title="Chat del pedido"
+        >
+          <ion-icon name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
+          <span class="chat-q" *ngIf="avisos.pedidosConMensajes().has(p.id)" aria-hidden="true">!</span>
+        </button>
       </div>
       <p class="empty-msg" *ngIf="!misPedidos.length">
-        Todavía no tienes pedidos en ruta ni entregados.
+        Todavía no tienes pedidos.
       </p>
     </section>
   </ng-container>
+
+  <app-chat-hoja *ngIf="chatId" [pedidoId]="chatId" (cerrar)="cerrarChat()"></app-chat-hoja>
 
   <ng-template #cargando>
     <app-skeleton variante="stats"></app-skeleton>

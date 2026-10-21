@@ -1,14 +1,17 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { callOutline, logoWhatsapp, navigateOutline } from 'ionicons/icons';
+import { callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline } from 'ionicons/icons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { nombreConVariante } from '../../shared/variante';
 import { EntregarPedidoComponent } from '../entregar-pedido/entregar-pedido.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { JastaService, PedidoJasta, ResumenJasta } from '../../core/services/jasta.service';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { ChatHojaComponent } from '../../shared/chat-pedido/chat-hoja.component';
 import { MetodoPago } from '../../shared/models/models';
 
 interface PedidoRuta {
@@ -42,7 +45,7 @@ interface EntregaJasta {
 @Component({
   selector: 'app-inicio-domiciliario',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, IonIcon, EntregarPedidoComponent],
+  imports: [SkeletonComponent, CommonModule, IonIcon, EntregarPedidoComponent, ChatHojaComponent],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
@@ -54,6 +57,12 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
   /** Pedidos de Jasta (null = todavía no se sabe o no reparte allá) */
   jasta: ResumenJasta | null = null;
   entregandoJasta: EntregaJasta | null = null;
+  /** Pedido con el chat abierto (también llega por ?chat=<pedido> desde un aviso) */
+  chatId: string | null = null;
+  avisos = inject(NotificacionesService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private subParams?: { unsubscribe(): void };
 
   private canal: RealtimeChannel | null = null;
   /** Además de los avisos en vivo, se consulta Jasta cada minuto por si se pierde la conexión */
@@ -63,10 +72,18 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
   private timerJasta?: ReturnType<typeof setTimeout>;
 
   constructor(private supabase: SupabaseService, private jastas: JastaService, private cdr: ChangeDetectorRef) {
-    addIcons({ callOutline, logoWhatsapp, navigateOutline });
+    addIcons({ callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline });
   }
 
   async ngOnInit(): Promise<void> {
+    void this.avisos.iniciar();
+    this.subParams = this.route.queryParamMap.subscribe((q) => {
+      const id = q.get('chat');
+      if (id) {
+        this.chatId = id;
+        this.cdr.detectChanges();
+      }
+    });
     void this.cargarJasta();
     await this.cargarPedidos();
     this.suscribirRealtime();
@@ -77,9 +94,19 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
     if (this.canal) {
       this.supabase.client.removeChannel(this.canal);
     }
+    this.subParams?.unsubscribe();
     clearInterval(this.relojJasta);
     clearTimeout(this.timerJasta);
     this.dejarJasta?.();
+  }
+
+  abrirChat(id: string): void {
+    this.chatId = id;
+  }
+
+  cerrarChat(): void {
+    this.chatId = null;
+    void this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
   /** Pedidos de los dos negocios en una sola ruta, en el orden en que se los asignaron */

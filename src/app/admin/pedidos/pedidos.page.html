@@ -101,6 +101,8 @@
                 <div class="stack">
                   <span class="strong">
                     #{{ p.numero }}
+                    <button type="button" class="chat-nuevo" *ngIf="avisos.pedidosConMensajes().has(p.id)" (click)="$event.stopPropagation(); abrirChat(p.id)"
+                      [attr.aria-label]="'Mensaje nuevo en el pedido ' + p.numero" title="Mensaje nuevo">!</button>
                     <span class="orden-alistado" *ngIf="ordinalAlistado(p)" [attr.title]="'Alistado en el puesto ' + ordinalAlistado(p)">{{ ordinalAlistado(p) }}</span>
                   </span>
                   <span class="text-soft small">{{ formatoFecha(p.created_at) }}</span>
@@ -174,20 +176,22 @@
                 </span>
               </td>
               <td class="menu-cell">
-                <button class="menu-btn" (click)="toggleMenu(p.id)" *ngIf="p.estado !== 'entregado'" aria-label="Más acciones">
+                <button class="menu-btn" (click)="toggleMenu(p.id)" aria-label="Más acciones">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
                 </button>
                 <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
+                  <button (click)="abrirChat(p.id)">Chat del pedido</button>
                   <button *ngIf="p.estado === 'pendiente' || p.estado === 'en_ruta'" [routerLink]="rutaNuevo" [queryParams]="{ editar: p.id }">Editar pedido</button>
                   <button *ngIf="esAlistado(p)" (click)="quitarAlistado(p)">Quitar de alistados</button>
-                  <button *ngIf="p.estado !== 'cancelado'" (click)="cancelarPedido(p)">Cancelar pedido</button>
-                  <button class="danger" (click)="eliminarPedido(p)">Eliminar</button>
+                  <button *ngIf="p.estado !== 'cancelado' && p.estado !== 'entregado'" (click)="cancelarPedido(p)">Cancelar pedido</button>
+                  <button class="danger" *ngIf="p.estado !== 'entregado'" (click)="eliminarPedido(p)">Eliminar</button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+      <app-chat-hoja *ngIf="chatId" [pedidoId]="chatId" (cerrar)="cerrarChat()"></app-chat-hoja>
 
       <div class="table-footer" *ngIf="filtrados.length">
         <span>Mostrando {{ filtrados.length }} de {{ totalFiltrados }} {{ totalFiltrados === 1 ? 'pedido' : 'pedidos' }}</span>

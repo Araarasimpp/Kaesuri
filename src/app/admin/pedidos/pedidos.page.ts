@@ -6,10 +6,10 @@
 // estado, rótulo y búsqueda, y los productos vienen dentro de la misma consulta
 // (sin listas largas de IDs en la URL). Así sigue funcionando con miles de pedidos.
 
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { nombreConVariante } from '../../shared/variante';
@@ -18,6 +18,8 @@ import { RotuloService } from '../../shared/rotulo.service';
 import { ImagenPreviewComponent } from '../../shared/imagen-preview/imagen-preview.component';
 import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { ChatHojaComponent } from '../../shared/chat-pedido/chat-hoja.component';
 
 interface ItemFila {
   nombre: string;
@@ -65,7 +67,7 @@ const COLUMNAS =
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule, RouterLink, ImagenPreviewComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, RouterLink, ImagenPreviewComponent, ChatHojaComponent],
   templateUrl: './pedidos.page.html',
   styleUrls: ['./pedidos.page.scss'],
 })
@@ -108,21 +110,46 @@ export class PedidosPage implements OnInit, OnDestroy {
     { valor: 'todos', etiqueta: 'Todos' },
   ];
 
+  /** Pedido con el chat abierto (también llega por ?chat=<pedido> desde un aviso) */
+  chatId: string | null = null;
+  avisos = inject(NotificacionesService);
+  private route = inject(ActivatedRoute);
+  private subParams?: { unsubscribe(): void };
+
   constructor(
     private supabase: SupabaseService,
     private rotulos: RotuloService,
     private cdr: ChangeDetectorRef,
-    router: Router
+    private router: Router
   ) {
     this.rutaNuevo = router.url.startsWith('/despachador') ? '/despachador/pedidos/nuevo' : '/admin/pedidos/nuevo';
   }
 
   async ngOnInit(): Promise<void> {
+    void this.avisos.iniciar();
+    this.subParams = this.route.queryParamMap.subscribe((q) => {
+      const id = q.get('chat');
+      if (id) {
+        this.chatId = id;
+        this.cdr.detectChanges();
+      }
+    });
     await Promise.all([this.cargarPedidos(), this.cargarConteos(), this.cargarDomiciliarios()]);
     this.suscribirRealtime();
   }
 
+  abrirChat(id: string): void {
+    this.menuAbiertoId = null;
+    this.chatId = id;
+  }
+
+  cerrarChat(): void {
+    this.chatId = null;
+    void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+  }
+
   ngOnDestroy(): void {
+    this.subParams?.unsubscribe();
     if (this.canal) this.supabase.client.removeChannel(this.canal);
     if (this.temporizadorRecarga) clearTimeout(this.temporizadorRecarga);
     if (this.temporizadorBusqueda) clearTimeout(this.temporizadorBusqueda);

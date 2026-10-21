@@ -5,8 +5,23 @@
     <div class="lista" *ngIf="paradas.length; else vacio">
       <ng-container *ngFor="let parada of paradas; trackBy: trackParada">
       <div class="pedido-card" *ngIf="parada.kaesuri as p">
-        <span class="negocio" *ngIf="jasta?.vinculado">Variedades JYB</span>
-        <h2 class="pedido-titulo">Pedido #{{ p.numero }} - {{ formatoMoneda(p.total) }}</h2>
+        <div class="titulo-fila">
+          <div>
+            <span class="negocio" *ngIf="jasta?.vinculado">Variedades JYB</span>
+            <h2 class="pedido-titulo">Pedido #{{ p.numero }} - {{ formatoMoneda(p.total) }}</h2>
+          </div>
+          <button
+            type="button"
+            class="chat-btn"
+            [class.nuevo]="avisos.pedidosConMensajes().has(p.id)"
+            (click)="abrirChat(p.id)"
+            [attr.aria-label]="avisos.pedidosConMensajes().has(p.id) ? 'Mensaje nuevo: abrir chat' : 'Chat del pedido con el vendedor'"
+            title="Chat del pedido"
+          >
+            <ion-icon name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
+            <span class="chat-q" aria-hidden="true">{{ avisos.pedidosConMensajes().has(p.id) ? '!' : '?' }}</span>
+          </button>
+        </div>
 
         <div class="datos">
           <p><strong>Cliente:</strong> {{ p.cliente_nombre }}</p>
@@ -107,6 +122,8 @@
   (cerrar)="cerrarEntrega()"
   (entregado)="onEntregado()"
 ></app-entregar-pedido>
+
+<app-chat-hoja *ngIf="chatId" [pedidoId]="chatId" (cerrar)="cerrarChat()"></app-chat-hoja>
 
 <app-entregar-pedido
   *ngIf="entregandoJasta"

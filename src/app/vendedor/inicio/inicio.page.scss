@@ -183,3 +183,40 @@
   text-align: center;
   padding: 12px 0;
 }
+/* Chat del pedido con el domiciliario ("!" si hay mensaje nuevo) */
+.chat-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--k-border);
+  border-radius: 50%;
+  background: var(--k-role-soft);
+  color: var(--k-role-ink);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.chat-btn.nuevo {
+  background: var(--k-coral-soft);
+  color: var(--k-coral);
+}
+
+.chat-q {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 2px solid var(--k-card-bg);
+  background: var(--k-coral);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+}

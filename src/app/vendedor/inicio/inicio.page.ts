@@ -1,6 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { chatbubbleEllipsesOutline } from 'ionicons/icons';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { ChatHojaComponent } from '../../shared/chat-pedido/chat-hoja.component';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
@@ -26,11 +31,11 @@ interface BarraDia {
 @Component({
   selector: 'app-inicio-vendedor',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule],
+  imports: [SkeletonComponent, CommonModule, IonIcon, ChatHojaComponent],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
-export class InicioPage implements OnInit {
+export class InicioPage implements OnInit, OnDestroy {
   loading = true;
 
   ventasHoy = 0;
@@ -41,10 +46,36 @@ export class InicioPage implements OnInit {
   ventasSemana: BarraDia[] = [];
   misPedidos: PedidoPropio[] = [];
 
-  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
+  /** Pedido con el chat abierto con el domiciliario (también llega por ?chat=<pedido>) */
+  chatId: string | null = null;
+  avisos = inject(NotificacionesService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private subParams?: { unsubscribe(): void };
+
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {
+    addIcons({ chatbubbleEllipsesOutline });
+  }
 
   async ngOnInit(): Promise<void> {
+    void this.avisos.iniciar();
+    this.subParams = this.route.queryParamMap.subscribe((q) => {
+      const id = q.get('chat');
+      if (id) {
+        this.chatId = id;
+        this.cdr.detectChanges();
+      }
+    });
     await this.cargarDashboard();
+  }
+
+  ngOnDestroy(): void {
+    this.subParams?.unsubscribe();
+  }
+
+  cerrarChat(): void {
+    this.chatId = null;
+    void this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
   async cargarDashboard(): Promise<void> {
@@ -89,7 +120,8 @@ export class InicioPage implements OnInit {
         .from('pedidos')
         .select('id, numero, cliente_nombre, total, comision, estado, created_at')
         .eq('vendedor_id', user.id)
-        .in('estado', ['en_ruta', 'entregado'])
+        // Los pendientes también, para poder escribirle a la oficina antes de que salga
+        .in('estado', ['pendiente', 'en_ruta', 'entregado'])
         .order('created_at', { ascending: false })
         .limit(15),
     ]);
@@ -138,7 +170,7 @@ export class InicioPage implements OnInit {
   }
 
   etiquetaEstado(estado: string): string {
-    return estado === 'en_ruta' ? 'En ruta' : 'Entregado';
+    return estado === 'pendiente' ? 'Pendiente' : estado === 'en_ruta' ? 'En ruta' : 'Entregado';
   }
 
   formatoMoneda(valor: number): string {

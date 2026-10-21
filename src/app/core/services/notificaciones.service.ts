@@ -17,12 +17,18 @@ export interface Notificacion {
   enlace: string | null;
   leida: boolean;
   created_at: string;
+  /** Pedido del aviso (los de mensajes del chat lo traen) */
+  pedido_id?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class NotificacionesService {
   readonly lista = signal<Notificacion[]>([]);
   readonly noLeidas = computed(() => this.lista().filter((n) => !n.leida).length);
+  /** Pedidos con mensajes del chat sin leer (para el "!" en las tarjetas) */
+  readonly pedidosConMensajes = computed(
+    () => new Set(this.lista().filter((n) => !n.leida && n.tipo === 'mensaje' && n.pedido_id).map((n) => n.pedido_id!))
+  );
 
   private usuarioId: string | null = null;
   private roles: UserRole[] = [];
@@ -52,7 +58,7 @@ export class NotificacionesService {
 
     const { data } = await this.supabase.client
       .from('notificaciones')
-      .select('id, tipo, titulo, mensaje, enlace, leida, created_at')
+      .select('id, tipo, titulo, mensaje, enlace, leida, created_at, pedido_id')
       .eq('usuario_id', perfil.id)
       .order('created_at', { ascending: false })
       .limit(40);
@@ -86,6 +92,18 @@ export class NotificacionesService {
     await this.supabase.client.from('notificaciones').update({ leida: true }).eq('id', n.id);
   }
 
+  /** Al abrir el chat de un pedido, sus avisos de mensaje quedan leídos */
+  async marcarMensajesLeidos(pedidoId: string): Promise<void> {
+    if (!this.usuarioId || !this.lista().some((n) => !n.leida && n.tipo === 'mensaje' && n.pedido_id === pedidoId)) return;
+    this.lista.update((l) => l.map((x) => (x.tipo === 'mensaje' && x.pedido_id === pedidoId ? { ...x, leida: true } : x)));
+    await this.supabase.client
+      .from('notificaciones')
+      .update({ leida: true })
+      .eq('usuario_id', this.usuarioId)
+      .eq('tipo', 'mensaje')
+      .eq('pedido_id', pedidoId);
+  }
+
   async marcarTodas(): Promise<void> {
     if (!this.usuarioId || !this.noLeidas()) return;
     this.lista.update((l) => l.map((x) => ({ ...x, leida: true })));
@@ -111,6 +129,11 @@ export class NotificacionesService {
     const rol = this.roles.includes(aqui) ? aqui : (Object.keys(base) as UserRole[]).find((r) => this.roles.includes(r));
     if (!rol) return null;
     const raiz = base[rol];
+    // Mensaje del chat: abre el chat de ese pedido en la pantalla de pedidos del área
+    if (n.enlace?.startsWith('chat:')) {
+      const lista = rol === 'admin' || rol === 'despachador' ? raiz + '/pedidos' : raiz;
+      return `${lista}?chat=${n.enlace.slice(5)}`;
+    }
     if (rol === 'vendedor') return raiz;
     if (rol === 'domiciliario') return n.enlace === 'cuadres' ? raiz + '/cuadres' : raiz;
     if (n.enlace === 'pedidos' || n.enlace === 'cuadres') return `${raiz}/${n.enlace}`;
