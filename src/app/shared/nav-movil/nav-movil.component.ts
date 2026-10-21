@@ -2,14 +2,38 @@
 // Barra de navegación de abajo en el celular. Flota por encima de la barra de gestos
 // del iPhone y muestra las secciones principales con su nombre; "Más" abre todas las
 // opciones del área (también el tema y cerrar sesión), así ninguna queda escondida.
-import { Component, HostBinding, HostListener, Input, effect, signal } from '@angular/core';
+import { Component, HostBinding, HostListener, Input, computed, effect, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, appsOutline, closeOutline, logOutOutline, moonOutline, sunnyOutline } from 'ionicons/icons';
+import {
+  add,
+  appsOutline,
+  bagHandleOutline,
+  bicycleOutline,
+  briefcaseOutline,
+  checkmarkCircle,
+  closeOutline,
+  logOutOutline,
+  moonOutline,
+  paperPlaneOutline,
+  pricetagOutline,
+  storefrontOutline,
+  sunnyOutline,
+} from 'ionicons/icons';
 import { filter } from 'rxjs';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, UserRole, areasDe } from '../../core/services/supabase.service';
 import { ThemeService } from '../../core/services/theme.service';
+
+/** Ícono de cada área (para "Cambiar de área") */
+const ICONO_AREA: Record<UserRole, string> = {
+  admin: 'briefcase-outline',
+  despachador: 'paper-plane-outline',
+  vendedor: 'pricetag-outline',
+  domiciliario: 'bicycle-outline',
+  venta_local: 'storefront-outline',
+  recolector: 'bag-handle-outline',
+};
 
 export interface ItemNav {
   label: string;
@@ -58,6 +82,21 @@ export interface ItemNav {
             </a>
           }
         </div>
+        @if (areas().length > 1) {
+          <div class="areas">
+            <p class="areas-titulo">Cambiar de área</p>
+            <div class="areas-lista">
+              @for (a of areas(); track a.ruta) {
+                <button type="button" class="area" [class.actual]="a.ruta === areaActual()" [attr.aria-current]="a.ruta === areaActual() ? 'page' : null"
+                  (click)="irArea(a.ruta)">
+                  <ion-icon [name]="icono(a.rol)" aria-hidden="true"></ion-icon>
+                  <span>{{ a.etiqueta }}</span>
+                  @if (a.ruta === areaActual()) { <ion-icon class="check" name="checkmark-circle" aria-label="Estás aquí"></ion-icon> }
+                </button>
+              }
+            </div>
+          </div>
+        }
         <div class="fila">
           <button type="button" class="b" (click)="theme.toggle()">
             <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'" aria-hidden="true"></ion-icon>{{ theme.isDark() ? 'Modo claro' : 'Modo oscuro' }}
@@ -84,13 +123,35 @@ export class NavMovilComponent {
 
   abierto = signal(false);
   private url = signal('');
+  /** Áreas de la persona (si tiene varios roles, se puede pasar de una a otra) */
+  areas = computed(() => {
+    const p = this.supabase.perfil();
+    return p ? areasDe(p) : [];
+  });
+  /** Área donde está ahora ("/vendedor", "/admin"…) */
+  areaActual = computed(() => '/' + this.url().split(/[/?#]/)[1]);
 
   constructor(
     public theme: ThemeService,
     private supabase: SupabaseService,
     private router: Router
   ) {
-    addIcons({ add, appsOutline, closeOutline, logOutOutline, moonOutline, sunnyOutline });
+    addIcons({
+      add,
+      appsOutline,
+      bagHandleOutline,
+      bicycleOutline,
+      briefcaseOutline,
+      checkmarkCircle,
+      closeOutline,
+      logOutOutline,
+      moonOutline,
+      paperPlaneOutline,
+      pricetagOutline,
+      storefrontOutline,
+      sunnyOutline,
+    });
+    void this.supabase.getCurrentProfile();
     // Con el menú abierto se esconde lo que flota fuera de la app (aviso de instalar)
     effect(() => document.body.classList.toggle('menu-movil-abierto', this.abierto()));
     this.url.set(this.router.url);
@@ -118,6 +179,15 @@ export class NavMovilComponent {
   @HostListener('document:keydown.escape')
   cerrar(): void {
     this.abierto.set(false);
+  }
+
+  icono(rol: UserRole): string {
+    return ICONO_AREA[rol] ?? 'apps-outline';
+  }
+
+  irArea(ruta: string): void {
+    this.abierto.set(false);
+    if (ruta !== this.areaActual()) void this.router.navigateByUrl(ruta);
   }
 
   async salir(): Promise<void> {
