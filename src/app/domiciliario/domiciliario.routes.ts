@@ -19,6 +19,10 @@ export const DOMICILIARIO_ROUTES: Routes = [
         path: 'cuadres',
         loadComponent: () => import('./cuadres/cuadres.page').then((m) => m.CuadresPage),
       },
+      {
+        path: 'ranking',
+        loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
+      },
     ],
   },
 ];

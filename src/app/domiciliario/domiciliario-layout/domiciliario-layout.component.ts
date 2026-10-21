@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
+import { homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline, trophyOutline } from 'ionicons/icons';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -22,7 +22,7 @@ export class DomiciliarioLayoutComponent {
     private router: Router,
     public theme: ThemeService
   ) {
-    addIcons({ homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline });
+    addIcons({ homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline, trophyOutline });
   }
 
   toggleTheme(): void {

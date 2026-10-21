@@ -38,6 +38,10 @@ export const DESPACHADOR_ROUTES: Routes = [
         path: 'tablero',
         loadComponent: () => import('../paginas/tablero/tablero.page').then((m) => m.TableroPage),
       },
+      {
+        path: 'ranking',
+        loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
+      },
     ],
   },
 ];

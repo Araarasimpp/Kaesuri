@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { homeOutline, add, logOutOutline, sunnyOutline, moonOutline, bookOutline } from 'ionicons/icons';
+import { homeOutline, add, logOutOutline, sunnyOutline, moonOutline, bookOutline, trophyOutline } from 'ionicons/icons';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -22,7 +22,7 @@ export class VendedorLayoutComponent {
     private router: Router,
     public theme: ThemeService
   ) {
-    addIcons({ homeOutline, add, logOutOutline, sunnyOutline, moonOutline, bookOutline });
+    addIcons({ homeOutline, add, logOutOutline, sunnyOutline, moonOutline, bookOutline, trophyOutline });
   }
 
   toggleTheme(): void {

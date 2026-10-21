@@ -14,6 +14,7 @@ import {
   chevronForwardOutline,
   logOutOutline,
   gridOutline,
+  trophyOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -41,6 +42,7 @@ export class DespachadorLayoutComponent {
     { label: 'Pedidos', path: '/despachador/pedidos', icon: 'receipt-outline' },
     { label: 'Cuadres', path: '/despachador/cuadres', icon: 'wallet-outline' },
     { label: 'Tablero', path: '/despachador/tablero', icon: 'grid-outline' },
+    { label: 'Ranking', path: '/despachador/ranking', icon: 'trophy-outline' },
   ];
 
   constructor(
@@ -49,6 +51,7 @@ export class DespachadorLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      trophyOutline,
       gridOutline,
       homeOutline,
       receiptOutline,

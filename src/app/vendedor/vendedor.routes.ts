@@ -23,6 +23,10 @@ export const VENDEDOR_ROUTES: Routes = [
         path: 'catalogo',
         loadComponent: () => import('../paginas/catalogo/catalogo.page').then((m) => m.CatalogoPage),
       },
+      {
+        path: 'ranking',
+        loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
+      },
     ],
   },
 ];
