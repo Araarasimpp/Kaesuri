@@ -10,6 +10,7 @@
 // no se abre ninguna pestaña nueva que haya que cerrar.
 
 import { Injectable } from '@angular/core';
+import qrcode from 'qrcode-generator';
 import { SupabaseService } from '../core/services/supabase.service';
 import { ROTULO_LOGO_BASE64 } from '../admin/rotulo-logo';
 
@@ -47,6 +48,22 @@ export const NEGOCIO_POR_DEFECTO: DatosNegocio = {
 };
 
 export const LOGO_ROTULO = ROTULO_LOGO_BASE64;
+
+
+/**
+ * Código QR del pedido ("KAESURI-215"), como en Jasta. Lo lee el bot de Telegram
+ * cuando quien despacha manda la foto del rótulo al grupo del domiciliario.
+ * Texto corto = QR pequeño y con cuadros grandes, fácil de leer aunque la foto salga regular.
+ */
+export function qrPedido(numero: number): string {
+  // Alfanumérico (mayúsculas, números y "-"): cabe en la versión más pequeña. Corrección Q: se lee
+  // aunque ~25 % salga borroso o con reflejo.
+  const q = qrcode(0, 'Q');
+  q.addData(`KAESURI-${numero}`, 'Alphanumeric');
+  q.make();
+  // Margen blanco alrededor (el lector necesita ver dónde empieza el código)
+  return q.createSvgTag({ cellSize: 4, margin: 8, scalable: true }).replace('<svg ', '<svg shape-rendering="crispEdges" ');
+}
 
 @Injectable({ providedIn: 'root' })
 export class RotuloService {
@@ -165,6 +182,7 @@ export class RotuloService {
 <div class="rotulo">
   <div class="rotulo-header">
     <img class="marca-logo" src="${LOGO_ROTULO}" alt="${esc(negocio.nombre_negocio)}" />
+    ${p.numero ? `<div class="qr">${qrPedido(p.numero)}<span>#${esc(p.numero)}</span></div>` : ''}
     <div class="cabecera-derecha">
       <div class="contacto">
         ${negocio.telefonos ? `<div>${esc(negocio.telefonos)}</div>` : ''}
@@ -214,6 +232,9 @@ export class RotuloService {
   .rotulo:last-child { page-break-after: auto; break-after: auto; }
   .rotulo-header { display: flex; justify-content: space-between; align-items: center; gap: 3mm; margin-bottom: 2.5mm; }
   .marca-logo { width: 30mm; height: 30mm; object-fit: contain; flex-shrink: 0; }
+  .qr { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.6mm; }
+  .qr svg { display: block; width: 24mm; height: 24mm; margin: -2mm; }
+  .qr span { font-size: 7pt; font-weight: bold; letter-spacing: 0.04em; }
   .cabecera-derecha { display: flex; flex-direction: column; align-items: flex-end; gap: 2mm; min-width: 0; }
   .contacto { font-size: 8.5pt; text-align: right; line-height: 1.3; word-break: break-word; }
   .fecha-box { border: 0.3mm solid #000; padding: 1mm 2mm; font-size: 8.5pt; white-space: nowrap; }

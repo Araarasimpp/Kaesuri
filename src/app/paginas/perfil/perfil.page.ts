@@ -5,6 +5,7 @@ import { SupabaseService, rolesDe } from '../../core/services/supabase.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { RecortarFotoComponent } from '../../shared/recortar-foto/recortar-foto.component';
+import { TelegramPanelComponent } from '../../shared/telegram/telegram-panel.component';
 import { mensajeError } from '../../shared/formato';
 
 const ETIQUETA_ROL: Record<string, string> = {
@@ -16,7 +17,7 @@ const ETIQUETA_ROL: Record<string, string> = {
   selector: 'app-perfil',
   standalone: true,
   host: { class: 'jt' },
-  imports: [FormsModule, AvatarComponent, RecortarFotoComponent],
+  imports: [FormsModule, AvatarComponent, RecortarFotoComponent, TelegramPanelComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -60,6 +61,13 @@ const ETIQUETA_ROL: Record<string, string> = {
         <div><button class="b b-pri" [disabled]="guardando()" (click)="guardar()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button></div>
       </section>
 
+      @if (despacha()) {
+        <section class="panel">
+          <h2>Telegram</h2>
+          <app-telegram-panel modo="perfil"></app-telegram-panel>
+        </section>
+      }
+
       <section class="panel">
         <h2>Contraseña</h2>
         <div class="fila-campos">
@@ -93,6 +101,11 @@ export class PerfilPage implements OnInit {
   /** Foto elegida que se está ajustando antes de subir */
   porRecortar = signal<File | null>(null);
   cambiando = signal(false);
+  /** Admin y despachador despachan (pueden mandar fotos de rótulos a Telegram) */
+  despacha = computed(() => {
+    const p = this.sb.perfil();
+    return !!p && rolesDe(p).some((r) => r === 'admin' || r === 'despachador');
+  });
   roles = computed(() => {
     const p = this.sb.perfil();
     return p ? rolesDe(p).map((r) => ETIQUETA_ROL[r] ?? r) : [];

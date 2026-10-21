@@ -22,7 +22,8 @@
               "core-js",
               "html2canvas",
               "raf",
-              "rgbcolor"
+              "rgbcolor",
+              "qrcode-generator"
             ],
             "outputPath": {
               "base": "www",
