@@ -212,6 +212,73 @@
   font-weight: 700;
 }
 
+/* ---------- Cambiar de área (solo con varios roles) */
+.areas {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-border);
+}
+
+.areas-titulo {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--k-text-soft);
+}
+
+.areas-lista {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.area {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--k-border);
+  background: var(--k-card-bg);
+  color: var(--k-text);
+  font-family: var(--k-font);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.area ion-icon {
+  font-size: 19px;
+  flex-shrink: 0;
+  color: var(--k-text-soft);
+}
+
+.area span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.area .check {
+  margin-left: auto;
+  color: var(--k-role-ink);
+}
+
+.area.actual {
+  border-color: var(--k-role);
+  background: color-mix(in srgb, var(--k-role) 10%, transparent);
+}
+
+.area.actual > ion-icon:first-child {
+  color: var(--k-role-ink);
+}
+
 .fila {
   display: grid;
   grid-template-columns: 1fr 1fr;
