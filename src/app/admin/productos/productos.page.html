@@ -44,7 +44,7 @@
 
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
-      <table *ngIf="filtrados.length; else vacio">
+      <table class="tabla-cel" *ngIf="filtrados.length; else vacio">
         <thead>
           <tr>
             <th class="col-check"></th>
@@ -60,14 +60,15 @@
         </thead>
         <tbody>
           <tr *ngFor="let p of paginados">
-            <td class="col-check">
+            <td class="col-check cel-check">
               <input
                 type="checkbox"
+                [attr.aria-label]="'Seleccionar ' + p.nombre"
                 [checked]="seleccionados.has(p.id)"
                 (change)="toggleSeleccion(p.id)"
               />
             </td>
-            <td>
+            <td class="cel-titulo">
               <div class="nombre-cell">
                 <span class="avatar" [class.tiene-foto]="p.imagen_url">
                   <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" />
@@ -76,19 +77,19 @@
                 <span>{{ p.nombre }}</span>
               </div>
             </td>
-            <td class="text-soft">{{ p.sku }}</td>
-            <td class="text-soft">{{ p.categoria || '—' }}</td>
-            <td class="text-soft">{{ formatoMoneda(p.precio_base) }}</td>
-            <td>{{ formatoMoneda(p.precio_sugerido) }}</td>
-            <td>{{ p.stock }}</td>
-            <td>
+            <td class="text-soft" data-etq="SKU">{{ p.sku }}</td>
+            <td class="text-soft" data-etq="Categoría">{{ p.categoria || '—' }}</td>
+            <td class="text-soft" data-etq="Precio base">{{ formatoMoneda(p.precio_base) }}</td>
+            <td data-etq="Precio sugerido">{{ formatoMoneda(p.precio_sugerido) }}</td>
+            <td data-etq="Disponible">{{ p.stock }}</td>
+            <td data-etq="Estado">
               <span class="badge" [ngClass]="estadoStock(p.stock).clase" *ngIf="p.activo">
                 {{ estadoStock(p.stock).texto }}
               </span>
               <span class="badge estado-archivado" *ngIf="!p.activo">Archivado</span>
             </td>
-            <td class="col-check menu-cell">
-              <button class="menu-btn" (click)="toggleMenu(p.id)">⋯</button>
+            <td class="col-check menu-cell cel-menu">
+              <button class="menu-btn" (click)="toggleMenu(p.id)" [attr.aria-label]="'Acciones de ' + p.nombre">⋯</button>
               <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
                 <button (click)="abrirEditar(p)">Editar</button>
                 <button *ngIf="p.activo" class="danger" (click)="eliminarProducto(p)">Eliminar</button>
@@ -113,9 +114,9 @@
         Mostrando {{ paginados.length }} de {{ filtrados.length }} productos
       </span>
       <div class="pager">
-        <button (click)="irAPagina(-1)" [disabled]="paginaActual === 1">←</button>
+        <button (click)="irAPagina(-1)" [disabled]="paginaActual === 1" aria-label="Página anterior">←</button>
         <span>{{ paginaActual }} / {{ totalPaginas }}</span>
-        <button (click)="irAPagina(1)" [disabled]="paginaActual === totalPaginas">→</button>
+        <button (click)="irAPagina(1)" [disabled]="paginaActual === totalPaginas" aria-label="Página siguiente">→</button>
       </div>
     </footer>
   </div>

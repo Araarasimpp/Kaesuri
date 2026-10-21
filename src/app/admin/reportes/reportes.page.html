@@ -39,7 +39,7 @@
 
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
-      <table *ngIf="filas.length; else vacio">
+      <table class="tabla-cel" *ngIf="filas.length; else vacio">
         <thead>
           <tr>
             <th>#</th>
@@ -56,11 +56,11 @@
         </thead>
         <tbody>
           <tr *ngFor="let f of filas">
-            <td class="text-soft">#{{ f.numero }}</td>
-            <td><span class="badge" [ngClass]="claseEstado(f.estado)">{{ etiquetaEstado(f.estado) }}</span></td>
-            <td class="text-soft">{{ formatoFecha(f.created_at) }}</td>
-            <td>{{ f.vendedorNombre }}</td>
-            <td class="col-productos">
+            <td class="text-soft cel-titulo">#{{ f.numero }}<span class="solo-cel">&nbsp;· {{ f.vendedorNombre }}</span></td>
+            <td class="cel-menu"><span class="badge" [ngClass]="claseEstado(f.estado)">{{ etiquetaEstado(f.estado) }}</span></td>
+            <td class="text-soft" data-etq="Fecha">{{ formatoFecha(f.created_at) }}</td>
+            <td class="solo-pc-celda">{{ f.vendedorNombre }}</td>
+            <td class="col-productos cel-ancho" data-etq="Productos">
               <ul class="productos-lista">
                 <li *ngFor="let i of f.items">
                   <span class="prod-nombre">{{ i.nombre }} <span class="text-soft">x{{ i.cantidad }}</span></span>
@@ -71,21 +71,21 @@
                 <li class="text-soft" *ngIf="!f.items.length">—</li>
               </ul>
             </td>
-            <td class="text-soft">{{ f.cantidad }}</td>
-            <td class="ganancia" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.gananciaTienda) }}</td>
-            <td>{{ formatoMoneda(f.total) }}</td>
-            <td class="text-soft">{{ formatoMoneda(f.valorDomicilio) }}</td>
-            <td class="comision" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.comision) }}</td>
+            <td class="text-soft" data-etq="Cantidad">{{ f.cantidad }}</td>
+            <td class="ganancia" data-etq="Ganancia tienda" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.gananciaTienda) }}</td>
+            <td data-etq="Total pedido">{{ formatoMoneda(f.total) }}</td>
+            <td class="text-soft" data-etq="Domicilio">{{ formatoMoneda(f.valorDomicilio) }}</td>
+            <td class="comision" data-etq="Ganancia vendedor" [class.sin-sumar]="!sumaGanancia(f.estado)">{{ formatoMoneda(f.comision) }}</td>
           </tr>
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="5">Totales del período</td>
-            <td>{{ totalCantidad }}</td>
-            <td class="ganancia">{{ formatoMoneda(totalGananciaTienda) }}</td>
-            <td>{{ formatoMoneda(totalPedido) }}</td>
-            <td>{{ formatoMoneda(totalDomicilio) }}</td>
-            <td class="comision">{{ formatoMoneda(totalComision) }}</td>
+            <td colspan="5" class="cel-titulo">Totales del período</td>
+            <td data-etq="Cantidad">{{ totalCantidad }}</td>
+            <td class="ganancia" data-etq="Ganancia tienda">{{ formatoMoneda(totalGananciaTienda) }}</td>
+            <td data-etq="Total pedido">{{ formatoMoneda(totalPedido) }}</td>
+            <td data-etq="Domicilio">{{ formatoMoneda(totalDomicilio) }}</td>
+            <td class="comision" data-etq="Ganancia vendedor">{{ formatoMoneda(totalComision) }}</td>
           </tr>
         </tfoot>
       </table>
