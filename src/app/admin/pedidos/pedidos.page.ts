@@ -35,6 +35,7 @@ interface PedidoFila {
   cliente_telefono: string | null;
   direccion: string;
   barrio: string | null;
+  canal: 'domicilio' | 'local';
   observaciones: string | null;
   estado: EstadoPedido;
   total: number;
@@ -61,7 +62,7 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
-  'id, numero, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, ' +
+  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, ' +
   'pedido_items(cantidad, color, talla, producto:productos(nombre, imagen_url))';
 
 @Component({

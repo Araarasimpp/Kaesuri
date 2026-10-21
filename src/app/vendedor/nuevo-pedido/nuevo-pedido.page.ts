@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { Producto } from '../../shared/models/models';
+import { MetodoPago, Producto } from '../../shared/models/models';
 import { urlMini } from '../../shared/formato';
 
 import { avisar, confirmar } from '../../shared/dialogo';
@@ -47,6 +47,18 @@ export class NuevoPedidoPage implements OnInit {
   guardando = false;
   errorMsg = '';
 
+  /** Venta en el punto físico (ruta con data.modo = 'local'): queda entregada y cobrada de una vez */
+  local = false;
+  vendedores: { id: string; nombre: string }[] = [];
+  vendedorId: string | null = null;
+  readonly metodos: { id: MetodoPago; label: string }[] = [
+    { id: 'efectivo', label: 'Efectivo' },
+    { id: 'transferencia', label: 'Transferencia' },
+    { id: 'mixto', label: 'Mixto' },
+  ];
+  metodo: MetodoPago = 'efectivo';
+  efectivo: number | null = null;
+
   /** Editando un pedido existente (admin y despachador, desde Pedidos → Editar pedido) */
   editarId: string | null = null;
   numeroEditando: number | null = null;
@@ -61,10 +73,12 @@ export class NuevoPedidoPage implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.editarId = this.route.snapshot.queryParamMap.get('editar');
+    this.local = this.route.snapshot.data['modo'] === 'local';
+    this.editarId = this.local ? null : this.route.snapshot.queryParamMap.get('editar');
     if (this.editarId) await this.cargarPedido(this.editarId);
     await this.cargarProductos();
-    await this.cargarZonas();
+    if (this.local) await this.cargarVendedores();
+    else await this.cargarZonas();
     if (this.editarId) this.armarCarritoDelPedido();
     else this.agregarDesdeCatalogo();
   }
@@ -283,6 +297,8 @@ export class NuevoPedidoPage implements OnInit {
       return;
     }
 
+    if (this.local) return this.registrarVentaLocal();
+
     if (!this.clienteNombre || !this.direccion) {
       this.errorMsg = 'Nombre del cliente y dirección son obligatorios.';
       return;
@@ -346,6 +362,57 @@ export class NuevoPedidoPage implements OnInit {
 
     const volverA = (this.route.snapshot.data['volverA'] as string) ?? '/vendedor';
     this.router.navigateByUrl(volverA);
+  }
+
+  private async cargarVendedores(): Promise<void> {
+    const { data } = await this.supabase.client
+      .from('profiles')
+      .select('id, nombre')
+      .contains('roles', ['vendedor'])
+      .eq('activo', true)
+      .order('nombre');
+    this.vendedores = (data ?? []) as { id: string; nombre: string }[];
+    this.cdr.detectChanges();
+  }
+
+  private async registrarVentaLocal(): Promise<void> {
+    if (this.metodo === 'mixto') {
+      const e = Number(this.efectivo) || 0;
+      if (e <= 0 || e >= this.subtotal) {
+        this.errorMsg = `En el pago mixto, el efectivo debe ser mayor que 0 y menor que ${this.formatoMoneda(this.subtotal)}.`;
+        return;
+      }
+    }
+    this.guardando = true;
+    const { data, error } = await this.supabase.client.rpc('registrar_venta_local', {
+      p_cliente_nombre: this.clienteNombre || null,
+      p_cliente_telefono: this.clienteTelefono || null,
+      p_observaciones: this.observaciones || null,
+      p_items: this.carrito.map((i) => ({
+        producto_id: i.producto.id,
+        cantidad: i.cantidad,
+        precio_unitario: i.precioUnitario,
+        color: i.color,
+        talla: i.talla,
+      })),
+      p_metodo: this.metodo,
+      p_efectivo: this.metodo === 'mixto' ? Number(this.efectivo) : null,
+      p_vendedor: this.vendedorId,
+    });
+    this.guardando = false;
+    if (error) {
+      this.errorMsg = error.message;
+      this.cdr.detectChanges();
+      return;
+    }
+    avisar(`Venta #${data as number} registrada.`);
+    // Queda en blanco para la siguiente venta (el vendedor elegido se mantiene)
+    this.carrito = [];
+    this.clienteNombre = this.clienteTelefono = this.observaciones = '';
+    this.metodo = 'efectivo';
+    this.efectivo = null;
+    await this.cargarProductos();
+    this.cdr.detectChanges();
   }
 
   formatoMoneda(valor: number): string {

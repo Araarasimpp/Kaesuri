@@ -77,6 +77,16 @@ export const ADMIN_ROUTES: Routes = [
         path: 'ranking',
         loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
       },
+      {
+        path: 'ventas-local',
+        data: { nuevaVenta: '/admin/venta-local' },
+        loadComponent: () => import('../paginas/ventas-local/ventas-local.page').then((m) => m.VentasLocalPage),
+      },
+      {
+        path: 'venta-local',
+        data: { modo: 'local', volverA: '/admin/ventas-local' },
+        loadComponent: () => import('../vendedor/nuevo-pedido/nuevo-pedido.page').then((m) => m.NuevoPedidoPage),
+      },
     ],
   },
 ];

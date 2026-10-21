@@ -35,4 +35,8 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./despachador/despachador.routes').then((m) => m.DESPACHADOR_ROUTES),
   },
+  {
+    path: 'local',
+    loadChildren: () => import('./local/local.routes').then((m) => m.LOCAL_ROUTES),
+  },
 ];

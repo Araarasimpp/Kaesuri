@@ -8,7 +8,7 @@ import { RecortarFotoComponent } from '../../shared/recortar-foto/recortar-foto.
 import { mensajeError } from '../../shared/formato';
 
 const ETIQUETA_ROL: Record<string, string> = {
-  admin: 'Admin', despachador: 'Despachador', vendedor: 'Vendedor', domiciliario: 'Domiciliario',
+  admin: 'Admin', despachador: 'Despachador', vendedor: 'Vendedor', domiciliario: 'Domiciliario', venta_local: 'Venta local',
 };
 
 /** Mi perfil y mi seguridad (como en Jasta): nombre, teléfono, foto, contraseña y sesiones */

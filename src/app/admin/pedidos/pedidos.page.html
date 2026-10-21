@@ -140,7 +140,7 @@
                 </div>
               </td>
               <td class="text-soft">{{ nombreVendedor(p.vendedor_id) }}</td>
-              <td class="text-soft">{{ p.barrio || '—' }}</td>
+              <td class="text-soft">{{ p.canal === 'local' ? 'En el local' : p.barrio || '—' }}</td>
               <td class="num strong">{{ formatoMoneda(p.total) }}</td>
               <td>
                 <span class="badge" [ngClass]="claseEstado(p)">{{ etiquetaEstado(p) }}</span>

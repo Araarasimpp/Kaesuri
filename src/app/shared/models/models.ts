@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador';
+export type UserRole = 'admin' | 'vendedor' | 'domiciliario' | 'despachador' | 'venta_local';
 export type EstadoPedido = 'pendiente' | 'en_ruta' | 'entregado' | 'cancelado';
 export type MetodoPago = 'efectivo' | 'transferencia' | 'mixto';
 
@@ -53,6 +53,8 @@ export interface Pedido {
   cliente_telefono?: string | null;
   direccion: string;
   barrio?: string | null;
+  /** 'local' = venta en el punto físico (entregada y cobrada al registrarla) */
+  canal?: 'domicilio' | 'local';
   valor_domicilio: number;
   comision: number;
   observaciones?: string | null;

@@ -124,9 +124,10 @@ export class NotificacionesService {
       despachador: '/despachador',
       vendedor: '/vendedor',
       domiciliario: '/domiciliario',
+      venta_local: '/local',
     };
-    const aqui = location.pathname.split('/')[1] as UserRole;
-    const rol = this.roles.includes(aqui) ? aqui : (Object.keys(base) as UserRole[]).find((r) => this.roles.includes(r));
+    const aqui = (Object.keys(base) as UserRole[]).find((r) => base[r] === '/' + location.pathname.split('/')[1]);
+    const rol = aqui && this.roles.includes(aqui) ? aqui : (Object.keys(base) as UserRole[]).find((r) => this.roles.includes(r));
     if (!rol) return null;
     const raiz = base[rol];
     // Mensaje del chat: abre el chat de ese pedido en la pantalla de pedidos del área

@@ -524,9 +524,10 @@ export class ProductoDetalleComponent implements AfterViewInit, OnDestroy, OnIni
   pedir(): void {
     const color = this.colorVisto()?.nombre;
     this.cerrar.emit();
-    // El "Nuevo pedido" de cada área (vendedor, despachador o admin)
+    // El "Nuevo pedido" de cada área (vendedor, despachador o admin; en Venta local, la nueva venta)
     const area = this.router.url.split('/')[1];
-    const ruta = area === 'vendedor' ? '/vendedor/nuevo-pedido' : `/${area === 'despachador' ? 'despachador' : 'admin'}/pedidos/nuevo`;
+    const ruta =
+      area === 'vendedor' ? '/vendedor/nuevo-pedido' : area === 'local' ? '/local/nueva' : `/${area === 'despachador' ? 'despachador' : 'admin'}/pedidos/nuevo`;
     void this.router.navigate([ruta], { queryParams: { producto: this.producto.id, ...(color ? { color } : {}) } });
   }
 }
