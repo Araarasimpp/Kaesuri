@@ -47,6 +47,12 @@ export class NuevoPedidoPage implements OnInit {
   guardando = false;
   errorMsg = '';
 
+  /** Editando un pedido existente (admin y despachador, desde Pedidos → Editar pedido) */
+  editarId: string | null = null;
+  numeroEditando: number | null = null;
+  /** Lo que el pedido ya tenía de cada producto: vuelve al inventario al guardar, así que cuenta como disponible */
+  private enPedido = new Map<string, number>();
+
   constructor(
     private supabase: SupabaseService,
     private router: Router,
@@ -55,8 +61,63 @@ export class NuevoPedidoPage implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.editarId = this.route.snapshot.queryParamMap.get('editar');
+    if (this.editarId) await this.cargarPedido(this.editarId);
     await this.cargarProductos();
     await this.cargarZonas();
+    if (this.editarId) this.armarCarritoDelPedido();
+  }
+
+  private itemsDelPedido: { producto_id: string; cantidad: number; precio_unitario: number; color: string | null; talla: string | null }[] = [];
+
+  /** Trae el pedido a editar y llena los datos del cliente */
+  private async cargarPedido(id: string): Promise<void> {
+    const { data, error } = await this.supabase.client
+      .from('pedidos')
+      .select('numero, estado, cliente_nombre, cliente_telefono, direccion, barrio, valor_domicilio, observaciones, pedido_items(producto_id, cantidad, precio_unitario, color, talla)')
+      .eq('id', id)
+      .single();
+    if (error || !data) {
+      this.errorMsg = 'No se encontró el pedido para editar.';
+      this.editarId = null;
+      return;
+    }
+    const p = data as any;
+    if (p.estado !== 'pendiente' && p.estado !== 'en_ruta') {
+      this.errorMsg = 'Este pedido ya no se puede editar.';
+      this.editarId = null;
+      return;
+    }
+    this.numeroEditando = p.numero;
+    this.clienteNombre = p.cliente_nombre ?? '';
+    this.clienteTelefono = p.cliente_telefono ?? '';
+    this.direccion = p.direccion ?? '';
+    this.barrio = p.barrio ?? '';
+    this.valorDomicilio = Number(p.valor_domicilio) || 0;
+    this.observaciones = p.observaciones ?? '';
+    this.itemsDelPedido = p.pedido_items ?? [];
+    for (const i of this.itemsDelPedido) this.enPedido.set(i.producto_id, (this.enPedido.get(i.producto_id) ?? 0) + i.cantidad);
+  }
+
+  private armarCarritoDelPedido(): void {
+    for (const i of this.itemsDelPedido) {
+      const producto = this.productos.find((p) => p.id === i.producto_id);
+      if (!producto) continue;
+      this.carrito.push({
+        key: ++this.claves,
+        producto,
+        cantidad: i.cantidad,
+        color: i.color,
+        talla: i.talla,
+        precioUnitario: Number(i.precio_unitario),
+      });
+    }
+    this.cdr.detectChanges();
+  }
+
+  /** Unidades que se pueden pedir: el inventario más lo que el pedido que se edita ya tenía */
+  disponible(p: Producto): number {
+    return p.stock + (this.enPedido.get(p.id) ?? 0);
   }
 
   async cargarZonas(): Promise<void> {
@@ -104,11 +165,10 @@ export class NuevoPedidoPage implements OnInit {
         'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, colores:producto_colores(id, nombre, hex, imagen_url, orden)'
       )
       .eq('activo', true)
-      .gt('stock', 0)
       .order('nombre');
 
     if (!error && data) {
-      this.productos = (data as Producto[]).map((p) => ({
+      this.productos = (data as Producto[]).filter((p) => this.disponible(p) > 0).map((p) => ({
         ...p,
         colores: [...(p.colores ?? [])].sort((a, b) => a.orden - b.orden || a.id - b.id),
       }));
@@ -135,7 +195,7 @@ export class NuevoPedidoPage implements OnInit {
   }
 
   agregarProducto(producto: Producto): void {
-    if (this.cantidadEnCarrito(producto.id) >= producto.stock) return;
+    if (this.cantidadEnCarrito(producto.id) >= this.disponible(producto)) return;
     // Con colores o tallas, cada vez que se agrega es una línea nueva (puede ser otra variante)
     const existente = this.tieneVariantes(producto) ? null : this.carrito.find((i) => i.producto.id === producto.id);
 
@@ -159,7 +219,7 @@ export class NuevoPedidoPage implements OnInit {
   }
 
   incrementar(item: ItemCarrito): void {
-    if (this.cantidadEnCarrito(item.producto.id) < item.producto.stock) {
+    if (this.cantidadEnCarrito(item.producto.id) < this.disponible(item.producto)) {
       item.cantidad++;
     }
   }
@@ -225,6 +285,28 @@ export class NuevoPedidoPage implements OnInit {
       color: i.color,
       talla: i.talla,
     }));
+
+    if (this.editarId) {
+      const { error } = await this.supabase.client.rpc('editar_pedido', {
+        p_pedido_id: this.editarId,
+        p_cliente_nombre: this.clienteNombre,
+        p_cliente_telefono: this.clienteTelefono || null,
+        p_direccion: this.direccion,
+        p_barrio: this.barrio || null,
+        p_valor_domicilio: Number(this.valorDomicilio) || 0,
+        p_observaciones: this.observaciones || null,
+        p_items: items,
+      });
+      this.guardando = false;
+      if (error) {
+        this.errorMsg = error.message.includes('editar_pedido') ? 'Editar pedidos aún no está activo en la base de datos.' : error.message;
+        this.cdr.detectChanges();
+        return;
+      }
+      avisar(`Pedido #${this.numeroEditando} actualizado.`);
+      this.volver();
+      return;
+    }
 
     const { data, error } = await this.supabase.client.rpc('crear_pedido', {
       p_cliente_nombre: this.clienteNombre,
