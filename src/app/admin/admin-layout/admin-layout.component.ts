@@ -24,12 +24,15 @@ import {
   trophyOutline,
   storefrontOutline,
   mapOutline,
+  bagHandleOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
 
 import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
+import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.component';
+import { NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -39,9 +42,9 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent, BarraMovilComponent, NavMovilComponent],
   templateUrl: './admin-layout.component.html',
-  styleUrls: ['../../shared/pill-nav.scss', './admin-layout.component.scss'],
+  styleUrls: ['./admin-layout.component.scss'],
 })
 export class AdminLayoutComponent {
   collapsed = false;
@@ -52,7 +55,7 @@ export class AdminLayoutComponent {
     { label: 'Ventas del local', path: '/admin/ventas-local', icon: 'storefront-outline' },
     { label: 'Clientes', path: '/admin/clientes', icon: 'people-circle-outline' },
     { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
-    { label: 'Recolector', path: '/admin/recolector', icon: 'wallet-outline' },
+    { label: 'Recolector', path: '/admin/recolector', icon: 'bag-handle-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
@@ -64,6 +67,9 @@ export class AdminLayoutComponent {
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
   ];
 
+  /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
+  readonly navPrincipales = this.menuItems.filter((m) => ['/admin', '/admin/pedidos', '/admin/cuadres', '/admin/reportes'].includes(m.path));
+
   constructor(
     public theme: ThemeService,
     private supabase: SupabaseService,
@@ -71,6 +77,7 @@ export class AdminLayoutComponent {
   ) {
     addIcons({
       mapOutline,
+      bagHandleOutline,
       storefrontOutline,
       trophyOutline,
       bookOutline,

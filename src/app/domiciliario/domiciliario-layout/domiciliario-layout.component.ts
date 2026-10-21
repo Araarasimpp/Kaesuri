@@ -1,36 +1,29 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { IonIcon } from '@ionic/angular';
+import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.component';
+import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
+import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline, trophyOutline } from 'ionicons/icons';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { ThemeService } from '../../core/services/theme.service';
+import { homeOutline, personCircleOutline, trophyOutline, walletOutline } from 'ionicons/icons';
 
-import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
-import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
 @Component({
   selector: 'app-domiciliario-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent],
+  imports: [RouterOutlet, BarraMovilComponent, NavMovilComponent],
   templateUrl: './domiciliario-layout.component.html',
-  styleUrls: ['../../shared/pill-nav.scss', './domiciliario-layout.component.scss'],
+  styleUrls: ['./domiciliario-layout.component.scss'],
 })
 export class DomiciliarioLayoutComponent {
-  constructor(
-    private supabase: SupabaseService,
-    private router: Router,
-    public theme: ThemeService
-  ) {
-    addIcons({ homeOutline, walletOutline, logOutOutline, sunnyOutline, moonOutline, trophyOutline });
-  }
+  /** Todas las secciones del área (en "Más" del celular) */
+  readonly secciones: ItemNav[] = [
+    { label: 'Entregas', path: '/domiciliario', icon: 'home-outline' },
+    { label: 'Cuadres', path: '/domiciliario/cuadres', icon: 'wallet-outline' },
+    { label: 'Ranking', path: '/domiciliario/ranking', icon: 'trophy-outline' },
+    { label: 'Mi perfil', path: '/domiciliario/perfil', icon: 'person-circle-outline' },
+  ];
+  /** Las que se ven siempre en la barra de abajo */
+  readonly principales = this.secciones.slice(0, 3);
 
-  toggleTheme(): void {
-    this.theme.toggle();
-  }
-
-  async logout(): Promise<void> {
-    await this.supabase.logout();
-    this.router.navigateByUrl('/auth/login');
+  constructor() {
+    addIcons({ homeOutline, personCircleOutline, trophyOutline, walletOutline });
   }
 }

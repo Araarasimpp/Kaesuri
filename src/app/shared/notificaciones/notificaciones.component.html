@@ -1,4 +1,4 @@
-<div class="notif" [class.sidebar]="modo === 'sidebar'" [class.flotante]="modo === 'flotante'" [class.junto]="junto">
+<div class="notif" [class.sidebar]="modo === 'sidebar'" [class.flotante]="modo === 'flotante' || modo === 'barra'" [class.barra]="modo === 'barra'" [class.junto]="junto">
   <button
     type="button"
     class="campana"

@@ -1,21 +1,8 @@
 <div class="layout">
-  <app-notificaciones modo="flotante" [junto]="true"></app-notificaciones>
-  <app-cambiar-area modo="flotante" [derecha]="120"></app-cambiar-area>
-  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="theme.isDark() ? 'Modo claro' : 'Modo oscuro'">
-    <ion-icon [name]="theme.isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
-  </button>
-
   <main class="content">
+    <app-barra-movil [siempre]="true"></app-barra-movil>
     <router-outlet></router-outlet>
   </main>
 
-  <nav class="pill-nav">
-    <a routerLink="/recolector" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Bases y compras">
-      <ion-icon name="wallet-outline"></ion-icon>
-      <span class="dot"></span>
-    </a>
-    <button class="pill-action" (click)="logout()" aria-label="Cerrar sesión">
-      <ion-icon name="log-out-outline"></ion-icon>
-    </button>
-  </nav>
+  <app-nav-movil [principales]="principales" [todos]="secciones" raiz="/recolector" [siempre]="true"></app-nav-movil>
 </div>

@@ -27,7 +27,7 @@ import { AvatarComponent } from '../avatar/avatar.component';
         [attr.aria-label]="'Mi cuenta (' + p.nombre + ')'"
         [attr.title]="compacto ? p.nombre : null"
       >
-        <app-avatar [nombre]="p.nombre" [foto]="p.avatar_url" [tam]="modo === 'sidebar' ? 26 : 34"></app-avatar>
+        <app-avatar [nombre]="p.nombre" [foto]="p.avatar_url" [tam]="modo === 'sidebar' ? 26 : modo === 'barra' ? 30 : 34"></app-avatar>
         <span class="nombre" *ngIf="modo === 'sidebar' && !compacto">{{ p.nombre }}</span>
       </button>
       <div class="panel" *ngIf="abierto()" role="menu">
@@ -67,6 +67,8 @@ import { AvatarComponent } from '../avatar/avatar.component';
         border-radius: 12px; box-shadow: var(--k-shadow-lg); color: var(--k-text); }
       .sidebar .panel { left: calc(100% + 8px); bottom: 0; }
       .flotante .panel { right: 0; top: calc(100% + 8px); }
+      .barra .boton { width: 40px; height: 40px; justify-content: center; border-radius: 50%; }
+      .barra .panel { right: 0; top: calc(100% + 8px); }
       .titulo { margin: 6px 10px 8px; font-size: 12px; font-weight: 600; color: var(--k-text-soft); text-transform: uppercase; letter-spacing: 0.04em; }
       .opcion { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 0 10px;
         border: none; border-radius: 8px; background: transparent; color: var(--k-text); font-family: var(--k-font); font-size: 15px;
@@ -77,7 +79,7 @@ import { AvatarComponent } from '../avatar/avatar.component';
   ],
 })
 export class CambiarAreaComponent implements OnInit {
-  @Input() modo: 'sidebar' | 'flotante' = 'flotante';
+  @Input() modo: 'sidebar' | 'flotante' | 'barra' = 'flotante';
   /** Distancia al borde derecho en modo flotante (para quedar al lado de los otros botones) */
   @Input() derecha = 16;
   /** Oculta el texto (menú lateral contraído) */

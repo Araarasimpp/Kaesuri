@@ -39,6 +39,27 @@
   z-index: 95;
 }
 
+.flotante.barra {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
+.flotante.barra .campana {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* En la barra del celular el panel ocupa casi todo el ancho de la pantalla */
+.flotante.barra .panel {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 60px);
+  right: 10px;
+  left: 10px;
+  width: auto;
+}
+
 .flotante.junto {
   right: 68px;
 }

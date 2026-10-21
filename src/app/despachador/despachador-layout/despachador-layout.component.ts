@@ -21,6 +21,8 @@ import { SupabaseService } from '../../core/services/supabase.service';
 
 import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
 import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
+import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.component';
+import { NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -30,9 +32,9 @@ interface MenuItem {
 @Component({
   selector: 'app-despachador-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent, BarraMovilComponent, NavMovilComponent],
   templateUrl: './despachador-layout.component.html',
-  styleUrls: ['../../shared/pill-nav.scss', './despachador-layout.component.scss'],
+  styleUrls: ['./despachador-layout.component.scss'],
 })
 export class DespachadorLayoutComponent {
   collapsed = false;
@@ -44,6 +46,9 @@ export class DespachadorLayoutComponent {
     { label: 'Tablero', path: '/despachador/tablero', icon: 'grid-outline' },
     { label: 'Ranking', path: '/despachador/ranking', icon: 'trophy-outline' },
   ];
+
+  /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
+  readonly navPrincipales = this.menuItems.filter((m) => ['/despachador', '/despachador/pedidos', '/despachador/cuadres', '/despachador/tablero'].includes(m.path));
 
   constructor(
     public theme: ThemeService,

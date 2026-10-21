@@ -38,3 +38,27 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
+
+/* iPhone: los campos de fecha y hora traen un ancho mínimo propio y se salen de su
+   caja (se montan unos sobre otros). Así respetan el ancho que les da cada página. */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+}
+
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+/* El aviso de instalar la app vive fuera de ion-app y quedaría encima del menú "Más" */
+body.menu-movil-abierto app-instalar-app {
+  display: none;
+}

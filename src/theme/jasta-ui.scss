@@ -7,7 +7,8 @@
 
 body {
   --ui-font: var(--k-font);
-  --mono-font: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* Jasta usa Geist Mono para las cifras; aquí, la letra de Kaesuri con números tabulares */
+  --mono-font: var(--k-font);
 
   --tinta: var(--k-text);
   --oro: var(--k-brand);
@@ -1378,4 +1379,11 @@ body {
       visibility: hidden;
     }
   }
+}
+
+/* Cifras alineadas (antes iban en letra monoespaciada) */
+.jt [class*='num'],
+.jt .kpi-valor,
+.jt .guia {
+  font-variant-numeric: tabular-nums;
 }

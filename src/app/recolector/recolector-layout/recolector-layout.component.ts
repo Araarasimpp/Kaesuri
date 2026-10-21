@@ -1,36 +1,27 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { IonIcon } from '@ionic/angular';
+import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.component';
+import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
+import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { walletOutline, logOutOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
-import { SupabaseService } from '../../core/services/supabase.service';
-import { ThemeService } from '../../core/services/theme.service';
+import { personCircleOutline, walletOutline } from 'ionicons/icons';
 
-import { NotificacionesComponent } from '../../shared/notificaciones/notificaciones.component';
-import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
 @Component({
   selector: 'app-recolector-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent],
+  imports: [RouterOutlet, BarraMovilComponent, NavMovilComponent],
   templateUrl: './recolector-layout.component.html',
-  styleUrls: ['../../shared/pill-nav.scss', './recolector-layout.component.scss'],
+  styleUrls: ['./recolector-layout.component.scss'],
 })
 export class RecolectorLayoutComponent {
-  constructor(
-    private supabase: SupabaseService,
-    private router: Router,
-    public theme: ThemeService
-  ) {
-    addIcons({ walletOutline, logOutOutline, sunnyOutline, moonOutline });
-  }
+  /** Todas las secciones del área (en "Más" del celular) */
+  readonly secciones: ItemNav[] = [
+    { label: 'Bases y compras', path: '/recolector', icon: 'wallet-outline' },
+    { label: 'Mi perfil', path: '/recolector/perfil', icon: 'person-circle-outline' },
+  ];
+  /** Las que se ven siempre en la barra de abajo */
+  readonly principales = this.secciones.slice(0, 1);
 
-  toggleTheme(): void {
-    this.theme.toggle();
-  }
-
-  async logout(): Promise<void> {
-    await this.supabase.logout();
-    this.router.navigateByUrl('/auth/login');
+  constructor() {
+    addIcons({ personCircleOutline, walletOutline });
   }
 }
