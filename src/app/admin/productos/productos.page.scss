@@ -294,8 +294,9 @@ tbody tr:last-child td {
 }
 
 .pager button {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
   border-radius: 8px;
   border: 1px solid var(--k-border);
   background: var(--k-bg-alt);

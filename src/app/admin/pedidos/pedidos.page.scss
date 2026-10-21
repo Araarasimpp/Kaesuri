@@ -320,8 +320,8 @@ tbody tr.seleccionada td {
 }
 
 .menu-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -485,4 +485,152 @@ tbody tr.seleccionada td {
   font-weight: 800;
   cursor: pointer;
   vertical-align: 1px;
+  position: relative;
+}
+
+/* Se ve pequeño, pero el área para tocarlo es de 44 px (tamaño mínimo para el dedo) */
+.chat-nuevo::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+
+/* El texto "Seleccionar todos" solo se ve en el celular (en la tabla basta la casilla) */
+.sel-todos-txt {
+  display: none;
+}
+
+/* ---------- Celular: cada pedido es una tarjeta (la tabla no cabe y las acciones quedaban fuera de la pantalla) */
+@media (max-width: 720px) {
+  .table-scroll {
+    overflow: visible;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+  }
+
+  thead tr {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--k-thead-bg);
+    border-bottom: 1px solid var(--k-border);
+  }
+
+  thead th {
+    display: none;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  thead th.col-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sel-todos-txt {
+    display: inline;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--k-text-soft);
+  }
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    padding: 14px;
+    border-top: 1px solid var(--k-row-line);
+  }
+
+  tbody tr:first-child {
+    border-top: none;
+  }
+
+  tbody tr.seleccionada {
+    background: var(--k-role-soft);
+  }
+
+  td,
+  tbody tr:hover td,
+  tbody tr.seleccionada td {
+    padding: 0;
+    border: none;
+    background: none;
+    white-space: normal;
+  }
+
+  td.col-check {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  td.col-pedido {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  td.menu-cell {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+  }
+
+  td.col-producto {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  /* Cada dato en su renglón: nombre a la izquierda, valor a la derecha */
+  td.col-dato {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 28px;
+    text-align: right;
+  }
+
+  td.col-dato::before {
+    content: attr(data-etq);
+    flex-shrink: 0;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--k-text-muted);
+    text-align: left;
+  }
+
+  td.col-dato .stack {
+    align-items: flex-end;
+  }
+
+  td.col-dato .btn-alistar {
+    display: inline-block;
+    margin: 0 0 0 8px;
+    padding: 6px 12px;
+  }
+
+  td.col-domiciliario .domiciliario-select {
+    flex: 1;
+    max-width: 230px;
+    height: 40px;
+  }
+
+  td input[type='checkbox'],
+  thead input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
 }

@@ -16,7 +16,7 @@
 
   <div class="table-card">
     <ng-container *ngIf="!loading; else cargando">
-      <table *ngIf="filtrados.length; else vacio">
+      <table class="tabla-cel" *ngIf="filtrados.length; else vacio">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -29,16 +29,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let u of filtrados" [class.fila-inactiva]="!u.activo">
-            <td>
+            <td class="cel-titulo">
               <div class="nombre-cell">
                 <span class="avatar">{{ inicial(u.nombre) }}</span>
                 <span>{{ u.nombre }}</span>
                 <span class="tag-tu" *ngIf="u.id === miId">Tú</span>
               </div>
             </td>
-            <td class="text-soft">{{ u.email || '—' }}</td>
-            <td class="text-soft">{{ u.telefono || '—' }}</td>
-            <td>
+            <td class="text-soft" data-etq="Correo">{{ u.email || '—' }}</td>
+            <td class="text-soft" data-etq="Teléfono">{{ u.telefono || '—' }}</td>
+            <td class="cel-ancho" data-etq="Roles">
               <div class="roles" role="group" [attr.aria-label]="'Roles de ' + u.nombre">
                 <button
                   type="button"
@@ -53,10 +53,10 @@
                 </button>
               </div>
             </td>
-            <td>
+            <td data-etq="Estado">
               <span class="badge" [class.activo]="u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
             </td>
-            <td>
+            <td class="cel-accion">
               <button
                 class="btn-toggle"
                 *ngIf="u.id !== miId"

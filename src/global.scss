@@ -64,3 +64,132 @@ body.menu-movil-abierto app-instalar-app,
 body:has(.velo) app-instalar-app {
   display: none;
 }
+
+/* Los avisos cortos (toast) salen encima de la barra de abajo, no debajo de ella */
+@media (max-width: 860px) {
+  body:has(app-nav-movil) {
+    --tabbar-offset: calc(64px + max(env(safe-area-inset-bottom), 8px) + 6px);
+  }
+}
+
+@media (min-width: 861px) {
+  body:has(app-nav-movil.siempre) {
+    --tabbar-offset: 86px;
+  }
+}
+
+/* Partes de una tabla que solo se ven en el celular (cuando es tarjeta) */
+table.tabla-cel .solo-cel {
+  display: none;
+}
+
+/* ---------- Tablas en el celular: cada fila es una tarjeta ----------
+   Se usa poniendo class="tabla-cel" en la <table> y data-etq="Nombre de la columna" en cada <td>.
+   cel-check (casilla), cel-titulo (lo principal) y cel-menu (acciones) van en la primera línea;
+   cel-ancho pone el contenido debajo de su nombre (roles, lista de productos). */
+@media (max-width: 720px) {
+  table.tabla-cel {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  table.tabla-cel thead {
+    display: none;
+  }
+
+  table.tabla-cel tbody,
+  table.tabla-cel tfoot {
+    display: block;
+  }
+
+  table.tabla-cel tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--k-row-line);
+  }
+
+  table.tabla-cel tbody tr:first-child {
+    border-top: none;
+  }
+
+  table.tabla-cel td {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 30px;
+    padding: 4px 0 !important;
+    border: none !important;
+    background: none !important;
+    text-align: right;
+    white-space: normal !important;
+    min-width: 0;
+  }
+
+  table.tabla-cel td[data-etq]::before {
+    content: attr(data-etq);
+    flex-shrink: 0;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--k-text-muted);
+    text-align: left;
+  }
+
+  table.tabla-cel td.cel-check {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  table.tabla-cel td.cel-titulo {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-start;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  table.tabla-cel tr:not(:has(.cel-check)) td.cel-titulo {
+    grid-column: 1 / 3;
+  }
+
+  table.tabla-cel td.cel-menu {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto !important;
+    justify-content: flex-end;
+  }
+
+  table.tabla-cel td.cel-ancho {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    text-align: left;
+  }
+
+  table.tabla-cel td:empty {
+    display: none;
+  }
+
+  table.tabla-cel tfoot tr {
+    background: var(--k-thead-bg);
+    font-weight: 600;
+  }
+
+  table.tabla-cel .solo-pc-celda {
+    display: none !important;
+  }
+
+  table.tabla-cel .solo-cel {
+    display: inline;
+  }
+
+  table.tabla-cel input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
+}

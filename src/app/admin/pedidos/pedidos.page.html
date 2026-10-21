@@ -68,12 +68,13 @@
           <thead>
             <tr>
               <th class="col-check">
-                <input
+                <input id="sel-todos"
                   type="checkbox"
                   aria-label="Seleccionar todos"
                   [checked]="seleccionados.size > 0 && seleccionados.size === filtrados.length"
                   (change)="toggleSeleccionarTodos()"
                 />
+                <label for="sel-todos" class="sel-todos-txt">Seleccionar todos</label>
               </th>
               <th>Pedido</th>
               <th class="col-producto">Producto</th>
@@ -97,7 +98,7 @@
                   (change)="toggleSeleccion(p.id)"
                 />
               </td>
-              <td>
+              <td class="col-pedido">
                 <div class="stack">
                   <span class="strong">
                     #{{ p.numero }}
@@ -133,16 +134,16 @@
                   <span class="text-soft" *ngIf="!p.items.length">—</span>
                 </div>
               </td>
-              <td>
+              <td class="col-dato" data-etq="Cliente">
                 <div class="stack">
                   <span>{{ p.cliente_nombre }}</span>
                   <span class="text-soft small">{{ p.cliente_telefono || '—' }}</span>
                 </div>
               </td>
-              <td class="text-soft">{{ nombreVendedor(p.vendedor_id) }}</td>
-              <td class="text-soft">{{ p.canal === 'local' ? 'En el local' : p.barrio || '—' }}</td>
-              <td class="num strong">{{ formatoMoneda(p.total) }}</td>
-              <td>
+              <td class="text-soft col-dato" data-etq="Vendedor">{{ nombreVendedor(p.vendedor_id) }}</td>
+              <td class="text-soft col-dato" data-etq="Barrio">{{ p.canal === 'local' ? 'En el local' : p.barrio || '—' }}</td>
+              <td class="num strong col-dato" data-etq="Total">{{ formatoMoneda(p.total) }}</td>
+              <td class="col-dato" data-etq="Estado">
                 <span class="badge" [ngClass]="claseEstado(p)">{{ etiquetaEstado(p) }}</span>
                 <button
                   type="button"
@@ -154,7 +155,7 @@
                   Alistar
                 </button>
               </td>
-              <td>
+              <td class="col-dato col-domiciliario" data-etq="Domiciliario">
                 <select
                   class="domiciliario-select"
                   *ngIf="p.estado !== 'entregado' && p.estado !== 'cancelado'; else domiciliarioFijo"
@@ -170,7 +171,7 @@
                   <span class="text-soft">{{ nombreDomiciliario(p.domiciliario_id) }}</span>
                 </ng-template>
               </td>
-              <td>
+              <td class="col-dato" data-etq="Rótulo">
                 <span class="badge" [ngClass]="p.rotulo_impreso_at ? 'estado-neutro' : 'estado-bajo'">
                   {{ p.rotulo_impreso_at ? 'Impreso' : 'Pendiente' }}
                 </span>
