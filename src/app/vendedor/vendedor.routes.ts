@@ -12,7 +12,7 @@ export const VENDEDOR_ROUTES: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./inicio/inicio.page').then((m) => m.InicioPage),
+        loadComponent: () => import('../paginas/mi-panel/mi-panel.page').then((m) => m.MiPanelPage),
       },
       {
         path: 'nuevo-pedido',
