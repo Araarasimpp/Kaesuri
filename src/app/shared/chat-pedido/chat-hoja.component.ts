@@ -6,6 +6,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { ChatPedidoComponent } from './chat-pedido.component';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { pesos } from '../formato';
+import { PresenciaService } from '../../core/services/presencia.service';
 
 interface Persona {
   nombre: string;
@@ -24,6 +25,7 @@ interface PedidoChat {
 }
 
 interface Contacto {
+  id: string | null;
   nombre: string;
   foto: string | null;
   rol: string;
@@ -63,7 +65,7 @@ interface Contacto {
         <div class="wa">
           <span class="wa-fotos" aria-hidden="true">
             @for (c of contactos(); track c.nombre) {
-              <span class="foto"><app-avatar [nombre]="c.nombre" [foto]="c.foto" [tam]="40"></app-avatar></span>
+              <span class="foto"><app-avatar [nombre]="c.nombre" [foto]="c.foto" [usuario]="c.id" [tam]="40"></app-avatar></span>
             }
           </span>
           <span class="wa-txt">
@@ -80,7 +82,7 @@ interface Contacto {
       @if (pedido(); as p) {
         <div class="chat-cab">
           <strong>{{ p.cliente_nombre }}</strong>
-          <span><span class="num">{{ pesos(p.total) }}</span>@if (p.barrio) { · {{ p.barrio }} }</span>
+          <span>Pedido #{{ p.numero }} · <span class="num">{{ pesos(p.total) }}</span>@if (p.barrio) { · {{ p.barrio }} }</span>
         </div>
       }
       <app-chat-pedido [pedidoId]="pedidoId" [completo]="true" (escribiendo)="escribe.set($event)"></app-chat-pedido>
@@ -92,6 +94,7 @@ export class ChatHojaComponent implements OnInit {
   @Output() cerrar = new EventEmitter<void>();
 
   private sb = inject(SupabaseService);
+  presencia = inject(PresenciaService);
   pedido = signal<PedidoChat | null>(null);
   private yo = signal<string | null>(null);
   /** Quién está escribiendo ahora (lo avisa el chat) */
@@ -103,14 +106,14 @@ export class ChatHojaComponent implements OnInit {
     const p = this.pedido();
     if (!p) return [];
     const yo = this.yo();
-    const vend = p.vendedor_id && p.vendedor ? { nombre: p.vendedor.nombre, foto: p.vendedor.avatar_url, rol: 'Vendedor' } : null;
-    const dom = p.domiciliario_id && p.domiciliario ? { nombre: p.domiciliario.nombre, foto: p.domiciliario.avatar_url, rol: 'Domiciliario' } : null;
+    const vend = p.vendedor_id && p.vendedor ? { id: p.vendedor_id, nombre: p.vendedor.nombre, foto: p.vendedor.avatar_url, rol: 'Vendedor' } : null;
+    const dom = p.domiciliario_id && p.domiciliario ? { id: p.domiciliario_id, nombre: p.domiciliario.nombre, foto: p.domiciliario.avatar_url, rol: 'Domiciliario' } : null;
     let lista: (Contacto | null)[];
     if (yo === p.domiciliario_id && yo !== p.vendedor_id) lista = [vend];
     else if (yo === p.vendedor_id && yo !== p.domiciliario_id) lista = [dom];
     else lista = [vend, dom];
     const quedan = lista.filter((c): c is Contacto => !!c);
-    return quedan.length ? quedan : [{ nombre: 'Variedades JYB', foto: null, rol: 'Sin domiciliario todavía' }];
+    return quedan.length ? quedan : [{ id: null, nombre: 'Variedades JYB', foto: null, rol: 'Sin domiciliario todavía' }];
   });
 
   titulo = computed(() => {
@@ -119,11 +122,14 @@ export class ChatHojaComponent implements OnInit {
     return c.length > 1 ? c.map((x) => x.nombre.trim().split(/\s+/)[0]).join(' y ') : c[0].nombre;
   });
 
+  /** Con una persona: su estado (Activo, Ausente, Desconectado · visto hace…), como en Discord; con dos, el punto de cada foto */
   subtitulo = computed(() => {
     const c = this.contactos();
     const p = this.pedido();
+    if (!p) return '';
+    if (c.length === 1 && c[0].id) return `${this.presencia.texto(c[0].id)} · ${c[0].rol}`;
     const quien = c.length > 1 ? 'Vendedor y domiciliario' : c[0]?.rol ?? '';
-    return p ? `${quien} · Pedido #${p.numero}` : '';
+    return `${quien} · Pedido #${p.numero}`;
   });
 
   constructor() {
@@ -140,6 +146,10 @@ export class ChatHojaComponent implements OnInit {
       )
       .eq('id', this.pedidoId)
       .maybeSingle();
-    if (data) this.pedido.set(data as unknown as PedidoChat);
+    if (data) {
+      const p = data as unknown as PedidoChat;
+      this.pedido.set(p);
+      void this.presencia.cargarVistos([p.vendedor_id, p.domiciliario_id]);
+    }
   }
 }
