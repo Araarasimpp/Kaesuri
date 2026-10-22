@@ -2,13 +2,15 @@
   <h1>Mis entregas</h1>
 
   <ng-container *ngIf="!loading; else cargando">
-    <div class="lista" *ngIf="paradas.length; else vacio">
-      <ng-container *ngFor="let parada of paradas; trackBy: trackParada">
-      <div class="pedido-card" *ngIf="parada.kaesuri as p">
+    <p class="ayuda-ruta" *ngIf="paradas.length > 1">Mantén presionada una tarjeta y muévela para ordenar tu ruta.</p>
+    <div class="lista" [class.ordenando]="arrastrandoId !== null" *ngIf="paradas.length; else vacio">
+      <ng-container *ngFor="let parada of paradas; let i = index; trackBy: trackParada">
+      <div class="pedido-card" *ngIf="parada.kaesuri as p" [class.arrastrando]="arrastrandoId === parada.clave"
+        (pointerdown)="presionar($event, parada.clave)" (touchstart)="tocar($event, parada.clave)" (contextmenu)="$event.preventDefault()">
         <div class="titulo-fila">
           <div>
             <span class="negocio" *ngIf="jasta?.vinculado">Variedades JYB</span>
-            <h2 class="pedido-titulo">Pedido #{{ p.numero }} - {{ formatoMoneda(p.total) }}</h2>
+            <h2 class="pedido-titulo"><span class="parada" *ngIf="paradas.length > 1" [attr.aria-label]="'Parada ' + (i + 1)">{{ i + 1 }}</span>Pedido #{{ p.numero }} - {{ formatoMoneda(p.total) }}</h2>
           </div>
           <button
             type="button"
@@ -61,9 +63,10 @@
         <button class="btn-entregar" (click)="abrirEntrega(p)">Marcar entregado</button>
       </div>
 
-      <div class="pedido-card jasta" *ngIf="parada.jasta as p">
+      <div class="pedido-card jasta" *ngIf="parada.jasta as p" [class.arrastrando]="arrastrandoId === parada.clave"
+        (pointerdown)="presionar($event, parada.clave)" (touchstart)="tocar($event, parada.clave)" (contextmenu)="$event.preventDefault()">
         <span class="negocio jasta">Jasta</span>
-        <h2 class="pedido-titulo">Pedido #{{ p.id }} - {{ formatoMoneda(p.total) }}</h2>
+        <h2 class="pedido-titulo"><span class="parada" *ngIf="paradas.length > 1" [attr.aria-label]="'Parada ' + (i + 1)">{{ i + 1 }}</span>Pedido #{{ p.id }} - {{ formatoMoneda(p.total) }}</h2>
 
         <div class="datos">
           <p><strong>Cliente:</strong> {{ p.cliente_nombre }}</p>
@@ -114,6 +117,8 @@
   <ng-template #cargando>
     <app-skeleton variante="tarjetas" [cantidad]="3"></app-skeleton>
   </ng-template>
+
+  <app-entregas-hechas [conJasta]="!!jasta?.vinculado"></app-entregas-hechas>
 </div>
 
 <app-entregar-pedido

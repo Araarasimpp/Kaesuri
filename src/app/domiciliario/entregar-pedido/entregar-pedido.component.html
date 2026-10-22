@@ -44,12 +44,9 @@
         </div>
       </div>
 
-      <div class="comprobante-uploader" *ngIf="llevaComprobante">
-        <label class="comprobante-preview" [class.empty]="!previewComprobante">
-          <img *ngIf="previewComprobante" [src]="previewComprobante" alt="Comprobante" />
-          <span *ngIf="!previewComprobante">Toca para subir foto del comprobante</span>
-          <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" hidden />
-        </label>
+      <!-- Varias fotos (cámara o galería), como en Jasta: se suben de una vez -->
+      <div class="jt comprobantes" *ngIf="llevaComprobante">
+        <app-comprobantes-input [rutas]="comprobantes" (cambio)="cambiarComprobantes($event)"></app-comprobantes-input>
       </div>
 
       <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
@@ -57,7 +54,7 @@
 
     <footer class="modal-footer">
       <button class="btn-secondary" (click)="onCerrar()">Cancelar</button>
-      <button class="btn-primary" (click)="onConfirmar()" [disabled]="guardando">
+      <button class="btn-primary" (click)="onConfirmar()" [disabled]="guardando || (llevaComprobante && !comprobantes.length)">
         {{ guardando ? 'Confirmando...' : 'Confirmar entrega' }}
       </button>
     </footer>
