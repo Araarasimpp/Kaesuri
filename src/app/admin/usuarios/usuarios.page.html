@@ -31,7 +31,7 @@
           <tr *ngFor="let u of filtrados" [class.fila-inactiva]="!u.activo">
             <td class="cel-titulo">
               <div class="nombre-cell">
-                <span class="avatar">{{ inicial(u.nombre) }}</span>
+                <span class="avatar">{{ inicial(u.nombre) }}<i class="punto-estado" [ngClass]="presencia.estado(u.id)" role="img" [attr.aria-label]="presencia.texto(u.id)" [attr.title]="presencia.texto(u.id)"></i></span>
                 <span>{{ u.nombre }}</span>
                 <span class="tag-tu" *ngIf="u.id === miId">Tú</span>
               </div>

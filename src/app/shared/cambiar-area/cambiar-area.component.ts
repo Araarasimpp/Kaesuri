@@ -3,7 +3,7 @@
 // (por ejemplo vendedor y domiciliario), pasar de un área a otra.
 // modo="sidebar": dentro del menú lateral (PC). modo="flotante": botón fijo arriba a la derecha.
 
-import { Component, ElementRef, HostListener, Input, OnInit, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
@@ -11,6 +11,7 @@ import { addIcons } from 'ionicons';
 import { checkmarkOutline, personCircleOutline } from 'ionicons/icons';
 import { SupabaseService, areasDe } from '../../core/services/supabase.service';
 import { AvatarComponent } from '../avatar/avatar.component';
+import { Preferencia, PresenciaService } from '../../core/services/presencia.service';
 
 @Component({
   selector: 'app-cambiar-area',
@@ -27,13 +28,19 @@ import { AvatarComponent } from '../avatar/avatar.component';
         [attr.aria-label]="'Mi cuenta (' + p.nombre + ')'"
         [attr.title]="compacto ? p.nombre : null"
       >
-        <app-avatar [nombre]="p.nombre" [foto]="p.avatar_url" [tam]="modo === 'sidebar' ? 26 : modo === 'barra' ? 30 : 34"></app-avatar>
+        <app-avatar [nombre]="p.nombre" [foto]="p.avatar_url" [usuario]="p.id" [tam]="modo === 'sidebar' ? 26 : modo === 'barra' ? 30 : 34"></app-avatar>
         <span class="nombre" *ngIf="modo === 'sidebar' && !compacto">{{ p.nombre }}</span>
       </button>
       <div class="panel" *ngIf="abierto()" role="menu">
         <button type="button" role="menuitem" class="opcion" (click)="ir(raiz + '/perfil')">
           <span>Mi perfil</span>
           <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+        </button>
+        <p class="titulo">Mi estado</p>
+        <button type="button" role="menuitemradio" class="opcion" *ngFor="let e of estados" [class.actual]="presencia.preferencia() === e.valor"
+          [attr.aria-checked]="presencia.preferencia() === e.valor" (click)="presencia.elegir(e.valor)">
+          <span class="est"><i class="punto" [ngClass]="e.punto"></i><span>{{ e.etiqueta }}<small>{{ e.ayuda }}</small></span></span>
+          <ion-icon *ngIf="presencia.preferencia() === e.valor" name="checkmark-outline" aria-hidden="true"></ion-icon>
         </button>
         <p class="titulo" *ngIf="areas().length > 1">Estás en {{ actual }}</p>
         <button
@@ -75,6 +82,12 @@ import { AvatarComponent } from '../avatar/avatar.component';
         font-weight: 500; text-align: left; cursor: pointer; }
       .opcion:hover { background: var(--k-hover); }
       .opcion.actual { color: var(--k-role-ink); font-weight: 650; }
+      .est { display: flex; align-items: center; gap: 10px; }
+      .est small { display: block; font-size: 12px; font-weight: 400; color: var(--k-text-soft); }
+      .punto { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+      .punto.activo { background: #23a55a; }
+      .punto.ausente { background: #f0b232; }
+      .punto.desconectado { background: #80848e; }
     `,
   ],
 })
@@ -91,6 +104,13 @@ export class CambiarAreaComponent implements OnInit {
     return p ? areasDe(p) : [];
   });
   abierto = signal(false);
+  presencia = inject(PresenciaService);
+  /** Como en Discord: automático (activo / ausente según uso), ausente fijo o invisible */
+  estados: { valor: Preferencia; etiqueta: string; ayuda: string; punto: string }[] = [
+    { valor: 'auto', etiqueta: 'Activo', ayuda: 'Ausente solo si no usas la app', punto: 'activo' },
+    { valor: 'ausente', etiqueta: 'Ausente', ayuda: 'Aunque tengas la app abierta', punto: 'ausente' },
+    { valor: 'invisible', etiqueta: 'Invisible', ayuda: 'Te ven desconectado', punto: 'desconectado' },
+  ];
 
   constructor(private supabase: SupabaseService, private router: Router, private host: ElementRef<HTMLElement>) {
     addIcons({ checkmarkOutline, personCircleOutline });

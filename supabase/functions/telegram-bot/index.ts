@@ -10,7 +10,12 @@
 //   /vincular CÓDIGO (en el grupo)   vincula el grupo a un domiciliario
 //   /ruta            (en el grupo)   lista lo que lleva el domiciliario
 //   /ayuda
-// Si una foto no se puede leer, también sirve escribir el número: 215
+// Si una foto no se puede leer, también sirve escribir el número: 215 (o "JYB 215"
+// si en el grupo también está el bot de Jasta).
+//
+// El grupo puede tener también el bot de Jasta: las fotos de rótulos de Jasta
+// (QR "JASTA-…") se ignoran sin responder, y la hora de asignación es la hora en
+// que se mandó la foto, para que las dos rutas queden en el orden de las fotos.
 //
 // Telegram manda el encabezado X-Telegram-Bot-Api-Secret-Token con el secreto
 // que se configuró en setWebhook (telegram-config); sin él no se atiende nada.
@@ -66,14 +71,22 @@ function pedidoDeQr(texto: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
-/** Número escrito a mano: "215", "#215" o "pedido 215" */
+/** Número escrito a mano: "215", "#215", "pedido 215" o "JYB 215" ("Jasta 215" es del otro bot) */
 function pedidoDeTexto(texto: string): number | null {
-  const m = texto.trim().match(/^(?:pedido\s*)?#?\s*(\d{1,9})$/i);
-  return m ? Number(m[1]) : null;
+  const m = texto.trim().match(/^(jyb|variedades|k|kaesuri)?\s*(?:pedido\s*)?#?\s*(\d{1,9})$/i);
+  return m ? Number(m[2]) : null;
 }
 
-/** Baja la foto de Telegram y busca el QR con el lector robusto (prueba primero la más grande) */
-async function leerQr(token: string, ids: string[]): Promise<number | null> {
+/** ¿El QR es de un rótulo de Jasta? (lo atiende el bot de Jasta) */
+function esDeJasta(texto: string): boolean {
+  return /JASTA[\s:#-]*\d/i.test(texto);
+}
+
+/**
+ * Baja la foto de Telegram y busca el QR con el lector robusto (prueba primero la más grande).
+ * 'otro' = es un rótulo de Jasta.
+ */
+async function leerQr(token: string, ids: string[]): Promise<number | 'otro' | null> {
   for (const id of ids) {
     try {
       const f = await api(token, 'getFile', { file_id: id });
@@ -82,6 +95,7 @@ async function leerQr(token: string, ids: string[]): Promise<number | null> {
       const bytes = new Uint8Array(await r.arrayBuffer());
       const img = jpeg.decode(bytes, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 256 });
       const texto = await leerQrImagen(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.data.byteLength), img.width, img.height);
+      if (texto && esDeJasta(texto)) return 'otro';
       const n = texto ? pedidoDeQr(texto) : null;
       if (n) return n;
     } catch (e) {
@@ -103,8 +117,10 @@ const AYUDA =
   'Si una foto no se lee, escriban el número del pedido (ej. 215). /ruta muestra lo que lleva el domiciliario.';
 
 async function despachar(token: string, msg: any, numero: number): Promise<void> {
-  const r = await rpc<{ texto?: string; repetido?: boolean }>('telegram_despachar', {
-    p_chat_id: msg.chat.id, p_message_id: msg.message_id, p_telegram_id: msg.from.id, p_numero: numero,
+  // Con la hora de la foto (msg.date): así la ruta queda en el orden de las fotos aunque el
+  // bot de Jasta, en el mismo grupo, lea las suyas más rápido o más despacio
+  const r = await rpc<{ texto?: string; repetido?: boolean }>('telegram_despachar_orden', {
+    p_chat_id: msg.chat.id, p_message_id: msg.message_id, p_telegram_id: msg.from.id, p_numero: numero, p_fecha: msg.date ?? null,
   });
   if (r?.texto && !r.repetido) await responder(token, msg, r.texto);
 }
@@ -153,7 +169,9 @@ async function atender(cfg: Config, msg: any): Promise<void> {
   if (fotos.length) {
     // Las fotos de otras personas (p. ej. el domiciliario mandando evidencias) se ignoran
     if (!(await esDespachador(msg.from.id))) return;
-    const numero = (await leerQr(token, fotos)) ?? (texto ? pedidoDeTexto(texto) : null);
+    const qr = await leerQr(token, fotos);
+    if (qr === 'otro') return;
+    const numero = qr ?? (texto ? pedidoDeTexto(texto) : null);
     if (!numero) {
       await responder(token, msg, '⚠️ No pude leer el código del rótulo. Manda otra foto más de cerca y con luz, o escribe el número del pedido.');
       return;

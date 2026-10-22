@@ -7,6 +7,7 @@ import { callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline }
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { nombreConVariante } from '../../shared/variante';
+import { microsAsignado } from '../../shared/fecha-colombia';
 import { EntregarPedidoComponent } from '../entregar-pedido/entregar-pedido.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { JastaService, PedidoJasta, ResumenJasta } from '../../core/services/jasta.service';
@@ -25,13 +26,15 @@ interface PedidoRuta {
   total: number;
   observaciones: string | null;
   created_at: string;
+  asignado_at: string | null;
   productos: string;
 }
 
 /** Una parada de la ruta: un pedido de Variedades JYB o uno de Jasta */
 interface Parada {
   clave: string;
-  cuando: string;
+  /** Hora de asignación en microsegundos */
+  cuando: number;
   kaesuri?: PedidoRuta;
   jasta?: PedidoJasta;
 }
@@ -109,12 +112,16 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
     void this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
-  /** Pedidos de los dos negocios en una sola ruta, en el orden en que se los asignaron */
+  /**
+   * Pedidos de los dos negocios en una sola ruta, en el orden en que se los asignaron.
+   * Por Telegram la hora de asignación es la de la foto del rótulo, así que queda en el
+   * mismo orden en que se mandaron las fotos (de Jasta y de Variedades JYB mezcladas).
+   */
   get paradas(): Parada[] {
     return [
-      ...this.pedidos.map((p) => ({ clave: 'k:' + p.id, cuando: p.created_at, kaesuri: p })),
-      ...(this.jasta?.en_ruta ?? []).map((p) => ({ clave: 'j:' + p.id, cuando: p.asignado_at ?? '', jasta: p })),
-    ].sort((a, b) => a.cuando.localeCompare(b.cuando));
+      ...this.pedidos.map((p) => ({ clave: 'k:' + p.id, cuando: microsAsignado(p.asignado_at ?? p.created_at), kaesuri: p })),
+      ...(this.jasta?.en_ruta ?? []).map((p) => ({ clave: 'j:' + p.id, cuando: microsAsignado(p.asignado_at), jasta: p })),
+    ].sort((a, b) => a.cuando - b.cuando);
   }
 
   trackParada(_: number, p: Parada): string {
@@ -188,11 +195,11 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
     const { data, error } = await this.supabase.client
       .from('pedidos')
       .select(
-        'id, numero, cliente_nombre, cliente_telefono, direccion, barrio, valor_domicilio, total, observaciones, created_at'
+        'id, numero, cliente_nombre, cliente_telefono, direccion, barrio, valor_domicilio, total, observaciones, created_at, asignado_at'
       )
       .eq('domiciliario_id', user.id)
       .eq('estado', 'en_ruta')
-      .order('created_at', { ascending: true });
+      .order('asignado_at', { ascending: true, nullsFirst: true });
 
     let pedidos = (data as any[]) ?? [];
 

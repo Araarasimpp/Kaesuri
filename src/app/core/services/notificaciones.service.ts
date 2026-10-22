@@ -56,13 +56,8 @@ export class NotificacionesService {
     this.usuarioId = perfil.id;
     this.roles = rolesDe(perfil);
 
-    const { data } = await this.supabase.client
-      .from('notificaciones')
-      .select('id, tipo, titulo, mensaje, enlace, leida, created_at, pedido_id')
-      .eq('usuario_id', perfil.id)
-      .order('created_at', { ascending: false })
-      .limit(40);
-    this.lista.set((data as Notificacion[]) ?? []);
+    await this.recargar();
+    document.addEventListener('visibilitychange', this.alVolver);
 
     this.canal = this.supabase.client
       .channel('notificaciones-' + perfil.id)
@@ -72,14 +67,40 @@ export class NotificacionesService {
         (payload) => {
           const nueva = payload.new as Notificacion;
           this.lista.update((l) => [nueva, ...l.filter((n) => n.id !== nueva.id)].slice(0, 40));
+          if (nueva.tipo === 'mensaje' && nueva.pedido_id) this.marcarEntregados([nueva.pedido_id]);
         }
       )
       .subscribe();
   }
 
+  private async recargar(): Promise<void> {
+    if (!this.usuarioId) return;
+    const { data } = await this.supabase.client
+      .from('notificaciones')
+      .select('id, tipo, titulo, mensaje, enlace, leida, created_at, pedido_id')
+      .eq('usuario_id', this.usuarioId)
+      .order('created_at', { ascending: false })
+      .limit(40);
+    if (!data) return;
+    this.lista.set(data as Notificacion[]);
+    this.marcarEntregados(this.lista().filter((n) => !n.leida && n.tipo === 'mensaje' && n.pedido_id).map((n) => n.pedido_id!));
+  }
+
+  /** Al volver a la app se trae lo que llegó mientras tanto (el celular corta la conexión en segundo plano) */
+  private alVolver = (): void => {
+    if (document.visibilityState === 'visible') void this.recargar();
+  };
+
+  /** Los mensajes de estos chats ya le llegaron a la persona (doble chulo gris para quien los mandó) */
+  private marcarEntregados(pedidos: string[]): void {
+    const unicos = [...new Set(pedidos)];
+    if (unicos.length) void this.supabase.client.rpc('chat_marcar_entregados', { p_pedidos: unicos }).then();
+  }
+
   private detener(): void {
     if (this.canal) this.supabase.client.removeChannel(this.canal);
     this.canal = null;
+    document.removeEventListener('visibilitychange', this.alVolver);
     this.iniciando = null;
     this.usuarioId = null;
     this.roles = [];

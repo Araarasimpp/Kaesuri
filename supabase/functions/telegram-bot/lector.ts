@@ -8,7 +8,8 @@ import { readBarcodes } from 'npm:zxing-wasm@2.2.4/reader';
 
 type Imagen = { data: Uint8ClampedArray; width: number; height: number };
 
-const ES_PEDIDO = /KAESURI[\s:#-]*\d/i;
+// También se aceptan los rótulos de Jasta (el bot los reconoce y los deja pasar sin responder)
+const ES_PEDIDO = /KAESURI[\s:#-]*\d|JASTA[\s:#-]*\d/i;
 const ok = (t: string | null | undefined) => (t && ES_PEDIDO.test(t) ? t : null);
 
 /** Luminancia 0-255 con el contraste estirado entre los percentiles 2 % y 98 % */

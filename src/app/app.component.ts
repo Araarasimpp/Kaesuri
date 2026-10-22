@@ -6,6 +6,7 @@ import { SkeletonComponent } from './shared/skeleton/skeleton.component';
 import { VisorComponent } from './shared/visor/visor.component';
 import { ToastComponent } from './shared/toast/toast.component';
 import { activarArrastreDeHojas } from './shared/arrastrar-hojas';
+import { PresenciaService } from './core/services/presencia.service';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +24,8 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly arrancando = signal(true);
 
   constructor() {
+    // Estado activo / ausente / desconectado de cada persona (arranca al haber sesión)
+    inject(PresenciaService);
     const router = inject(Router);
     const sub = router.events.subscribe((e) => {
       const lista = (e instanceof NavigationEnd && e.urlAfterRedirects !== '/') || e instanceof NavigationError;

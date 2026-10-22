@@ -1,8 +1,9 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService, UserRole } from '../../core/services/supabase.service';
+import { PresenciaService } from '../../core/services/presencia.service';
 
 import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
@@ -26,6 +27,8 @@ interface UsuarioFila {
 export class UsuariosPage implements OnInit, OnDestroy {
   loading = true;
   usuarios: UsuarioFila[] = [];
+  /** Activo, ausente o desconectado (punto en la inicial, como en Discord) */
+  presencia = inject(PresenciaService);
   busqueda = '';
   miId: string | null = null;
   guardandoId: string | null = null;
@@ -78,6 +81,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
 
     if (!error && data) {
       this.usuarios = data as UsuarioFila[];
+      void this.presencia.cargarVistos(this.usuarios.map((u) => u.id));
     }
     this.loading = false;
     this.cdr.detectChanges();
