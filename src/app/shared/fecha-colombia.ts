@@ -38,3 +38,19 @@ export function formatoHoraCO(fechaIso: string): string {
     minute: '2-digit',
   });
 }
+
+/**
+ * Hora de asignación en microsegundos (para ordenar la ruta). Por Telegram los pedidos
+ * mandados en el mismo segundo se desempatan en los microsegundos (número del mensaje),
+ * que Date.parse descarta. Sin fecha va de primero (0).
+ */
+export function microsAsignado(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  const m = iso.replace(' ', 'T').match(/^([^.]+?)(?:\.(\d+))?([zZ]|[+-]\d{2}(?::?\d{2})?)?$/);
+  if (!m) return Date.parse(iso) * 1000 || 0;
+  let zona = m[3] ?? 'Z';
+  if (/^[+-]\d{2}$/.test(zona)) zona += ':00';
+  const seg = Date.parse(m[1] + zona);
+  const fraccion = Number(((m[2] ?? '') + '000000').slice(0, 6));
+  return Number.isNaN(seg) ? 0 : seg * 1000 + fraccion;
+}
