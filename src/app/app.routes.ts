@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/registro/registro.page').then((m) => m.RegistroPage),
   },
   {
+    // Pública (sin sesión): el cliente ve en qué va su pedido
+    path: 'seguimiento/:codigo',
+    loadComponent: () => import('./seguimiento/seguimiento.page').then((m) => m.SeguimientoPage),
+  },
+  {
     path: 'admin',
     loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },

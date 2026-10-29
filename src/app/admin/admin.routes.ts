@@ -99,6 +99,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'novedades',
         loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
       },
+      {
+        path: 'resumen-domiciliarios',
+        loadComponent: () => import('../paginas/mi-resumen/mi-resumen.page').then((m) => m.MiResumenPage),
+      },
     ],
   },
 ];

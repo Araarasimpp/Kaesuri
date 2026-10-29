@@ -44,6 +44,8 @@ interface PedidoFila {
   alistado_at: string | null;
   created_at: string;
   cuadre_id: string | null;
+  /** Código del enlace público de seguimiento (/seguimiento/<código>) */
+  seguimiento: string | null;
   /** Intentos de entrega que no se pudieron y el último motivo */
   novedades: number;
   ultima_novedad: string | null;
@@ -66,7 +68,7 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
-  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, cuadre_id, novedades, ultima_novedad, ' +
+  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, cuadre_id, seguimiento, novedades, ultima_novedad, ' +
   'pedido_items(cantidad, color, talla, producto:productos(nombre, imagen_url))';
 
 @Component({
@@ -517,6 +519,31 @@ export class PedidosPage implements OnInit, OnDestroy {
     const { error } = await this.supabase.client.rpc('cancelar_pedido', { p_pedido_id: pedido.id });
     if (error) avisar(error.message, 'No se pudo cancelar');
     await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  /** Enlace público para que el cliente vea en qué va su pedido */
+  enlaceSeguimiento(p: PedidoFila): string {
+    return `${location.origin}/seguimiento/${p.seguimiento ?? ''}`;
+  }
+
+  /** Abre WhatsApp con el cliente y el enlace de seguimiento */
+  enviarSeguimiento(p: PedidoFila): void {
+    this.menuAbiertoId = null;
+    const tel = (p.cliente_telefono ?? '').replace(/\D/g, '');
+    const num = tel.length === 10 ? '57' + tel : tel;
+    const nombre = (p.cliente_nombre ?? '').trim().split(/\s+/)[0];
+    const texto = `Hola ${nombre}, aquí puedes ver en qué va tu pedido #${p.numero} de Variedades JYB: ${this.enlaceSeguimiento(p)}`;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  }
+
+  async copiarSeguimiento(p: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    try {
+      await navigator.clipboard.writeText(this.enlaceSeguimiento(p));
+      avisar('Ya puedes pegarlo en el chat con el cliente.', 'Enlace de seguimiento copiado');
+    } catch {
+      avisar(this.enlaceSeguimiento(p), 'Enlace de seguimiento');
+    }
   }
 
   /** Entregado por error (p. ej. comprobante equivocado): vuelve a En ruta con el mismo domiciliario */

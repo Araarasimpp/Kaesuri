@@ -184,6 +184,8 @@
                 </button>
                 <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
                   <button (click)="abrirChat(p.id)">Chat del pedido</button>
+                  <button *ngIf="p.seguimiento && p.estado !== 'cancelado' && p.cliente_telefono" (click)="enviarSeguimiento(p)">Enviar seguimiento por WhatsApp</button>
+                  <button *ngIf="p.seguimiento && p.estado !== 'cancelado'" (click)="copiarSeguimiento(p)">Copiar enlace de seguimiento</button>
                   <button *ngIf="p.estado === 'pendiente' || p.estado === 'en_ruta'" [routerLink]="rutaNuevo" [queryParams]="{ editar: p.id }">Editar pedido</button>
                   <button *ngIf="esAlistado(p)" (click)="quitarAlistado(p)">Quitar de alistados</button>
                   <button *ngIf="esAdmin && p.estado === 'entregado' && !p.cuadre_id && p.domiciliario_id" (click)="devolverEntrega(p)">Devolver a En ruta</button>

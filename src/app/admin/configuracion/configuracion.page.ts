@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { TelegramPanelComponent } from '../../shared/telegram/telegram-panel.component';
 import { CuentasPagoConfigComponent } from './cuentas-pago-config.component';
+import { WhatsappConfigComponent } from './whatsapp-config.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
@@ -20,7 +21,7 @@ interface Configuracion {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule, TelegramPanelComponent, CuentasPagoConfigComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, TelegramPanelComponent, CuentasPagoConfigComponent, WhatsappConfigComponent],
   templateUrl: './configuracion.page.html',
   styleUrls: ['./configuracion.page.scss'],
 })
