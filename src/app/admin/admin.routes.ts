@@ -103,6 +103,26 @@ export const ADMIN_ROUTES: Routes = [
         path: 'resumen-domiciliarios',
         loadComponent: () => import('../paginas/mi-resumen/mi-resumen.page').then((m) => m.MiResumenPage),
       },
+      {
+        path: 'inventario',
+        loadComponent: () => import('../paginas/inventario/inventario.page').then((m) => m.InventarioPage),
+      },
+      {
+        path: 'devoluciones',
+        loadComponent: () => import('../paginas/devoluciones/devoluciones.page').then((m) => m.DevolucionesPage),
+      },
+      {
+        path: 'comisiones',
+        loadComponent: () => import('../paginas/comisiones/comisiones.page').then((m) => m.ComisionesPage),
+      },
+      {
+        path: 'gastos',
+        loadComponent: () => import('../paginas/gastos/gastos.page').then((m) => m.GastosPage),
+      },
+      {
+        path: 'rentabilidad',
+        loadComponent: () => import('../paginas/rentabilidad/rentabilidad.page').then((m) => m.RentabilidadPage),
+      },
     ],
   },
 ];

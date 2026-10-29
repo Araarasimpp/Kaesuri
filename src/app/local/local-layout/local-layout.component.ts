@@ -3,7 +3,7 @@ import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.compon
 import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline } from 'ionicons/icons';
+import { bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline, returnDownBackOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-local-layout',
@@ -18,12 +18,13 @@ export class LocalLayoutComponent {
     { label: 'Ventas', path: '/local', icon: 'receipt-outline' },
     { label: 'Catálogo', path: '/local/catalogo', icon: 'book-outline' },
     { label: 'Clientes', path: '/local/clientes', icon: 'people-circle-outline' },
+    { label: 'Devoluciones', path: '/local/devoluciones', icon: 'return-down-back-outline' },
     { label: 'Mi perfil', path: '/local/perfil', icon: 'person-circle-outline' },
   ];
   /** Las que se ven siempre en la barra de abajo */
   readonly principales = this.secciones.slice(0, 3);
 
   constructor() {
-    addIcons({ bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline });
+    addIcons({ returnDownBackOutline, bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline });
   }
 }

@@ -50,6 +50,14 @@ export const DESPACHADOR_ROUTES: Routes = [
         path: 'novedades',
         loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
       },
+      {
+        path: 'inventario',
+        loadComponent: () => import('../paginas/inventario/inventario.page').then((m) => m.InventarioPage),
+      },
+      {
+        path: 'devoluciones',
+        loadComponent: () => import('../paginas/devoluciones/devoluciones.page').then((m) => m.DevolucionesPage),
+      },
     ],
   },
 ];

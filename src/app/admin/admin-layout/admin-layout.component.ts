@@ -27,6 +27,11 @@ import {
   bagHandleOutline,
   alertCircleOutline,
   statsChartOutline,
+  fileTrayStackedOutline,
+  returnDownBackOutline,
+  cashOutline,
+  cardOutline,
+  trendingUpOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -55,14 +60,19 @@ export class AdminLayoutComponent {
     { label: 'Inicio', path: '/admin', icon: 'home-outline' },
     { label: 'Pedidos', path: '/admin/pedidos', icon: 'receipt-outline' },
     { label: 'Ventas del local', path: '/admin/ventas-local', icon: 'storefront-outline' },
+    { label: 'Devoluciones', path: '/admin/devoluciones', icon: 'return-down-back-outline' },
     { label: 'Clientes', path: '/admin/clientes', icon: 'people-circle-outline' },
     { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
     { label: 'Novedades', path: '/admin/novedades', icon: 'alert-circle-outline' },
     { label: 'Domiciliarios', path: '/admin/resumen-domiciliarios', icon: 'stats-chart-outline' },
     { label: 'Recolector', path: '/admin/recolector', icon: 'bag-handle-outline' },
+    { label: 'Comisiones', path: '/admin/comisiones', icon: 'cash-outline' },
+    { label: 'Gastos', path: '/admin/gastos', icon: 'card-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
+    { label: 'Rentabilidad', path: '/admin/rentabilidad', icon: 'trending-up-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
+    { label: 'Inventario', path: '/admin/inventario', icon: 'file-tray-stacked-outline' },
     { label: 'Catálogo', path: '/admin/catalogo', icon: 'book-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
     { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
@@ -80,6 +90,11 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      trendingUpOutline,
+      cardOutline,
+      cashOutline,
+      returnDownBackOutline,
+      fileTrayStackedOutline,
       statsChartOutline,
       alertCircleOutline,
       mapOutline,

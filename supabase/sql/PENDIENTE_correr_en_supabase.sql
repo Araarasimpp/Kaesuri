@@ -178,3 +178,9 @@ revoke all on function public.alerta_stock() from public, anon, authenticated;
 drop trigger if exists productos_alerta_stock on public.productos;
 create trigger productos_alerta_stock after update of stock on public.productos
   for each row execute function public.alerta_stock();
+
+-- ============================================================ 4. Revisar pedidos quietos cada hora
+-- Pedidos con más de 24 horas sin moverse (por alistar, alistado sin salir o en ruta):
+-- aviso una vez a quien le toca y un resumen al admin. De 8 a. m. a 6 p. m. (Colombia).
+select cron.unschedule('pedidos-quietos') where exists (select 1 from cron.job where jobname = 'pedidos-quietos');
+select cron.schedule('pedidos-quietos', '20 13-23 * * *', 'select public.revisar_quietos()');

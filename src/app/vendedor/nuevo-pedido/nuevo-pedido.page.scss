@@ -465,3 +465,33 @@
   flex: 1;
   min-width: 0;
 }
+
+/* Teléfono con indicativo del país y aviso de cliente con historial (como en Jasta) */
+.tel-grupo {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 6px;
+
+  .prefijo { padding-right: 22px; text-overflow: ellipsis; }
+  &.invalido input { border-color: var(--k-coral); }
+}
+
+.error-campo {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--k-coral);
+}
+
+.riesgo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--k-amber-soft);
+  color: var(--k-amber);
+  font-size: 13px;
+
+  &.alto { background: var(--k-coral-soft); color: var(--k-coral); }
+}
