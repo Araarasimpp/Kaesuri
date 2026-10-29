@@ -1,9 +1,3 @@
--- ============================================================================
---  Kaesuri · Enlace de seguimiento por WhatsApp (API oficial de Meta), como en Jasta
---  PENDIENTE: córrelo en Supabase → SQL Editor (proyecto Kaesuri) y dale "Run".
---  No envía nada hasta que el admin lo active en Configuración → WhatsApp.
--- ============================================================================
-
 -- ---------------------------------------------------------------- Enlace por WhatsApp (Meta)
 -- Cuando un pedido a domicilio sale en ruta por primera vez, se le manda al cliente la
 -- plantilla aprobada de WhatsApp con su nombre, el número del pedido y el enlace de
@@ -152,3 +146,35 @@ revoke all on function public.whatsapp_config_leer(), public.whatsapp_config_gua
 grant execute on function public.whatsapp_config_leer(), public.whatsapp_config_guardar(text, text, text, text, text, boolean),
   public.whatsapp_probar(text), public.whatsapp_envios_recientes() to authenticated;
 
+
+
+-- ============================================================ 2. El vendedor ve el comprobante de su pago (liquidación)
+drop policy if exists "comprobantes: vendedor ve su liquidación" on storage.objects;
+create policy "comprobantes: vendedor ve su liquidación" on storage.objects for select to authenticated
+  using (bucket_id = 'comprobantes' and exists (select 1 from public.liquidaciones l
+    where objects.name = any (l.comprobantes) and l.vendedor_id = (select auth.uid())));
+
+-- ============================================================ 3. Aviso de inventario bajo o agotado
+-- Cuando un producto baja a su mínimo o se agota, les llega un aviso a los admins
+-- (campana + push), una vez cada vez que cruza.
+create or replace function public.alerta_stock()
+returns trigger language plpgsql security definer set search_path to 'public' as $function$
+declare v_titulo text;
+begin
+  if not coalesce(new.activo, true) or new.stock >= old.stock then return new; end if;
+  if new.stock <= 0 and old.stock > 0 then
+    v_titulo := 'Se agotó: ' || new.nombre;
+  elsif new.stock <= new.stock_minimo and old.stock > new.stock_minimo then
+    v_titulo := 'Por acabarse: ' || new.nombre;
+  else
+    return new;
+  end if;
+  perform public.notificar_roles(array['admin']::user_role[], case when new.stock <= 0 then 'agotado' else 'stock_bajo' end,
+    left(v_titulo, 120), case when new.stock <= 0 then 'No quedan unidades' else 'Quedan ' || new.stock || ' (mínimo ' || new.stock_minimo || ')' end,
+    'inventario');
+  return new;
+end $function$;
+revoke all on function public.alerta_stock() from public, anon, authenticated;
+drop trigger if exists productos_alerta_stock on public.productos;
+create trigger productos_alerta_stock after update of stock on public.productos
+  for each row execute function public.alerta_stock();
