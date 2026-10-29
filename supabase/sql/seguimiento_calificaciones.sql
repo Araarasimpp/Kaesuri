@@ -200,3 +200,19 @@ end;
 $function$;
 revoke all on function public.resumen_domiciliario(date, date, uuid) from public, anon;
 grant execute on function public.resumen_domiciliario(date, date, uuid) to authenticated;
+
+-- ---------------------------------------------------------------- Código de seguimiento de un pedido
+-- Para que el vendedor comparta el enlace desde su panel (solo sus pedidos; la oficina, todos)
+create or replace function public.codigo_seguimiento(p_pedido uuid)
+returns uuid
+language sql
+stable
+security definer
+set search_path to 'public'
+as $function$
+  select p.seguimiento from pedidos p
+   where p.id = p_pedido
+     and (p.vendedor_id = auth.uid() or public.tiene_rol('admin', 'despachador', 'venta_local'));
+$function$;
+revoke all on function public.codigo_seguimiento(uuid) from public, anon;
+grant execute on function public.codigo_seguimiento(uuid) to authenticated;

@@ -146,6 +146,7 @@ const POR_PAGINA = 20;
       .est { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--text-soft); }
       .est[data-estado='entregado'] { color: var(--ok, #2e7d32); }
       .est[data-estado='cancelado'] { color: var(--danger); }
+      .chip-seg { display: inline-flex; align-items: center; padding: 1px 8px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: 11.5px; font-weight: 650; color: var(--accent); cursor: pointer; }
       .chip-mensaje { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 11px; border: 0;
         background: var(--danger); color: #fff; font-size: 11.5px; font-weight: 650; cursor: pointer; }
       .mas { display: flex; justify-content: center; padding-top: 12px; }
@@ -300,6 +301,11 @@ const POR_PAGINA = 20;
                         <span class="est" [attr.data-estado]="p.estado">{{ etiquetaEstado(p.estado) }}</span>
                         <span>·</span><span>{{ cuando(p.created_at) }}</span>
                         @if (p.domiciliario) { <span>·</span><span>{{ p.domiciliario }}</span> }
+                        @if (p.estado !== 'cancelado') {
+                          <span class="chip-seg" role="button" tabindex="0" title="Enlace para que el cliente vea en qué va su pedido"
+                            (click)="compartirSeguimiento(p); $event.stopPropagation()" (keydown.enter)="compartirSeguimiento(p); $event.stopPropagation()">
+                            Seguimiento</span>
+                        }
                         @if (conMensajes().has(p.id)) {
                           <span class="chip-mensaje" role="button" tabindex="0" (click)="abrir(p.id); $event.stopPropagation()"
                             (keydown.enter)="abrir(p.id); $event.stopPropagation()">
@@ -511,6 +517,30 @@ export class MiPanelPage implements OnInit, OnDestroy {
   }
 
   // ----------------------------------------------------------------- Chat
+  /** Comparte (o copia) el enlace de seguimiento para mandárselo al cliente */
+  async compartirSeguimiento(p: { id: string; numero: number; cliente_nombre: string }): Promise<void> {
+    const { data, error } = await this.sb.client.rpc('codigo_seguimiento', { p_pedido: p.id });
+    if (error || !data) return this.toast.error('No se pudo sacar el enlace de seguimiento');
+    const url = `${location.origin}/seguimiento/${data}`;
+    const nombre = p.cliente_nombre.trim().split(/\s+/)[0];
+    const texto = `Hola ${nombre}, aquí puedes ver en qué va tu pedido #${p.numero} de Variedades JYB:`;
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> };
+    if (nav.share) {
+      try {
+        await nav.share({ title: 'Seguimiento de tu pedido', text: texto, url });
+        return;
+      } catch {
+        /* canceló o no se pudo: se copia */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${texto} ${url}`);
+      this.toast.ok('Enlace copiado: pégalo en el chat con el cliente');
+    } catch {
+      this.toast.error(url);
+    }
+  }
+
   abrir(id: string): void {
     this.abierto.set(id);
     void this.router.navigate([], { queryParams: { chat: id }, replaceUrl: true });
