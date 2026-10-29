@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { searchOutline, closeOutline, logoWhatsapp } from 'ionicons/icons';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, rolesDe } from '../../core/services/supabase.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { mensajeError, numero, pesos } from '../../shared/formato';
 import { formatoFechaCO } from '../../shared/fecha-colombia';
@@ -29,6 +29,10 @@ interface Cliente {
       .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
       .lista li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
       .lista small { display: block; color: var(--text-muted); font-size: 12px; }
+      .marca { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--danger-wash); color: var(--danger);
+        font-size: 11px; font-weight: 700; vertical-align: 1px; }
+      .alerta { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-wash); color: var(--danger); font-size: 13.5px; }
+      .alerta textarea { width: 100%; box-sizing: border-box; margin-top: 8px; }
     `,
   ],
   template: `
@@ -46,7 +50,7 @@ interface Cliente {
           <tbody>
             @for (c of clientes(); track c.telefono) {
               <tr class="click" (click)="abrir(c)">
-                <td class="titulo">{{ c.nombre }}</td>
+                <td class="titulo">{{ c.nombre }}@if (marcaDe(c); as m) { <span class="marca" [title]="m.nota">⚠ Marcado</span> }</td>
                 <td class="num" data-etq="Teléfono">{{ c.telefono }}</td>
                 <td class="suave corta" data-etq="Barrio">{{ c.barrio || '—' }}</td>
                 <td class="der num" data-etq="Compras">{{ c.entregados }}</td>
@@ -86,6 +90,25 @@ interface Cliente {
             <dt>Compras</dt><dd>{{ c.entregados }} entregadas · {{ pesos(c.total) }}</dd>
           </dl>
           <a class="b" [href]="whatsapp(c)" target="_blank" rel="noopener"><ion-icon name="logo-whatsapp"></ion-icon>Escribir por WhatsApp</a>
+          <!-- Marca del admin: sale como alerta al escribir su teléfono en Nuevo pedido -->
+          @if (marcaDe(c); as m) {
+            <p class="alerta"><strong>⚠ Cliente marcado</strong><br />"{{ m.nota }}"{{ m.autor ? ' — ' + m.autor : '' }}</p>
+          }
+          @if (esAdmin()) {
+            @if (editandoMarca()) {
+              <div class="campo">
+                <label for="cli-marca">Por qué hay que tener cuidado con este cliente</label>
+                <textarea id="cli-marca" rows="2" maxlength="300" [(ngModel)]="notaMarca" placeholder="Ej: no recibió dos pedidos, pide y cancela"></textarea>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button class="b b-pri" (click)="guardarMarca(c)" [disabled]="guardandoMarca()">Guardar</button>
+                @if (marcaDe(c)) { <button class="b" (click)="notaMarca = ''; guardarMarca(c)" [disabled]="guardandoMarca()">Quitar marca</button> }
+                <button class="b" (click)="editandoMarca.set(false)">Cancelar</button>
+              </div>
+            } @else {
+              <button class="b" (click)="notaMarca = marcaDe(c)?.nota ?? ''; editandoMarca.set(true)">{{ marcaDe(c) ? 'Cambiar la marca' : 'Marcar como cliente problemático' }}</button>
+            }
+          }
           <section>
             <h3 class="seccion-titulo">Lo que ha comprado</h3>
             <ul class="lista">
@@ -117,6 +140,12 @@ export class ClientesPage implements OnInit {
   pedidosCli = signal<Compra[]>([]);
   cargandoCli = signal(false);
   q = '';
+  /** Clientes marcados por el admin (por los últimos 10 dígitos del teléfono) */
+  marcas = signal<Record<string, { nota: string; autor: string | null }>>({});
+  esAdmin = signal(false);
+  editandoMarca = signal(false);
+  guardandoMarca = signal(false);
+  notaMarca = '';
   private timer?: ReturnType<typeof setTimeout>;
 
   pesos = pesos;
@@ -129,6 +158,27 @@ export class ClientesPage implements OnInit {
 
   ngOnInit(): void {
     void this.ir(0);
+    void this.cargarMarcas();
+    void this.sb.getCurrentProfile().then((p) => this.esAdmin.set(!!p && rolesDe(p).includes('admin')));
+  }
+
+  private async cargarMarcas(): Promise<void> {
+    const { data } = await this.sb.client.rpc('clientes_marcados');
+    if (data) this.marcas.set(data as Record<string, { nota: string; autor: string | null }>);
+  }
+
+  marcaDe(c: Cliente): { nota: string; autor: string | null } | null {
+    return this.marcas()[c.telefono.replace(/\D/g, '').slice(-10)] ?? null;
+  }
+
+  async guardarMarca(c: Cliente): Promise<void> {
+    this.guardandoMarca.set(true);
+    const { error } = await this.sb.client.rpc('marcar_cliente', { p_telefono: c.telefono, p_nota: this.notaMarca.trim() });
+    this.guardandoMarca.set(false);
+    if (error) return this.toast.error(mensajeError(error));
+    this.toast.ok(this.notaMarca.trim() ? 'Cliente marcado: saldrá la alerta en Nuevo pedido' : 'Marca quitada');
+    this.editandoMarca.set(false);
+    await this.cargarMarcas();
   }
 
   buscarLuego(): void {
@@ -149,6 +199,7 @@ export class ClientesPage implements OnInit {
 
   async abrir(c: Cliente): Promise<void> {
     this.sel.set(c);
+    this.editandoMarca.set(false);
     this.pedidosCli.set([]);
     this.cargandoCli.set(true);
     // Solo lo que de verdad recibió (sin cancelados ni pendientes), a domicilio y en el local
