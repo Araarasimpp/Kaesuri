@@ -29,6 +29,10 @@ export class EntregarPedidoComponent {
    * Recibe las rutas de las fotos ya subidas al bucket de comprobantes de Kaesuri.
    */
   @Input() alConfirmar?: (metodo: MetodoPago, efectivo: number, transferencia: number, comprobantes: string[]) => Promise<void>;
+  /** Hay cuentas con QR: se puede mostrar el QR al cliente desde aquí */
+  @Input() conQr = false;
+  /** Pide mostrar el QR con el valor de la transferencia */
+  @Output() qr = new EventEmitter<number>();
   @Output() cerrar = new EventEmitter<void>();
   @Output() entregado = new EventEmitter<void>();
 

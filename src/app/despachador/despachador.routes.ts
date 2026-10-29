@@ -46,6 +46,10 @@ export const DESPACHADOR_ROUTES: Routes = [
         path: 'ranking',
         loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
       },
+      {
+        path: 'novedades',
+        loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
+      },
     ],
   },
 ];

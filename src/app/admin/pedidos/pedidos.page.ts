@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { SupabaseService } from '../../core/services/supabase.service';
+import { SupabaseService, rolesDe } from '../../core/services/supabase.service';
 import { nombreConVariante } from '../../shared/variante';
 import { EstadoPedido } from '../../shared/models/models';
 import { RotuloService } from '../../shared/rotulo.service';
@@ -43,6 +43,10 @@ interface PedidoFila {
   rotulo_impreso_at: string | null;
   alistado_at: string | null;
   created_at: string;
+  cuadre_id: string | null;
+  /** Intentos de entrega que no se pudieron y el último motivo */
+  novedades: number;
+  ultima_novedad: string | null;
   productos: string;
   items: ItemFila[];
 }
@@ -62,7 +66,7 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
-  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, ' +
+  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, cuadre_id, novedades, ultima_novedad, ' +
   'pedido_items(cantidad, color, talla, producto:productos(nombre, imagen_url))';
 
 @Component({
@@ -126,8 +130,15 @@ export class PedidosPage implements OnInit, OnDestroy {
     this.rutaNuevo = router.url.startsWith('/despachador') ? '/despachador/pedidos/nuevo' : '/admin/pedidos/nuevo';
   }
 
+  /** Solo el admin puede devolver una entrega a En ruta */
+  esAdmin = false;
+
   async ngOnInit(): Promise<void> {
     void this.avisos.iniciar();
+    void this.supabase.getCurrentProfile().then((p) => {
+      this.esAdmin = !!p && rolesDe(p).includes('admin');
+      this.cdr.detectChanges();
+    });
     this.subParams = this.route.queryParamMap.subscribe((q) => {
       const id = q.get('chat');
       if (id) {
@@ -505,6 +516,20 @@ export class PedidosPage implements OnInit, OnDestroy {
 
     const { error } = await this.supabase.client.rpc('cancelar_pedido', { p_pedido_id: pedido.id });
     if (error) avisar(error.message, 'No se pudo cancelar');
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  /** Entregado por error (p. ej. comprobante equivocado): vuelve a En ruta con el mismo domiciliario */
+  async devolverEntrega(pedido: PedidoFila): Promise<void> {
+    this.menuAbiertoId = null;
+    const ok = await confirmar(
+      `El pedido #${pedido.numero} de ${pedido.cliente_nombre} vuelve a En ruta con ${this.nombreDomiciliario(pedido.domiciliario_id)}, ` +
+        'para que lo entregue de nuevo con el comprobante correcto. Se quita el pago que tenía registrado.',
+      { titulo: 'Devolver entrega', aceptar: 'Devolver a En ruta', cancelar: 'Volver' }
+    );
+    if (!ok) return;
+    const { error } = await this.supabase.client.rpc('devolver_entrega', { p_pedido: pedido.id });
+    if (error) avisar(error.message, 'No se pudo devolver');
     await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
   }
 

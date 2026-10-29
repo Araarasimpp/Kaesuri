@@ -25,6 +25,7 @@ import {
   storefrontOutline,
   mapOutline,
   bagHandleOutline,
+  alertCircleOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -55,6 +56,7 @@ export class AdminLayoutComponent {
     { label: 'Ventas del local', path: '/admin/ventas-local', icon: 'storefront-outline' },
     { label: 'Clientes', path: '/admin/clientes', icon: 'people-circle-outline' },
     { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
+    { label: 'Novedades', path: '/admin/novedades', icon: 'alert-circle-outline' },
     { label: 'Recolector', path: '/admin/recolector', icon: 'bag-handle-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
@@ -76,6 +78,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      alertCircleOutline,
       mapOutline,
       bagHandleOutline,
       storefrontOutline,

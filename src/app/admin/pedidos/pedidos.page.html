@@ -145,6 +145,8 @@
               <td class="num strong col-dato" data-etq="Total">{{ formatoMoneda(p.total) }}</td>
               <td class="col-dato" data-etq="Estado">
                 <span class="badge" [ngClass]="claseEstado(p)">{{ etiquetaEstado(p) }}</span>
+                <span class="badge estado-agotado novedad" *ngIf="p.novedades && p.estado !== 'entregado' && p.estado !== 'cancelado'"
+                  [attr.title]="'Intentos que no se pudieron: ' + p.novedades">⚠ {{ p.ultima_novedad }}</span>
                 <button
                   type="button"
                   class="btn-alistar"
@@ -184,6 +186,7 @@
                   <button (click)="abrirChat(p.id)">Chat del pedido</button>
                   <button *ngIf="p.estado === 'pendiente' || p.estado === 'en_ruta'" [routerLink]="rutaNuevo" [queryParams]="{ editar: p.id }">Editar pedido</button>
                   <button *ngIf="esAlistado(p)" (click)="quitarAlistado(p)">Quitar de alistados</button>
+                  <button *ngIf="esAdmin && p.estado === 'entregado' && !p.cuadre_id && p.domiciliario_id" (click)="devolverEntrega(p)">Devolver a En ruta</button>
                   <button *ngIf="p.estado !== 'cancelado' && p.estado !== 'entregado'" (click)="cancelarPedido(p)">Cancelar pedido</button>
                   <button class="danger" *ngIf="p.estado !== 'entregado'" (click)="eliminarPedido(p)">Eliminar</button>
                 </div>

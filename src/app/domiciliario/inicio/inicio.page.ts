@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline } from 'ionicons/icons';
+import { alertCircleOutline, callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline, qrCodeOutline } from 'ionicons/icons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { nombreConVariante } from '../../shared/variante';
@@ -14,6 +14,10 @@ import { JastaService, PedidoJasta, ResumenJasta } from '../../core/services/jas
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { ChatHojaComponent } from '../../shared/chat-pedido/chat-hoja.component';
 import { EntregasHechasComponent } from '../entregas-hechas/entregas-hechas.component';
+import { NovedadComponent } from '../../shared/novedad/novedad.component';
+import { QrPagoComponent } from '../../shared/qr-pago/qr-pago.component';
+import { cargarCuentas } from '../../shared/qr-pago/cuentas-pago';
+import { ToastService } from '../../shared/toast/toast.service';
 import { MetodoPago } from '../../shared/models/models';
 
 interface PedidoRuta {
@@ -28,6 +32,9 @@ interface PedidoRuta {
   observaciones: string | null;
   created_at: string;
   asignado_at: string | null;
+  /** Intentos de entrega que no se pudieron (y el último motivo) */
+  novedades: number;
+  ultima_novedad: string | null;
   productos: string;
 }
 
@@ -49,7 +56,7 @@ interface EntregaJasta {
 @Component({
   selector: 'app-inicio-domiciliario',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, IonIcon, EntregarPedidoComponent, ChatHojaComponent, EntregasHechasComponent],
+  imports: [SkeletonComponent, CommonModule, IonIcon, EntregarPedidoComponent, ChatHojaComponent, EntregasHechasComponent, NovedadComponent, QrPagoComponent],
   templateUrl: './inicio.page.html',
   styleUrls: ['./inicio.page.scss'],
 })
@@ -81,13 +88,23 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
   arrastrandoId: string | null = null;
   private usuarioId = '';
   @ViewChild(EntregasHechasComponent) hechas?: EntregasHechasComponent;
+  /** Hay cuentas del negocio para cobrar por transferencia (QR) */
+  hayCuentas = false;
+  qr: { total: number | null; detalle: string; titulo?: string } | null = null;
+  /** Pedido al que se le está reportando que no se pudo entregar */
+  novedadDe: PedidoRuta | null = null;
+  private toast = inject(ToastService);
 
   constructor(private supabase: SupabaseService, private jastas: JastaService, private cdr: ChangeDetectorRef) {
-    addIcons({ callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline });
+    addIcons({ alertCircleOutline, callOutline, chatbubbleEllipsesOutline, logoWhatsapp, navigateOutline, qrCodeOutline });
   }
 
   async ngOnInit(): Promise<void> {
     void this.avisos.iniciar();
+    void cargarCuentas(this.supabase.client).then((l) => {
+      this.hayCuentas = l.length > 0;
+      this.cdr.detectChanges();
+    });
     document.addEventListener('touchmove', this.bloquearScroll, { passive: false });
     void this.supabase.getCurrentUser().then((u) => {
       this.usuarioId = u?.id ?? '';
@@ -386,7 +403,7 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
     const { data, error } = await this.supabase.client
       .from('pedidos')
       .select(
-        'id, numero, cliente_nombre, cliente_telefono, direccion, barrio, valor_domicilio, total, observaciones, created_at, asignado_at'
+        'id, numero, cliente_nombre, cliente_telefono, direccion, barrio, valor_domicilio, total, observaciones, created_at, asignado_at, novedades, ultima_novedad'
       )
       .eq('domiciliario_id', user.id)
       .eq('estado', 'en_ruta')
@@ -448,6 +465,13 @@ export class InicioDomiciliarioPage implements OnInit, OnDestroy {
 
   cerrarEntrega(): void {
     this.pedidoEntregando = null;
+  }
+
+  /** Se reportó que no se pudo entregar: si lo devolvió, sale de la ruta */
+  async alReportar(accion: 'reintentar' | 'devolver'): Promise<void> {
+    this.novedadDe = null;
+    this.toast.ok(accion === 'devolver' ? 'Listo: el pedido vuelve a la tienda' : 'Novedad guardada: sigue en tu ruta');
+    await this.cargarPedidos();
   }
 
   async onEntregado(): Promise<void> {

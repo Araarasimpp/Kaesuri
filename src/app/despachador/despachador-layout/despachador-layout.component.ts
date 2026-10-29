@@ -15,6 +15,7 @@ import {
   logOutOutline,
   gridOutline,
   trophyOutline,
+  alertCircleOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -45,6 +46,7 @@ export class DespachadorLayoutComponent {
     { label: 'Cuadres', path: '/despachador/cuadres', icon: 'wallet-outline' },
     { label: 'Tablero', path: '/despachador/tablero', icon: 'grid-outline' },
     { label: 'Ranking', path: '/despachador/ranking', icon: 'trophy-outline' },
+    { label: 'Novedades', path: '/despachador/novedades', icon: 'alert-circle-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -56,6 +58,7 @@ export class DespachadorLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      alertCircleOutline,
       trophyOutline,
       gridOutline,
       homeOutline,
