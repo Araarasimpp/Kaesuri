@@ -101,7 +101,7 @@ export class WhatsappConfigComponent implements OnInit {
     const [c, e] = await Promise.all([this.sb.client.rpc('whatsapp_config_leer'), this.sb.client.rpc('whatsapp_envios_recientes')]);
     if (c.error) {
       const falta = /function|schema cache|does not exist/i.test(c.error.message);
-      return this.error.set(falta ? 'Falta activar esta función en la base de datos (supabase/sql/whatsapp_seguimiento.sql).' : 'No se pudo leer la configuración de WhatsApp: ' + c.error.message);
+      return this.error.set(falta ? 'Falta activar esta función en la base de datos: corre supabase/sql/PENDIENTE_correr_en_supabase.sql en el editor SQL de Supabase.' : 'No se pudo leer la configuración de WhatsApp: ' + c.error.message);
     }
     const w = c.data as WaConfig;
     this.wa.set(w);

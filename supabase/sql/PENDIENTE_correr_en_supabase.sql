@@ -260,3 +260,52 @@ end $function$;
 revoke all on function public.enviar_lista_compras() from public, anon, authenticated;
 select cron.unschedule('lista-compras') where exists (select 1 from cron.job where jobname = 'lista-compras');
 select cron.schedule('lista-compras', '40 12 * * 1', 'select public.enviar_lista_compras()');
+
+-- ============================================================ 9. Respaldo semanal en Excel por Telegram
+-- Los domingos a las 9:15 p. m. la base le pide a la Edge Function respaldo-semanal (ya publicada)
+-- el Excel de los últimos 7 días para cada admin con su Telegram vinculado. También se pide desde
+-- Configuración → Telegram ("Mandar respaldo ahora"), igual que el cierre del día.
+create or replace function public.enviar_respaldo(p_hasta date default null)
+returns void language plpgsql security definer set search_path to 'public' as $function$
+declare v_secreto text;
+begin
+  select secreto into v_secreto from privado.telegram_config limit 1;
+  if v_secreto is null then return; end if;
+  perform net.http_post(
+    url := 'https://mswqdzpsynvdanxdfidf.supabase.co/functions/v1/respaldo-semanal',
+    body := jsonb_build_object('hasta', coalesce(p_hasta, (now() at time zone 'America/Bogota')::date)),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-respaldo-secreto', v_secreto),
+    timeout_milliseconds := 60000);
+end $function$;
+revoke all on function public.enviar_respaldo(date) from public, anon, authenticated;
+
+-- Cuántos admins lo van a recibir (0 = nadie tiene el bot vinculado)
+create or replace function public.pedir_respaldo()
+returns integer language plpgsql security definer set search_path to 'public' as $function$
+declare n int;
+begin
+  if not public.tiene_rol('admin') then raise exception 'Solo el admin puede pedir el respaldo'; end if;
+  if not exists (select 1 from privado.telegram_config where token is not null) then raise exception 'Primero conecta el bot de Telegram'; end if;
+  select count(distinct t.telegram_id) into n from telegram_usuarios t join profiles u on u.id = t.usuario_id
+   where coalesce(u.activo, true) and 'admin' = any (u.roles);
+  if n = 0 then raise exception 'Ningún admin tiene su Telegram vinculado (Mi perfil → Telegram)'; end if;
+  perform public.enviar_respaldo(null);
+  return n;
+end $function$;
+revoke all on function public.pedir_respaldo() from public, anon;
+grant execute on function public.pedir_respaldo() to authenticated;
+
+-- El cierre de hoy, cuando el admin lo pide: lo manda por Telegram y devuelve el texto para verlo en la app
+create or replace function public.enviar_cierre_dia_ahora()
+returns jsonb language plpgsql security definer set search_path to 'public' as $function$
+declare v_dia date := (now() at time zone 'America/Bogota')::date;
+begin
+  if not public.tiene_rol('admin') then raise exception 'Solo el admin puede mandar el cierre'; end if;
+  return jsonb_build_object('enviados', public.enviar_cierre_dia(v_dia), 'texto', public.cierre_dia_texto(v_dia));
+end $function$;
+revoke all on function public.enviar_cierre_dia_ahora() from public, anon;
+grant execute on function public.enviar_cierre_dia_ahora() to authenticated;
+
+-- Domingo 9:15 p. m. Colombia = lunes 02:15 UTC (la semana termina el domingo)
+select cron.unschedule('respaldo-semanal') where exists (select 1 from cron.job where jobname = 'respaldo-semanal');
+select cron.schedule('respaldo-semanal', '15 2 * * 1', $$select public.enviar_respaldo(((now() at time zone 'America/Bogota')::date))$$);
