@@ -18,6 +18,15 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/registro/registro.page').then((m) => m.RegistroPage),
   },
   {
+    // Pública (sin sesión): catálogo de la tienda (general o de un vendedor) con pedido directo
+    path: 'tienda',
+    loadComponent: () => import('./tienda/tienda.page').then((m) => m.TiendaPage),
+  },
+  {
+    path: 'tienda/:codigo',
+    loadComponent: () => import('./tienda/tienda.page').then((m) => m.TiendaPage),
+  },
+  {
     // Pública (sin sesión): el cliente ve en qué va su pedido
     path: 'seguimiento/:codigo',
     loadComponent: () => import('./seguimiento/seguimiento.page').then((m) => m.SeguimientoPage),

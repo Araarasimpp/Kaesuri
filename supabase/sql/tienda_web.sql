@@ -49,6 +49,22 @@ $$;
 revoke all on function public.vendedor_tienda(text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------- Catálogo (público)
+-- Categoría para mostrar: junta las que están escritas distinto ("HOGAR", "Higar" → "Hogar")
+create or replace function public.categoria_normal(p text)
+returns text language sql immutable set search_path to '' as $$
+  select case
+    when n is null then 'Otros'
+    when n ~ '^h[oi]g' then 'Hogar'
+    when n ~ '^j[uo]g' then 'Juguetería'
+    when n ~ '^herramient' then 'Herramientas'
+    when n ~ '^cocin' then 'Cocina'
+    when n ~ '^bellez' then 'Belleza'
+    when n ~ '^impresor' then 'Impresoras'
+    when n ~ '^tecnolog' then 'Tecnología'
+    else initcap(n) end
+  from (select nullif(lower(translate(trim(coalesce(p, '')), 'ÁÉÍÓÚÜÑáéíóúüñ', 'AEIOUUNaeiouun')), '') n) s
+$$;
+
 create or replace function public.tienda(p_vendedor text default null)
 returns jsonb
 language plpgsql
@@ -68,7 +84,7 @@ begin
                  else jsonb_build_object('id', left(v_vend.id::text, 8), 'nombre', v_vend.nombre, 'telefono', v_vend.telefono) end,
     'barrios', (select coalesce(jsonb_agg(jsonb_build_object('barrio', nombre, 'domicilio', valor) order by nombre), '[]') from zonas_domicilio),
     'productos', (select coalesce(jsonb_agg(jsonb_build_object(
-        'id', p.id, 'nombre', p.nombre, 'precio', p.precio_sugerido, 'categoria', coalesce(nullif(trim(p.categoria), ''), 'Otros'),
+        'id', p.id, 'nombre', p.nombre, 'precio', p.precio_sugerido, 'categoria', public.categoria_normal(p.categoria),
         'imagen_url', p.imagen_url, 'tallas', coalesce(p.tallas, '{}'),
         'colores', (select coalesce(jsonb_agg(jsonb_build_object('nombre', c.nombre, 'hex', c.hex, 'imagen_url', c.imagen_url) order by c.orden, c.created_at), '[]')
                     from producto_colores c where c.producto_id = p.id),
