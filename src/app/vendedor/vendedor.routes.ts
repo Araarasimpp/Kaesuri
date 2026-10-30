@@ -39,6 +39,14 @@ export const VENDEDOR_ROUTES: Routes = [
         path: 'comisiones',
         loadComponent: () => import('../paginas/comisiones/comisiones.page').then((m) => m.ComisionesPage),
       },
+      {
+        path: 'pedidos-web',
+        loadComponent: () => import('../paginas/pedidos-web/pedidos-web.page').then((m) => m.PedidosWebPage),
+      },
+      {
+        path: 'recontactar',
+        loadComponent: () => import('../paginas/recontactar/recontactar.page').then((m) => m.RecontactarPage),
+      },
     ],
   },
 ];

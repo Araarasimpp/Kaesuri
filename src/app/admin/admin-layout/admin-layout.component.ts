@@ -79,6 +79,8 @@ export class AdminLayoutComponent {
     { label: 'Configuración', path: '/admin/configuracion', icon: 'settings-outline' },
     { label: 'Barrios', path: '/admin/barrios', icon: 'map-outline' },
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
+    { label: 'Pedidos de la tienda', path: '/admin/pedidos-web', icon: 'storefront-outline' },
+    { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */

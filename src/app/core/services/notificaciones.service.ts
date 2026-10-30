@@ -157,9 +157,11 @@ export class NotificacionesService {
       const lista = rol === 'admin' || rol === 'despachador' ? raiz + '/pedidos' : raiz;
       return `${lista}?chat=${n.enlace.slice(5)}`;
     }
-    // Secciones nuevas (comisiones, inventario, devoluciones, novedades): si el área la tiene, se abre ahí
+    // Secciones nuevas (comisiones, inventario, pedidos de la tienda…): si el área la tiene, se abre ahí
     if (n.enlace === 'comisiones' && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/comisiones`;
     if (n.enlace === 'inventario' && (rol === 'admin' || rol === 'despachador')) return `${raiz}/inventario`;
+    if ((n.enlace === 'pedidos-web' || n.enlace === 'recontactar') && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
+    if (n.enlace === 'barrios' && rol === 'admin') return `${raiz}/barrios`;
     if (rol === 'vendedor') return raiz;
     if (rol === 'domiciliario') return n.enlace === 'cuadres' ? raiz + '/cuadres' : raiz;
     if (n.enlace === 'recolector') return rol === 'recolector' ? raiz : `${raiz}/recolector`;

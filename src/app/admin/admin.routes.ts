@@ -123,6 +123,14 @@ export const ADMIN_ROUTES: Routes = [
         path: 'rentabilidad',
         loadComponent: () => import('../paginas/rentabilidad/rentabilidad.page').then((m) => m.RentabilidadPage),
       },
+      {
+        path: 'pedidos-web',
+        loadComponent: () => import('../paginas/pedidos-web/pedidos-web.page').then((m) => m.PedidosWebPage),
+      },
+      {
+        path: 'recontactar',
+        loadComponent: () => import('../paginas/recontactar/recontactar.page').then((m) => m.RecontactarPage),
+      },
     ],
   },
 ];
