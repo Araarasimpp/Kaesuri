@@ -12,8 +12,10 @@
 // POST { accion: 'entregadas', desde?, hasta? }  (ISO)
 // POST { accion: 'rotulos' }                 pedidos de Variedades JYB por despachar (para imprimir sus rótulos en Jasta)
 // POST { accion: 'marcar_rotulos', ids }     marca esos rótulos como impresos
-//   Rótulos: sirve a quien es admin o despachador en Kaesuri con el mismo correo, o admin o
-//   alistador en Jasta (se le pregunta a Jasta con la misma sesión).
+// POST { accion: 'pedidos' }                 pedidos activos de Variedades JYB para la lista de Pedidos de Jasta
+// POST { accion: 'alistar', ids, alistar }   los alista (o los devuelve a por alistar) desde Jasta
+//   Rótulos, pedidos y alistar: sirve a quien es admin o despachador en Kaesuri con el mismo correo,
+//   o admin o alistador en Jasta (se le pregunta a Jasta con la misma sesión).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // Proyecto de Jasta (la llave es la publicable)
@@ -135,10 +137,21 @@ Deno.serve(async (req) => {
       return responder(data);
     }
 
-    if (body.accion === 'rotulos' || body.accion === 'marcar_rotulos') {
+    if (['rotulos', 'marcar_rotulos', 'pedidos', 'alistar'].includes(String(body.accion))) {
       const { data: desp } = await db.rpc('jasta_despachador', { p_email: yo.email });
       const permitido = !!desp || (await alistaEnJasta(token, yo.id));
       if (!permitido) return responder({ vinculado: false });
+      if (body.accion === 'pedidos') {
+        const { data, error } = await db.rpc('jasta_pedidos_datos');
+        if (error) throw error;
+        return responder(data);
+      }
+      if (body.accion === 'alistar') {
+        const ids = (Array.isArray(body.ids) ? body.ids : []).filter((x): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+        const { data, error } = await db.rpc('jasta_alistar', { p_email: yo.email, p_ids: ids, p_alistar: body.alistar !== false });
+        if (error) throw error;
+        return responder({ cambiados: data });
+      }
       if (body.accion === 'rotulos') {
         const { data, error } = desp
           ? await db.rpc('jasta_rotulos', { p_email: yo.email })
