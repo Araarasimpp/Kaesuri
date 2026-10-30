@@ -4,6 +4,14 @@
     <h1>{{ editarId ? 'Editar pedido #' + numeroEditando : local ? 'Venta en el local' : 'Nuevo pedido' }}</h1>
   </header>
 
+  <div class="venta-lista jt" *ngIf="local && ultimaVenta" role="status">
+    <div class="venta-txt"><strong>✓ Venta #{{ ultimaVenta }} registrada</strong><small>Imprime el ticket: trae la garantía y un QR para que el cliente vea su compra.</small></div>
+    <div class="venta-acc">
+      <app-boton-ticket [numero]="ultimaVenta" [principal]="true"></app-boton-ticket>
+      <button type="button" class="b" (click)="ultimaVenta = null">Listo</button>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- Columna izquierda: selector de productos -->
     <section class="panel">

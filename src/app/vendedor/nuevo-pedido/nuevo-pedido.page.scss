@@ -495,3 +495,11 @@
 
   &.alto { background: var(--k-coral-soft); color: var(--k-coral); }
 }
+
+// Venta del local recién registrada: botón del ticket
+.venta-lista {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--efectivo-texto, #0f7a5c) 35%, transparent); border-radius: 14px; background: var(--ok-wash, #e6f4ef);
+  .venta-txt { flex: 1 1 240px; min-width: 0; strong { display: block; font-size: 15px; } small { display: block; margin-top: 2px; font-size: 13px; color: var(--text-soft, #555); } }
+  .venta-acc { flex: 1 1 260px; display: flex; gap: 8px; ::ng-deep .grupo { flex: 1 1 auto; } }
+}

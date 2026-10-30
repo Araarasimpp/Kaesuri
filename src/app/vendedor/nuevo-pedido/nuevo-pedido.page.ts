@@ -20,6 +20,7 @@ interface Riesgo {
   marca: { nota: string; autor: string | null } | null;
 }
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { BotonTicketComponent } from '../../shared/ticket/boton-ticket.component';
 interface ItemCarrito {
   /** Cada línea es un producto con un color y una talla */
   key: number;
@@ -35,7 +36,7 @@ interface ItemCarrito {
 @Component({
   selector: 'app-nuevo-pedido',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule],
+  imports: [SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
   templateUrl: './nuevo-pedido.page.html',
   styleUrls: ['./nuevo-pedido.page.scss'],
 })
@@ -66,6 +67,8 @@ export class NuevoPedidoPage implements OnInit {
 
   /** Venta en el punto físico (ruta con data.modo = 'local'): queda entregada y cobrada de una vez */
   local = false;
+  /** Número de la última venta del local registrada (para imprimir su ticket) */
+  ultimaVenta: number | null = null;
   vendedores: { id: string; nombre: string }[] = [];
   vendedorId: string | null = null;
   readonly metodos: { id: MetodoPago; label: string }[] = [
@@ -508,7 +511,9 @@ export class NuevoPedidoPage implements OnInit {
       this.cdr.detectChanges();
       return;
     }
-    avisar(`Venta #${data as number} registrada.`);
+    // En vez de un aviso, queda arriba la venta con el botón para imprimir el ticket
+    this.ultimaVenta = data as number;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     // Queda en blanco para la siguiente venta (el vendedor elegido se mantiene)
     this.carrito = [];
     this.clienteNombre = this.clienteTelefono = this.observaciones = '';
