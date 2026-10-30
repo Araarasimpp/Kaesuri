@@ -10,12 +10,6 @@
 // POST { accion: 'entregar', pedido_id, metodo, efectivo?, comprobantes? }  comprobantes = ['sb://comprobantes/…'] de Jasta
 // POST { accion: 'cerrar_cuadre' }
 // POST { accion: 'entregadas', desde?, hasta? }  (ISO)
-// POST { accion: 'rotulos' }                 pedidos de Variedades JYB por despachar (para imprimir sus rótulos en Jasta)
-// POST { accion: 'marcar_rotulos', ids }     marca esos rótulos como impresos
-// POST { accion: 'pedidos' }                 pedidos activos de Variedades JYB para la lista de Pedidos de Jasta
-// POST { accion: 'alistar', ids, alistar }   los alista (o los devuelve a por alistar) desde Jasta
-//   Rótulos, pedidos y alistar: sirve a quien es admin o despachador en Kaesuri con el mismo correo,
-//   o admin o alistador en Jasta (se le pregunta a Jasta con la misma sesión).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // Proyecto de Jasta (la llave es la publicable)
@@ -42,16 +36,6 @@ async function usuarioJasta(token: string): Promise<{ id: string; email: string 
   if (!r.ok) return null;
   const u = await r.json();
   return u?.id && u?.email ? { id: u.id, email: u.email } : null;
-}
-
-/** ¿Es admin o alistador activo en Jasta? (lo dice Jasta, con la sesión de la persona) */
-async function alistaEnJasta(token: string, uid: string): Promise<boolean> {
-  const r = await fetch(`${JASTA_URL}/rest/v1/usuarios?select=roles,activo&auth_id=eq.${uid}`, {
-    headers: { apikey: JASTA_KEY, Authorization: `Bearer ${token}` },
-  });
-  if (!r.ok) return false;
-  const filas = (await r.json()) as { roles?: string[]; activo?: boolean }[];
-  return filas.some((f) => f.activo !== false && (f.roles ?? []).some((x) => x === 'admin' || x === 'alistador'));
 }
 
 /** Copia la foto del comprobante del bucket de Jasta al de Kaesuri y devuelve la ruta en Kaesuri */
@@ -135,36 +119,6 @@ Deno.serve(async (req) => {
       const { data, error } = await db.rpc('jasta_entregadas', { p_email: yo.email, p_desde: fecha(body.desde), p_hasta: fecha(body.hasta) });
       if (error) throw error;
       return responder(data);
-    }
-
-    if (['rotulos', 'marcar_rotulos', 'pedidos', 'alistar'].includes(String(body.accion))) {
-      const { data: desp } = await db.rpc('jasta_despachador', { p_email: yo.email });
-      const permitido = !!desp || (await alistaEnJasta(token, yo.id));
-      if (!permitido) return responder({ vinculado: false });
-      if (body.accion === 'pedidos') {
-        const { data, error } = await db.rpc('jasta_pedidos_datos');
-        if (error) throw error;
-        return responder(data);
-      }
-      if (body.accion === 'alistar') {
-        const ids = (Array.isArray(body.ids) ? body.ids : []).filter((x): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
-        const { data, error } = await db.rpc('jasta_alistar', { p_email: yo.email, p_ids: ids, p_alistar: body.alistar !== false });
-        if (error) throw error;
-        return responder({ cambiados: data });
-      }
-      if (body.accion === 'rotulos') {
-        const { data, error } = desp
-          ? await db.rpc('jasta_rotulos', { p_email: yo.email })
-          : await db.rpc('jasta_rotulos_alistador');
-        if (error) throw error;
-        return responder(data);
-      }
-      const ids = (Array.isArray(body.ids) ? body.ids : []).filter((x): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
-      const { data, error } = desp
-        ? await db.rpc('jasta_marcar_rotulos', { p_email: yo.email, p_ids: ids })
-        : await db.rpc('jasta_marcar_rotulos_alistador', { p_ids: ids });
-      if (error) throw error;
-      return responder({ marcados: data });
     }
 
     return responder({ error: 'Acción no válida' }, 400);
