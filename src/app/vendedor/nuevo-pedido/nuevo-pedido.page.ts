@@ -7,7 +7,20 @@ import { MetodoPago, Producto } from '../../shared/models/models';
 import { urlMini } from '../../shared/formato';
 
 import { avisar, confirmar } from '../../shared/dialogo';
+import { PAISES, bandera, errorTelefono, limpiarNombre, separarTelefono, unirTelefono } from '../../shared/paises';
+
+/** Historial del cliente (riesgo_cliente) */
+interface Riesgo {
+  nivel: 'alto' | 'medio' | null;
+  pedidos: number;
+  entregados: number;
+  rechazados: number;
+  novedades: number;
+  devoluciones: number;
+  marca: { nota: string; autor: string | null } | null;
+}
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { BotonTicketComponent } from '../../shared/ticket/boton-ticket.component';
 interface ItemCarrito {
   /** Cada línea es un producto con un color y una talla */
   key: number;
@@ -23,7 +36,7 @@ interface ItemCarrito {
 @Component({
   selector: 'app-nuevo-pedido',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule],
+  imports: [SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
   templateUrl: './nuevo-pedido.page.html',
   styleUrls: ['./nuevo-pedido.page.scss'],
 })
@@ -37,7 +50,12 @@ export class NuevoPedidoPage implements OnInit {
   urlMini = urlMini;
 
   clienteNombre = '';
+  /** Solo los dígitos del número; el indicativo va aparte (Colombia por defecto) */
   clienteTelefono = '';
+  prefijo = '57';
+  paises = PAISES;
+  bandera = bandera;
+  riesgo: Riesgo | null = null;
   direccion = '';
   barrio = '';
   zonas: { id: string; nombre: string; valor: number }[] = [];
@@ -49,6 +67,8 @@ export class NuevoPedidoPage implements OnInit {
 
   /** Venta en el punto físico (ruta con data.modo = 'local'): queda entregada y cobrada de una vez */
   local = false;
+  /** Número de la última venta del local registrada (para imprimir su ticket) */
+  ultimaVenta: number | null = null;
   vendedores: { id: string; nombre: string }[] = [];
   vendedorId: string | null = null;
   readonly metodos: { id: MetodoPago; label: string }[] = [
@@ -117,7 +137,9 @@ export class NuevoPedidoPage implements OnInit {
     }
     this.numeroEditando = p.numero;
     this.clienteNombre = p.cliente_nombre ?? '';
-    this.clienteTelefono = p.cliente_telefono ?? '';
+    const t = separarTelefono(p.cliente_telefono);
+    this.prefijo = t.prefijo;
+    this.clienteTelefono = t.numero;
     this.direccion = p.direccion ?? '';
     this.barrio = p.barrio ?? '';
     this.valorDomicilio = Number(p.valor_domicilio) || 0;
@@ -280,8 +302,85 @@ export class NuevoPedidoPage implements OnInit {
     return this.subtotal + (Number(this.valorDomicilio) || 0);
   }
 
+  get errorTel(): string {
+    return errorTelefono(this.prefijo, this.clienteTelefono);
+  }
+
+  /** Lo que se guarda: 10 dígitos si es de Colombia; "+<indicativo> <número>" si no */
+  private telefonoGuardar(): string {
+    return unirTelefono(this.prefijo, this.clienteTelefono);
+  }
+
+  /** Teléfono: solo números (si pegan "+57 300 123 4567" se quita el 57) */
+  cambioTelefono(v: string): void {
+    let n = (v ?? '').replace(/\D/g, '');
+    if (this.prefijo === '57' && n.length > 10 && n.startsWith('57')) n = n.slice(2);
+    n = n.slice(0, this.prefijo === '57' ? 10 : 14);
+    this.clienteTelefono = n;
+    const el = document.getElementById('np-tel') as HTMLInputElement | null;
+    if (el && el.value !== n) el.value = n;
+  }
+
+  /** Nombre: solo letras, espacios y signos de nombres (tildes, ñ, punto, guion) */
+  cambioNombre(v: string): void {
+    const limpio = limpiarNombre(v ?? '');
+    this.clienteNombre = limpio;
+    const el = document.getElementById('np-nombre') as HTMLInputElement | null;
+    if (el && el.value !== limpio) el.value = limpio;
+  }
+
+  /** Al terminar de escribir el teléfono: ¿el cliente ha tenido problemas antes? */
+  async buscarRiesgo(): Promise<void> {
+    this.riesgo = null;
+    const tel = this.telefonoGuardar();
+    if (this.clienteTelefono.length < 7 || this.errorTel || this.editarId) return this.cdr.detectChanges();
+    const { data } = await this.supabase.client.rpc('riesgo_cliente', { p_telefono: tel });
+    const r = data as Riesgo | null;
+    if (tel === this.telefonoGuardar()) this.riesgo = r?.nivel ? r : null;
+    this.cdr.detectChanges();
+  }
+
+  resumenRiesgo(r: Riesgo): string {
+    const p: string[] = [];
+    if (r.rechazados) p.push(`${r.rechazados} ${r.rechazados === 1 ? 'pedido salió y se canceló' : 'pedidos salieron y se cancelaron'}`);
+    if (r.devoluciones) p.push(`${r.devoluciones} ${r.devoluciones === 1 ? 'devolución' : 'devoluciones'}`);
+    if (r.novedades) p.push(`${r.novedades} ${r.novedades === 1 ? 'novedad' : 'novedades'} de entrega`);
+    p.push(`${r.entregados} de ${r.pedidos} entregados`);
+    return p.join(' · ');
+  }
+
+  /** Si el mismo teléfono ya pidió en las últimas 24 horas, pregunta antes de crear otro. Devuelve si se sigue. */
+  private async seguirSiHayParecido(productos: string[]): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('pedidos_parecidos', { p_telefono: this.telefonoGuardar(), p_productos: productos });
+    const lista = (error ? [] : (data ?? [])) as { numero: number; estado: string; created_at: string; vendedor: string; productos: string | null; mismos: boolean; canal: string }[];
+    if (!lista.length) return true;
+    const ESTADO: Record<string, string> = { pendiente: 'en la tienda', en_ruta: 'en ruta', entregado: 'entregado' };
+    const p = lista.find((x) => x.mismos) ?? lista[0];
+    const hace = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / 60000));
+    const cuando = hace < 60 ? `hace ${hace} min` : `hace ${Math.round(hace / 60)} h`;
+    return confirmar(
+      `${p.mismos ? 'Este cliente ya tiene un pedido con estos mismos productos' : 'Este cliente ya hizo un pedido'} ${cuando}: ` +
+        `#${p.numero} (${p.canal === 'local' ? 'venta en el local' : ESTADO[p.estado] ?? p.estado}${p.vendedor ? ', de ' + p.vendedor : ''}) · ${p.productos ?? ''}` +
+        (lista.length > 1 ? `. Y ${lista.length - 1} más en las últimas 24 horas.` : '.') +
+        ' ¿Crear este pedido de todas formas?',
+      { titulo: '⚠️ ¿Pedido repetido?', aceptar: 'Crear de todas formas', cancelar: 'Es el mismo, no crear' }
+    );
+  }
+
   async onCrearPedido(): Promise<void> {
     this.errorMsg = '';
+    if (this.clienteNombre.trim() && !/\p{L}/u.test(this.clienteNombre)) {
+      this.errorMsg = 'El nombre debe tener letras.';
+      return;
+    }
+    if (!this.local && !this.clienteTelefono) {
+      this.errorMsg = 'Escribe el teléfono del cliente.';
+      return;
+    }
+    if (this.errorTel) {
+      this.errorMsg = this.errorTel;
+      return;
+    }
 
     if (this.carrito.length === 0) {
       this.errorMsg = 'Agrega al menos un producto al pedido.';
@@ -319,7 +418,7 @@ export class NuevoPedidoPage implements OnInit {
       const { error } = await this.supabase.client.rpc('editar_pedido', {
         p_pedido_id: this.editarId,
         p_cliente_nombre: this.clienteNombre,
-        p_cliente_telefono: this.clienteTelefono || null,
+        p_cliente_telefono: this.telefonoGuardar() || null,
         p_direccion: this.direccion,
         p_barrio: this.barrio || null,
         p_valor_domicilio: Number(this.valorDomicilio) || 0,
@@ -337,9 +436,16 @@ export class NuevoPedidoPage implements OnInit {
       return;
     }
 
+    // Pedido nuevo: si el mismo teléfono ya pidió en las últimas 24 horas, se pregunta antes
+    if (!(await this.seguirSiHayParecido(items.map((i) => i.producto_id)))) {
+      this.guardando = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     const { data, error } = await this.supabase.client.rpc('crear_pedido', {
       p_cliente_nombre: this.clienteNombre,
-      p_cliente_telefono: this.clienteTelefono || null,
+      p_cliente_telefono: this.telefonoGuardar() || null,
       p_direccion: this.direccion,
       p_barrio: this.barrio || null,
       p_valor_domicilio: Number(this.valorDomicilio) || 0,
@@ -386,7 +492,7 @@ export class NuevoPedidoPage implements OnInit {
     this.guardando = true;
     const { data, error } = await this.supabase.client.rpc('registrar_venta_local', {
       p_cliente_nombre: this.clienteNombre || null,
-      p_cliente_telefono: this.clienteTelefono || null,
+      p_cliente_telefono: this.telefonoGuardar() || null,
       p_observaciones: this.observaciones || null,
       p_items: this.carrito.map((i) => ({
         producto_id: i.producto.id,
@@ -405,10 +511,14 @@ export class NuevoPedidoPage implements OnInit {
       this.cdr.detectChanges();
       return;
     }
-    avisar(`Venta #${data as number} registrada.`);
+    // En vez de un aviso, queda arriba la venta con el botón para imprimir el ticket
+    this.ultimaVenta = data as number;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     // Queda en blanco para la siguiente venta (el vendedor elegido se mantiene)
     this.carrito = [];
     this.clienteNombre = this.clienteTelefono = this.observaciones = '';
+    this.prefijo = '57';
+    this.riesgo = null;
     this.metodo = 'efectivo';
     this.efectivo = null;
     await this.cargarProductos();

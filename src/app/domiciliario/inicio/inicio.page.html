@@ -1,5 +1,10 @@
 <div class="domiciliario-page">
-  <h1>Mis entregas</h1>
+  <div class="cabecera">
+    <h1>Mis entregas</h1>
+    <button type="button" class="btn-qr" *ngIf="hayCuentas" (click)="qr = { total: null, detalle: '' }">
+      <ion-icon name="qr-code-outline" aria-hidden="true"></ion-icon>QR de pago
+    </button>
+  </div>
 
   <ng-container *ngIf="!loading; else cargando">
     <p class="ayuda-ruta" *ngIf="paradas.length > 1">Mantén presionada una tarjeta y muévela para ordenar tu ruta.</p>
@@ -24,6 +29,11 @@
             <span class="chat-q" aria-hidden="true">{{ avisos.pedidosConMensajes().has(p.id) ? '!' : '?' }}</span>
           </button>
         </div>
+
+        <p class="novedad-previa" *ngIf="p.novedades && p.ultima_novedad">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          {{ p.novedades === 1 ? 'Ya se intentó' : 'Ya se intentó ' + p.novedades + ' veces' }}: {{ p.ultima_novedad }}
+        </p>
 
         <div class="datos">
           <p><strong>Cliente:</strong> {{ p.cliente_nombre }}</p>
@@ -57,6 +67,16 @@
           <button class="accion accion-navegar" (click)="navegar(p)">
             <ion-icon name="navigate-outline"></ion-icon>
             <span>Navegar</span>
+          </button>
+        </div>
+
+        <div class="acciones-extra">
+          <button type="button" class="btn-extra" *ngIf="hayCuentas" (click)="qr = { total: p.total, detalle: 'Pedido #' + p.numero + ' · ' + p.cliente_nombre }"
+            aria-label="Mostrar el QR para que el cliente pague por transferencia">
+            <ion-icon name="qr-code-outline" aria-hidden="true"></ion-icon>QR de pago
+          </button>
+          <button type="button" class="btn-extra btn-novedad" (click)="novedadDe = p">
+            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>No se pudo entregar
           </button>
         </div>
 
@@ -123,10 +143,16 @@
 
 <app-entregar-pedido
   *ngIf="pedidoEntregando"
+  [conQr]="hayCuentas"
+  (qr)="qr = { total: $event, detalle: 'Pedido #' + pedidoEntregando.numero + ' · ' + pedidoEntregando.cliente_nombre, titulo: 'Valor de la transferencia' }"
   [pedido]="pedidoEntregando"
   (cerrar)="cerrarEntrega()"
   (entregado)="onEntregado()"
 ></app-entregar-pedido>
+
+<app-novedad *ngIf="novedadDe as p" [pedido]="p" (cerrar)="novedadDe = null" (reportado)="alReportar($event)"></app-novedad>
+
+<app-qr-pago *ngIf="qr as q" [total]="q.total" [titulo]="q.titulo || 'Total del pedido'" [detalle]="q.detalle" (cerrar)="qr = null"></app-qr-pago>
 
 <app-chat-hoja *ngIf="chatId" [pedidoId]="chatId" (cerrar)="cerrarChat()"></app-chat-hoja>
 

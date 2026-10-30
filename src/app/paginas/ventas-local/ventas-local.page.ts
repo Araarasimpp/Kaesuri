@@ -11,6 +11,8 @@ import { DiaComponent } from '../../shared/rango/dia.component';
 import { mensajeError, numero, pesos } from '../../shared/formato';
 import { finDiaColombia, formatoFechaCO, formatoHoraCO, inicioDiaColombia } from '../../shared/fecha-colombia';
 import { nombreConVariante } from '../../shared/variante';
+import { CuadreCajaComponent } from './cuadre-caja.component';
+import { BotonTicketComponent } from '../../shared/ticket/boton-ticket.component';
 
 type Metodo = 'todos' | 'efectivo' | 'transferencia' | 'mixto';
 
@@ -34,12 +36,13 @@ interface VentaLocal {
   selector: 'app-ventas-local',
   standalone: true,
   host: { class: 'jt' },
-  imports: [RouterLink, IonIcon, DiaComponent],
+  imports: [RouterLink, IonIcon, DiaComponent, CuadreCajaComponent, BotonTicketComponent],
   styles: [
     `
       .seccion { padding: 16px 20px 0; }
       .prods { white-space: normal; min-width: 220px; max-width: 360px; font-size: 12px; color: var(--text-soft); line-height: 1.35; }
       .tabla td { white-space: nowrap; }
+      .tabla td.ticket { min-width: 200px; }
       @media (max-width: 760px) { .seccion { padding: 12px 14px 0; } }
     `,
   ],
@@ -64,10 +67,11 @@ interface VentaLocal {
           <div class="cifra-t"><small>Transferencias</small><strong class="num">{{ pesos(tot().transferencia) }}</strong></div>
           <div class="cifra-t"><small>Comisiones</small><strong class="num">{{ pesos(tot().comision) }}</strong><em>De los vendedores</em></div>
         </div>
+        @if (diaCaja(); as d) { <app-cuadre-caja [fecha]="d" [version]="ventas().length + tot().efectivo"></app-cuadre-caja> }
       </div>
       <div class="tabla-wrap" style="margin-top: 16px">
         <table class="tabla tarjetas-cel">
-          <thead><tr><th>Hora</th><th>N.º</th><th>Cliente</th><th>Productos</th><th>Vendió</th><th>Pago</th><th class="der">Efectivo</th><th class="der">Transferencia</th><th class="der">Total</th></tr></thead>
+          <thead><tr><th>Hora</th><th>N.º</th><th>Cliente</th><th>Productos</th><th>Vendió</th><th>Pago</th><th class="der">Efectivo</th><th class="der">Transferencia</th><th class="der">Total</th><th></th></tr></thead>
           <tbody>
             @for (v of filtradas(); track v.id) {
               <tr>
@@ -80,9 +84,10 @@ interface VentaLocal {
                 <td class="der num" data-etq="Efectivo">{{ pesos(efectivo(v)) }}</td>
                 <td class="der num" data-etq="Transferencia">{{ pesos(transferencia(v)) }}</td>
                 <td class="der num" data-etq="Total">{{ pesos(v.total) }}</td>
+                <td class="ticket"><app-boton-ticket [pedidoId]="v.id"></app-boton-ticket></td>
               </tr>
             } @empty {
-              <tr><td colspan="9" class="suave">{{ cargando() ? 'Cargando…' : 'No hay ventas en el local en este periodo.' }}</td></tr>
+              <tr><td colspan="10" class="suave">{{ cargando() ? 'Cargando…' : 'No hay ventas en el local en este periodo.' }}</td></tr>
             }
           </tbody>
         </table>
@@ -104,6 +109,8 @@ export class VentasLocalPage implements OnInit, OnDestroy {
   metodo = signal<Metodo>('todos');
   ventas = signal<VentaLocal[]>([]);
   cargando = signal(true);
+  /** Día que se puede cuadrar (solo cuando se ve un día, no un rango) */
+  diaCaja = signal<string | null>(null);
   private rango: RangoFechas | null = null;
   private canal: RealtimeChannel | null = null;
   private timer?: ReturnType<typeof setTimeout>;
@@ -146,6 +153,7 @@ export class VentasLocalPage implements OnInit, OnDestroy {
 
   cambiarRango(r: RangoFechas): void {
     this.rango = r;
+    this.diaCaja.set(r.desde && r.desde === r.hasta ? r.desde : null);
     void this.cargar();
   }
 

@@ -4,6 +4,14 @@
     <h1>{{ editarId ? 'Editar pedido #' + numeroEditando : local ? 'Venta en el local' : 'Nuevo pedido' }}</h1>
   </header>
 
+  <div class="venta-lista jt" *ngIf="local && ultimaVenta" role="status">
+    <div class="venta-txt"><strong>✓ Venta #{{ ultimaVenta }} registrada</strong><small>Imprime el ticket: trae la garantía y un QR para que el cliente vea su compra.</small></div>
+    <div class="venta-acc">
+      <app-boton-ticket [numero]="ultimaVenta" [principal]="true"></app-boton-ticket>
+      <button type="button" class="b" (click)="ultimaVenta = null">Listo</button>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- Columna izquierda: selector de productos -->
     <section class="panel">
@@ -109,15 +117,29 @@
 
       <h2>Datos del cliente</h2>
 
+      <!-- Historial del cliente: pedidos que salieron y se cancelaron, novedades, devoluciones o marca del admin -->
+      <div class="riesgo" [class.alto]="riesgo.nivel === 'alto'" role="alert" *ngIf="riesgo">
+        <strong>{{ riesgo.nivel === 'alto' ? '⚠️ Ojo con este cliente' : '⚠️ Este cliente ha tenido problemas' }}</strong>
+        <span *ngIf="riesgo.marca">"{{ riesgo.marca.nota }}"{{ riesgo.marca.autor ? ' — ' + riesgo.marca.autor : '' }}</span>
+        <span>{{ resumenRiesgo(riesgo) }}</span>
+      </div>
+
       <div class="field">
         <label>{{ local ? 'Nombre (opcional)' : 'Nombre *' }}</label>
-        <input type="text" [(ngModel)]="clienteNombre" [placeholder]="local ? 'Cliente del local' : ''" />
+        <input id="np-nombre" type="text" [ngModel]="clienteNombre" (ngModelChange)="cambioNombre($event)" [placeholder]="local ? 'Cliente del local' : ''" />
       </div>
 
       <div class="fields-row">
         <div class="field">
-          <label>Teléfono</label>
-          <input type="tel" [(ngModel)]="clienteTelefono" />
+          <label>{{ local ? 'Teléfono (opcional)' : 'Teléfono *' }}</label>
+          <div class="tel-grupo" [class.invalido]="errorTel">
+            <select class="prefijo" [(ngModel)]="prefijo" (ngModelChange)="buscarRiesgo()" aria-label="Indicativo del país">
+              <option *ngFor="let p of paises" [value]="p.prefijo">{{ bandera(p.iso) }} +{{ p.prefijo }} {{ p.nombre }}</option>
+            </select>
+            <input id="np-tel" type="tel" inputmode="numeric" autocomplete="off" [placeholder]="prefijo === '57' ? '3001234567' : 'Solo números'"
+              [ngModel]="clienteTelefono" (ngModelChange)="cambioTelefono($event)" (blur)="buscarRiesgo()" />
+          </div>
+          <p class="error-campo" *ngIf="errorTel">{{ errorTel }}</p>
         </div>
         <div class="field combo-field" *ngIf="!local">
           <label>Barrio</label>

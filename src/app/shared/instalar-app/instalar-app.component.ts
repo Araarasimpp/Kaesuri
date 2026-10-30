@@ -4,7 +4,8 @@
 // - iPhone / iPad (Safari): instrucciones, porque Apple no permite un botón directo.
 // Si la persona lo cierra, no vuelve a aparecer en 14 días.
 
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PushService } from '../../core/services/push.service';
 
@@ -22,22 +23,30 @@ export class InstalarAppComponent implements OnInit, OnDestroy {
   readonly visible = signal(false);
   readonly modo = signal<'boton' | 'ios'>('boton');
 
+  private router = inject(Router);
+  private subRutas?: { unsubscribe(): void };
   private alSerInstalable = () => this.evaluar();
   private alInstalar = () => this.visible.set(false);
 
   ngOnInit(): void {
     window.addEventListener('jyb-instalable', this.alSerInstalable);
     window.addEventListener('appinstalled', this.alInstalar);
+    // En las páginas públicas (seguimiento, tienda) quien entra es el cliente: no se le invita a instalar
+    this.subRutas = this.router.events.subscribe((e) => {
+      if (e instanceof NavigationEnd) this.evaluar();
+    });
     this.evaluar();
   }
 
   ngOnDestroy(): void {
+    this.subRutas?.unsubscribe();
     window.removeEventListener('jyb-instalable', this.alSerInstalable);
     window.removeEventListener('appinstalled', this.alInstalar);
   }
 
   private evaluar(): void {
-    if (PushService.instalada() || this.oculto()) {
+    const publica = /^\/(seguimiento|tienda)(\/|$)/.test(location.pathname);
+    if (publica || PushService.instalada() || this.oculto()) {
       this.visible.set(false);
       return;
     }

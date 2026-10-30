@@ -44,6 +44,11 @@
         </div>
       </div>
 
+      <button type="button" class="btn-qr" *ngIf="llevaComprobante && conQr"
+        (click)="qr.emit(metodoPago === 'mixto' ? montoTransferencia : pedido.total)">
+        Mostrar QR para que pague {{ (metodoPago === 'mixto' ? montoTransferencia : pedido.total) | number }}
+      </button>
+
       <!-- Varias fotos (cámara o galería), como en Jasta: se suben de una vez -->
       <div class="jt comprobantes" *ngIf="llevaComprobante">
         <app-comprobantes-input [rutas]="comprobantes" (cambio)="cambiarComprobantes($event)"></app-comprobantes-input>

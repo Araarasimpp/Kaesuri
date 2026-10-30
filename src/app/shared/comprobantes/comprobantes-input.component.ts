@@ -51,7 +51,7 @@ const MAX = 5;
     <div class="caja" [class.falta]="!rutas.length" [class.encima]="encima()" tabindex="0" [attr.aria-label]="titulo"
       (dragover)="$event.preventDefault(); encima.set(true)" (dragleave)="encima.set(false)" (drop)="soltar($event)" (paste)="pegar($event)">
       <p class="tit"><ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>{{ titulo }}
-        @if (rutas.length) { <span class="ok">✓ {{ rutas.length === 1 ? '1 foto' : rutas.length + ' fotos' }}</span> } @else { <span class="req">Obligatorio</span> }
+        @if (rutas.length) { <span class="ok">✓ {{ rutas.length === 1 ? '1 foto' : rutas.length + ' fotos' }}</span> } @else if (obligatorio) { <span class="req">Obligatorio</span> }
       </p>
       @if (rutas.length || subiendo()) {
         <div class="fotos">
@@ -80,6 +80,8 @@ export class ComprobantesInputComponent {
   @Input() rutas: string[] = [];
   @Input() titulo = 'Comprobante de la transferencia';
   @Input() pista = 'Foto o pantallazo donde se vea el valor y la fecha.';
+  /** Si no hace falta foto (p. ej. un gasto), no se marca como obligatoria */
+  @Input() obligatorio = true;
   @Output() cambio = new EventEmitter<string[]>();
 
   private sb = inject(SupabaseService);

@@ -46,6 +46,22 @@ export const DESPACHADOR_ROUTES: Routes = [
         path: 'ranking',
         loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
       },
+      {
+        path: 'novedades',
+        loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
+      },
+      {
+        path: 'inventario',
+        loadComponent: () => import('../paginas/inventario/inventario.page').then((m) => m.InventarioPage),
+      },
+      {
+        path: 'devoluciones',
+        loadComponent: () => import('../paginas/devoluciones/devoluciones.page').then((m) => m.DevolucionesPage),
+      },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

@@ -156,3 +156,17 @@
   background: var(--k-bg-alt);
   color: var(--k-text);
 }
+/* Mostrar el QR de la cuenta para que el cliente pague (como en Jasta) */
+.btn-qr {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  background: var(--k-card-bg);
+  color: var(--k-text);
+  font-family: var(--k-font);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}

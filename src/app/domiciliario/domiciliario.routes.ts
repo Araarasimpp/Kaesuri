@@ -27,6 +27,18 @@ export const DOMICILIARIO_ROUTES: Routes = [
         path: 'ranking',
         loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
       },
+      {
+        path: 'novedades',
+        loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
+      },
+      {
+        path: 'mi-resumen',
+        loadComponent: () => import('../paginas/mi-resumen/mi-resumen.page').then((m) => m.MiResumenPage),
+      },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

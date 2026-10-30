@@ -31,6 +31,26 @@ export const VENDEDOR_ROUTES: Routes = [
         path: 'ranking',
         loadComponent: () => import('../paginas/ranking/ranking.page').then((m) => m.RankingPage),
       },
+      {
+        path: 'novedades',
+        loadComponent: () => import('../paginas/novedades/novedades.page').then((m) => m.NovedadesPage),
+      },
+      {
+        path: 'comisiones',
+        loadComponent: () => import('../paginas/comisiones/comisiones.page').then((m) => m.ComisionesPage),
+      },
+      {
+        path: 'pedidos-web',
+        loadComponent: () => import('../paginas/pedidos-web/pedidos-web.page').then((m) => m.PedidosWebPage),
+      },
+      {
+        path: 'recontactar',
+        loadComponent: () => import('../paginas/recontactar/recontactar.page').then((m) => m.RecontactarPage),
+      },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

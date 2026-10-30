@@ -6,6 +6,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { EstadoPedido } from '../../shared/models/models';
 import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { CalificacionesComponent } from './calificaciones.component';
 
 interface ItemReporte {
   nombre: string;
@@ -41,7 +42,7 @@ type FiltroEstado = 'todos' | EstadoPedido;
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule],
+  imports: [SkeletonComponent, CommonModule, FormsModule, CalificacionesComponent],
   templateUrl: './reportes.page.html',
   styleUrls: ['./reportes.page.scss'],
 })
@@ -131,9 +132,15 @@ export class ReportesPage implements OnInit {
     this.cargarReporte();
   }
 
+  /** Periodo de la última consulta (para las calificaciones) */
+  desdeConsultado = '';
+  hastaConsultado = '';
+
   async cargarReporte(): Promise<void> {
     if (!this.desde || !this.hasta) return;
     this.loading = true;
+    this.desdeConsultado = this.desde;
+    this.hastaConsultado = this.hasta;
 
     const inicio = inicioDiaColombia(this.desde);
     const fin = finDiaColombia(this.hasta);

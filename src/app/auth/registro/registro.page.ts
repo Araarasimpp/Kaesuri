@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 
 @Component({
@@ -11,17 +11,22 @@ import { SupabaseService } from '../../core/services/supabase.service';
   templateUrl: './registro.page.html',
   styleUrls: ['../auth-shell.scss', './registro.page.scss'],
 })
-export class RegistroPage {
+export class RegistroPage implements OnDestroy {
   nombre = '';
   email = '';
   telefono = '';
   password = '';
   errorMsg = '';
   loading = false;
+  /** Ya se mandó el correo de confirmación: se muestra qué hacer y el botón para reenviarlo */
+  enviado = false;
+  /** Segundos que faltan para poder pedir otro correo */
+  espera = 0;
+  avisoMsg = '';
+  private reloj?: ReturnType<typeof setInterval>;
 
   constructor(
     private supabase: SupabaseService,
-    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -57,6 +62,38 @@ export class RegistroPage {
       return;
     }
 
-    this.router.navigate(['/auth/login'], { queryParams: { registrado: '1' } });
+    this.enviado = true;
+    this.iniciarEspera();
+    this.cdr.detectChanges();
+  }
+
+  async reenviar() {
+    this.errorMsg = '';
+    this.avisoMsg = '';
+    const { error } = await this.supabase.reenviarConfirmacion(this.email.trim());
+    if (error) {
+      this.errorMsg = error.status === 429
+        ? 'Ya se enviaron varios correos hace poco. Espera unos minutos y revisa también Spam o Promociones.'
+        : 'No se pudo reenviar el correo. Intenta de nuevo.';
+    } else {
+      this.avisoMsg = 'Listo, te mandamos otro correo. Usa el enlace del último que llegue.';
+      this.iniciarEspera();
+    }
+    this.cdr.detectChanges();
+  }
+
+  /** Supabase solo deja mandar un correo por minuto; el botón queda bloqueado ese tiempo. */
+  private iniciarEspera(): void {
+    clearInterval(this.reloj);
+    this.espera = 60;
+    this.reloj = setInterval(() => {
+      this.espera--;
+      if (this.espera <= 0) clearInterval(this.reloj);
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.reloj);
   }
 }
