@@ -154,3 +154,43 @@
 .switch-link a:hover {
   text-decoration: underline;
 }
+.olvide-link {
+  align-self: center;
+  border: none;
+  background: none;
+  padding: 4px;
+  color: var(--k-role-ink);
+  font-family: var(--k-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.olvide-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.olvide-link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ok-msg {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--k-text);
+  background: var(--k-teal-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.submit-secundario {
+  background: transparent;
+  color: var(--k-role-ink);
+  border: 1px solid var(--k-border-strong, var(--k-border));
+}
+
+.submit-secundario:hover:not(:disabled) {
+  background: var(--k-surface-2, transparent);
+}

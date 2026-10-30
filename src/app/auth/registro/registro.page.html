@@ -6,6 +6,19 @@
       <p>Empieza a vender con Variedades JYB en minutos</p>
     </div>
 
+    <div class="auth-card" *ngIf="enviado; else formulario" role="status">
+      <p class="ok-msg">Te enviamos un correo a <strong>{{ email }}</strong>. Ábrelo y toca el enlace para confirmar tu cuenta; después ya puedes entrar.</p>
+      <p class="nota">Suele llegar en menos de un minuto. Si no lo ves, revisa <strong>Spam</strong> o <strong>Promociones</strong> y confirma que el correo esté bien escrito.</p>
+      <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+      <p class="nota" *ngIf="avisoMsg">{{ avisoMsg }}</p>
+      <button class="submit-btn submit-secundario" type="button" [disabled]="espera > 0" (click)="reenviar()">
+        {{ espera > 0 ? 'Puedes pedir otro en ' + espera + ' s' : '¿No llegó? Enviar de nuevo' }}
+      </button>
+      <a class="submit-btn submit-link" routerLink="/auth/login">Ir a iniciar sesión</a>
+      <button class="olvide-link" type="button" (click)="enviado = false">Me equivoqué de correo</button>
+    </div>
+
+    <ng-template #formulario>
     <form class="auth-card" (ngSubmit)="onRegistrar()">
       <div class="field">
         <label for="nombre">Nombre</label>
@@ -35,6 +48,7 @@
 
       <p class="nota">Tu cuenta empieza como vendedor. El administrador puede cambiar tu rol.</p>
     </form>
+    </ng-template>
 
     <p class="switch-link">¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión</a></p>
   </div>

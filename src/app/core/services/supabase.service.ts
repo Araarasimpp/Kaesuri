@@ -97,6 +97,11 @@ export class SupabaseService {
     });
   }
 
+  /** Vuelve a mandar el correo para confirmar la cuenta (Supabase deja uno por minuto). */
+  async reenviarConfirmacion(email: string) {
+    return this.client.auth.resend({ type: 'signup', email });
+  }
+
   /** Manda el correo con el enlace para poner una contraseña nueva. */
   async enviarRecuperacion(email: string) {
     return this.client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/' });

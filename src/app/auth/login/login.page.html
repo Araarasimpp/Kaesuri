@@ -19,6 +19,9 @@
 
       <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
       <p class="nota" *ngIf="avisoMsg">{{ avisoMsg }}</p>
+      <button class="olvide-link" type="button" *ngIf="sinConfirmar" (click)="onReenviar()" [disabled]="enviandoCorreo">
+        {{ enviandoCorreo ? 'Enviando correo...' : 'Enviarme otra vez el correo de confirmación' }}
+      </button>
 
       <button class="submit-btn" type="submit" [disabled]="loading">
         {{ loading ? 'Ingresando...' : 'Ingresar' }}

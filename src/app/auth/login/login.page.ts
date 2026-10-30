@@ -10,7 +10,7 @@ import { tomarErrorDeEnlace } from '../enlace-correo';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.page.html',
-  styleUrls: ['../auth-shell.scss', './login.page.scss'],
+  styleUrls: ['../auth-shell.scss'],
 })
 export class LoginPage {
   email = '';
@@ -19,6 +19,8 @@ export class LoginPage {
   avisoMsg = '';
   loading = false;
   enviandoCorreo = false;
+  /** La cuenta existe pero no ha confirmado el correo: se ofrece reenviarlo */
+  sinConfirmar = false;
 
   constructor(
     private supabase: SupabaseService,
@@ -52,6 +54,22 @@ export class LoginPage {
     this.cdr.detectChanges();
   }
 
+  async onReenviar() {
+    this.enviandoCorreo = true;
+    const { error } = await this.supabase.reenviarConfirmacion(this.email.trim());
+    this.enviandoCorreo = false;
+    if (error) {
+      this.errorMsg = error.status === 429
+        ? 'Ya se enviaron varios correos hace poco. Espera unos minutos y vuelve a intentarlo.'
+        : 'No se pudo reenviar el correo. Intenta de nuevo.';
+    } else {
+      this.errorMsg = '';
+      this.sinConfirmar = false;
+      this.avisoMsg = `Te mandamos otro correo a ${this.email.trim()}. Revisa también Spam o Promociones y usa el enlace del último que llegue.`;
+    }
+    this.cdr.detectChanges();
+  }
+
   async onLogin() {
     this.errorMsg = '';
     this.avisoMsg = '';
@@ -64,9 +82,13 @@ export class LoginPage {
     this.loading = true;
     const { error } = await this.supabase.login(this.email, this.password);
 
+    this.sinConfirmar = false;
     if (error) {
       this.loading = false;
-      this.errorMsg = 'Correo o contraseña incorrectos.';
+      this.sinConfirmar = error.code === 'email_not_confirmed' || /not confirmed/i.test(error.message);
+      this.errorMsg = this.sinConfirmar
+        ? 'Todavía no has confirmado tu correo. Busca el correo que te enviamos (revisa también Spam o Promociones) y toca el enlace.'
+        : 'Correo o contraseña incorrectos.';
       this.cdr.detectChanges();
       return;
     }
