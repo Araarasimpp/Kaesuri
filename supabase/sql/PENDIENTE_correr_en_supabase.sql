@@ -309,3 +309,16 @@ grant execute on function public.enviar_cierre_dia_ahora() to authenticated;
 -- Domingo 9:15 p. m. Colombia = lunes 02:15 UTC (la semana termina el domingo)
 select cron.unschedule('respaldo-semanal') where exists (select 1 from cron.job where jobname = 'respaldo-semanal');
 select cron.schedule('respaldo-semanal', '15 2 * * 1', $$select public.enviar_respaldo(((now() at time zone 'America/Bogota')::date))$$);
+
+-- ============================================================ 10. Quitar el puente de la página de Pedidos de Jasta
+-- Jasta ya no muestra, alista ni imprime los pedidos de Variedades JYB (jasta-puente ya no
+-- tiene esas acciones). Se borran las funciones que solo servían para eso. El puente de
+-- entregas del domiciliario (jasta_resumen, jasta_entregar, …) no se toca.
+drop function if exists public.jasta_pedidos_datos();
+drop function if exists public.jasta_alistar(text, uuid[], boolean);
+drop function if exists public.jasta_rotulos(text);
+drop function if exists public.jasta_rotulos_alistador();
+drop function if exists public.jasta_rotulos_datos();
+drop function if exists public.jasta_marcar_rotulos(text, uuid[]);
+drop function if exists public.jasta_marcar_rotulos_alistador(uuid[]);
+drop function if exists public.jasta_despachador(text);
