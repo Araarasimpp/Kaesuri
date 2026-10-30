@@ -184,3 +184,9 @@ create trigger productos_alerta_stock after update of stock on public.productos
 -- aviso una vez a quien le toca y un resumen al admin. De 8 a. m. a 6 p. m. (Colombia).
 select cron.unschedule('pedidos-quietos') where exists (select 1 from cron.job where jobname = 'pedidos-quietos');
 select cron.schedule('pedidos-quietos', '20 13-23 * * *', 'select public.revisar_quietos()');
+
+-- ============================================================ 5. Pedidos de la tienda sin confirmar (cada 5 min)
+-- Recordatorio al vendedor a los 15 min y aviso al admin a la hora. La función ya está creada
+-- (recordatorio_pedidos_web.sql); de noche no avisa.
+select cron.unschedule('pedidos-web-sin-confirmar') where exists (select 1 from cron.job where jobname = 'pedidos-web-sin-confirmar');
+select cron.schedule('pedidos-web-sin-confirmar', '*/5 * * * *', 'select public.revisar_pedidos_web()');
