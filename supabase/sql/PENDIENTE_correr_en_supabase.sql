@@ -190,3 +190,73 @@ select cron.schedule('pedidos-quietos', '20 13-23 * * *', 'select public.revisar
 -- (recordatorio_pedidos_web.sql); de noche no avisa.
 select cron.unschedule('pedidos-web-sin-confirmar') where exists (select 1 from cron.job where jobname = 'pedidos-web-sin-confirmar');
 select cron.schedule('pedidos-web-sin-confirmar', '*/5 * * * *', 'select public.revisar_pedidos_web()');
+
+-- ============================================================ 6. Avisos de metas (cada 10 min)
+-- Al pasar el 50 %, 80 % y 100 % de la meta del mes (y el 100 % de la semana). La función ya está creada.
+select cron.unschedule('avisos-metas') where exists (select 1 from cron.job where jobname = 'avisos-metas');
+select cron.schedule('avisos-metas', '*/10 * * * *', 'select public.revisar_metas()');
+
+-- ============================================================ 7. Cierre del día por Telegram (9 p. m.)
+-- Resumen del día (entregas, ganancia, gastos, pendientes, comisiones y caja del local) a los admins
+-- que vincularon su Telegram, y aviso en la app del cierre del local.
+create or replace function public.enviar_cierre_dia(p_dia date default null)
+returns integer language plpgsql security definer set search_path to 'public' as $function$
+declare v_token text; v_texto text; r record; n int := 0; v_dia date := coalesce(p_dia, (now() at time zone 'America/Bogota')::date);
+  l jsonb := public.cierre_local(v_dia);
+begin
+  if (l->>'ventas')::int > 0 then
+    perform public.notificar_roles(array['admin', 'venta_local']::user_role[], 'cierre_local',
+      'Cierre del local · ' || (l->>'ventas') || case when (l->>'ventas')::int = 1 then ' venta · ' else ' ventas · ' end || public.fmt_pesos((l->>'total')::numeric),
+      'Efectivo que debe haber en caja: ' || public.fmt_pesos((l->>'efectivo')::numeric) || ' · Transferencias: ' || public.fmt_pesos((l->>'transferencia')::numeric),
+      'ventas-local');
+  end if;
+  select token into v_token from privado.telegram_config limit 1;
+  if v_token is null then return 0; end if;
+  v_texto := public.cierre_dia_texto(v_dia);
+  for r in select distinct t.telegram_id from telegram_usuarios t join profiles u on u.id = t.usuario_id
+           where coalesce(u.activo, true) and 'admin' = any (u.roles) loop
+    perform net.http_post(url := 'https://api.telegram.org/bot' || v_token || '/sendMessage',
+                          body := jsonb_build_object('chat_id', r.telegram_id, 'text', v_texto),
+                          headers := '{"Content-Type": "application/json"}'::jsonb);
+    n := n + 1;
+  end loop;
+  return n;
+end $function$;
+revoke all on function public.enviar_cierre_dia(date) from public, anon, authenticated;
+select cron.unschedule('cierre-del-dia') where exists (select 1 from cron.job where jobname = 'cierre-del-dia');
+select cron.schedule('cierre-del-dia', '0 2 * * *', 'select public.enviar_cierre_dia(((now() at time zone ''America/Bogota'') - interval ''3 hours'')::date)');
+
+-- ============================================================ 8. Lista de compras de la semana (lunes 7:40 a. m.)
+-- Qué pedirle al proveedor según lo que se vende: aviso en la app (admin y despachador) y por Telegram a los admins.
+create or replace function public.enviar_lista_compras()
+returns integer language plpgsql security definer set search_path to 'public' as $function$
+declare v_token text; v_texto text; v_n int; v_total numeric; v_top text; r record; n int := 0;
+begin
+  select count(*), coalesce(sum(sugerido * coalesce(costo, 0)), 0) into v_n, v_total from public.compras_sugeridas_base(21);
+  if v_n = 0 then return 0; end if;
+  select string_agg(nombre, ', ') into v_top from (select nombre from public.compras_sugeridas_base(21) limit 3) t;
+  perform public.notificar_roles(array['admin', 'despachador']::user_role[], 'compras',
+    'Lista de compras de la semana: ' || v_n || case when v_n = 1 then ' producto' else ' productos' end || ' por pedir',
+    'Lo más urgente: ' || v_top, 'inventario');
+  select token into v_token from privado.telegram_config limit 1;
+  if v_token is null then return 0; end if;
+  select '🛒 Lista de compras · ' || to_char((now() at time zone 'America/Bogota')::date, 'DD/MM/YYYY') || E'\n'
+      || 'Para tener inventario de 3 semanas según lo que se vende:' || E'\n\n'
+      || string_agg('• ' || nombre || ' — pedir ' || sugerido || ' (quedan ' || greatest(stock, 0)
+           || case when dias is not null then ', ~' || dias || ' días' else '' end || ')', E'\n')
+      || case when v_n > 40 then E'\n… y ' || (v_n - 40) || ' más en Inventario → Qué comprar' else '' end
+      || E'\n\n💰 Costo aproximado: ' || public.fmt_pesos(v_total)
+    into v_texto
+  from (select * from public.compras_sugeridas_base(21) limit 40) c;
+  for r in select distinct t.telegram_id from telegram_usuarios t join profiles u on u.id = t.usuario_id
+           where coalesce(u.activo, true) and 'admin' = any (u.roles) loop
+    perform net.http_post(url := 'https://api.telegram.org/bot' || v_token || '/sendMessage',
+                          body := jsonb_build_object('chat_id', r.telegram_id, 'text', v_texto),
+                          headers := '{"Content-Type": "application/json"}'::jsonb);
+    n := n + 1;
+  end loop;
+  return n;
+end $function$;
+revoke all on function public.enviar_lista_compras() from public, anon, authenticated;
+select cron.unschedule('lista-compras') where exists (select 1 from cron.job where jobname = 'lista-compras');
+select cron.schedule('lista-compras', '40 12 * * 1', 'select public.enviar_lista_compras()');

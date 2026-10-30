@@ -35,6 +35,10 @@ export const DOMICILIARIO_ROUTES: Routes = [
         path: 'mi-resumen',
         loadComponent: () => import('../paginas/mi-resumen/mi-resumen.page').then((m) => m.MiResumenPage),
       },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

@@ -19,6 +19,10 @@ export const RECOLECTOR_ROUTES: Routes = [
         path: '',
         loadComponent: () => import('../paginas/recolector/recolector.page').then((m) => m.RecolectorPage),
       },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

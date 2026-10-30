@@ -32,6 +32,7 @@ import {
   cashOutline,
   cardOutline,
   trendingUpOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -81,6 +82,7 @@ export class AdminLayoutComponent {
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
     { label: 'Pedidos de la tienda', path: '/admin/pedidos-web', icon: 'storefront-outline' },
     { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
+  { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -92,6 +94,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      sparklesOutline,
       trendingUpOutline,
       cardOutline,
       cashOutline,

@@ -36,6 +36,10 @@ export const LOCAL_ROUTES: Routes = [
         path: 'devoluciones',
         loadComponent: () => import('../paginas/devoluciones/devoluciones.page').then((m) => m.DevolucionesPage),
       },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];

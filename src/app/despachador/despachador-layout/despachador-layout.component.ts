@@ -18,6 +18,7 @@ import {
   alertCircleOutline,
   fileTrayStackedOutline,
   returnDownBackOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -51,6 +52,7 @@ export class DespachadorLayoutComponent {
     { label: 'Novedades', path: '/despachador/novedades', icon: 'alert-circle-outline' },
     { label: 'Inventario', path: '/despachador/inventario', icon: 'file-tray-stacked-outline' },
     { label: 'Devoluciones', path: '/despachador/devoluciones', icon: 'return-down-back-outline' },
+  { label: 'Actualizaciones', path: '/despachador/actualizaciones', icon: 'sparkles-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -62,6 +64,7 @@ export class DespachadorLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      sparklesOutline,
       returnDownBackOutline,
       fileTrayStackedOutline,
       alertCircleOutline,

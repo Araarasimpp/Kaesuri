@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MiMetaComponent } from '../../shared/mi-meta/mi-meta.component';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -75,7 +76,7 @@ const POR_PAGINA = 20;
   selector: 'app-mi-panel',
   standalone: true,
   host: { class: 'jt' },
-  imports: [FormsModule, RouterLink, IonIcon, ChatHojaComponent, AvatarComponent],
+  imports: [FormsModule, RouterLink, IonIcon, ChatHojaComponent, AvatarComponent, MiMetaComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -178,6 +179,8 @@ const POR_PAGINA = 20;
           <a class="b b-pri" routerLink="/vendedor/nuevo-pedido"><ion-icon name="add"></ion-icon>Nuevo pedido</a>
         </div>
       </div>
+
+      <app-mi-meta></app-mi-meta>
 
       <!-- Rango de las ganancias -->
       <div class="rango">

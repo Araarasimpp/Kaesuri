@@ -5,6 +5,7 @@ import { InstalarAppComponent } from './shared/instalar-app/instalar-app.compone
 import { SkeletonComponent } from './shared/skeleton/skeleton.component';
 import { VisorComponent } from './shared/visor/visor.component';
 import { ToastComponent } from './shared/toast/toast.component';
+import { NuevaVersionComponent } from './shared/version/nueva-version.component';
 import { activarArrastreDeHojas } from './shared/arrastrar-hojas';
 import { PresenciaService } from './core/services/presencia.service';
 
@@ -12,7 +13,7 @@ import { PresenciaService } from './core/services/presencia.service';
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
-  imports: [IonApp, IonRouterOutlet, InstalarAppComponent, SkeletonComponent, VisorComponent, ToastComponent],
+  imports: [IonApp, IonRouterOutlet, InstalarAppComponent, SkeletonComponent, VisorComponent, ToastComponent, NuevaVersionComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
   /**

@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { addCircleOutline, closeOutline, searchOutline, trashOutline } from 'ionicons/icons';
@@ -37,6 +38,7 @@ interface Compra {
   anulada: boolean;
   items: { nombre: string; cantidad: number; costo: number | null }[] | null;
 }
+interface Sugerido { id: string; nombre: string; categoria: string | null; stock: number; vendidos_60: number; dias: number | null; sugerido: number; costo: number | null }
 interface Linea { producto: Prod; cantidad: number | null; costo: number | null }
 type Filtro = 'todos' | 'bajos' | 'agotados';
 
@@ -103,6 +105,18 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
       .total-compra { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); }
       .total-compra strong { font-family: var(--mono-font); font-size: 20px; }
       .check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+      .semanas { display: flex; gap: 6px; flex-wrap: wrap; }
+      .semanas button { height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text-soft);
+        font: inherit; font-size: 13px; cursor: pointer; }
+      .semanas button.on { border-color: var(--accent); background: var(--accent-wash); color: var(--accent); font-weight: 650; }
+      .sug { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: var(--perfora); }
+      .sug:last-child { border-bottom: 0; }
+      .sug .nom { white-space: normal; }
+      .pedir { flex-shrink: 0; padding: 5px 12px; border-radius: 999px; background: var(--accent-wash); color: var(--accent); font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+      .pedir.urgente { background: var(--danger-wash); color: var(--danger); }
+      .total-sug { margin: 0; font-size: 14px; color: var(--text-soft); }
+      .acc-sug { display: flex; gap: 8px; flex-wrap: wrap; }
+      .acc-sug .b { flex: 1 1 160px; }
       .vacio-txt { margin: 0; padding: 14px 0 6px; text-align: center; font-size: 13.5px; color: var(--text-soft); }
       .quitar { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); cursor: pointer; }
       .quitar:hover { color: var(--danger); background: var(--danger-wash); }
@@ -122,6 +136,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
 
       <div class="segmented" role="tablist">
         <button [class.on]="vista() === 'stock'" (click)="vista.set('stock')">Stock</button>
+        <button [class.on]="vista() === 'comprar'" (click)="verComprar()">Qué comprar</button>
         <button [class.on]="vista() === 'compras'" (click)="vista.set('compras')">Compras</button>
       </div>
 
@@ -174,6 +189,40 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
             }
           } @else {
             @if (cargando()) { <app-skeleton variante="filas" [cantidad]="6"></app-skeleton> } @else { <p class="vacio-txt">No hay productos con este filtro.</p> }
+          }
+        </section>
+      } @else if (vista() === 'comprar') {
+        <section class="panel">
+          <div class="panel-head"><div><h2>Qué comprar</h2>
+            <p class="panel-sub">Lo que se va a acabar según lo que se vende (últimos 60 días), para tener inventario de {{ semanas() }} semanas. Los lunes llega esta lista en un aviso.</p></div></div>
+          <div class="semanas" role="group" aria-label="Para cuántas semanas">
+            @for (n of [2, 3, 4, 6]; track n) {
+              <button [class.on]="semanas() === n" (click)="semanas.set(n); cargarSugeridos()">{{ n }} semanas</button>
+            }
+          </div>
+          @if (cargandoSug()) {
+            <app-skeleton variante="filas" [cantidad]="5"></app-skeleton>
+          } @else {
+            <ul class="lista">
+              @for (x of sugeridos(); track x.id) {
+                <li class="sug">
+                  <div style="min-width: 0">
+                    <span class="nom">{{ x.nombre }}</span>
+                    <span class="sub">Quedan {{ numero(x.stock < 0 ? 0 : x.stock) }} · se venden ~{{ porSemana(x) }} por semana{{ x.dias !== null ? ' · alcanza para ' + (x.dias === 0 ? 'nada' : '~' + x.dias + (x.dias === 1 ? ' día' : ' días')) : '' }}</span>
+                  </div>
+                  <span class="pedir" [class.urgente]="x.dias !== null && x.dias <= 7">Pedir {{ numero(x.sugerido) }}</span>
+                </li>
+              } @empty {
+                <li><p class="vacio-txt">Nada por comprar: lo que hay alcanza para {{ semanas() }} semanas.</p></li>
+              }
+            </ul>
+            @if (sugeridos().length) {
+              @if (esAdmin() && costoSugerido() > 0) { <p class="total-sug">Costo aproximado: <strong class="num">{{ pesos(costoSugerido()) }}</strong></p> }
+              <div class="acc-sug">
+                <button class="b" (click)="copiarLista()">Copiar lista</button>
+                <button class="b b-pri" (click)="comprarSugeridos()">Registrar esta compra</button>
+              </div>
+            }
           }
         </section>
       } @else {
@@ -306,9 +355,15 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
 export class InventarioPage implements OnInit {
   private sb = inject(SupabaseService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
   private visor = inject(VisorService);
 
-  vista = signal<'stock' | 'compras'>('stock');
+  vista = signal<'stock' | 'comprar' | 'compras'>('stock');
+  sugeridos = signal<Sugerido[]>([]);
+  cargandoSug = signal(false);
+  semanas = signal(3);
+  private sugCargados = false;
+  costoSugerido = computed(() => this.sugeridos().reduce((t, x) => t + x.sugerido * (Number(x.costo) || 0), 0));
   productos = signal<Prod[]>([]);
   cargando = signal(true);
   filtro = signal<Filtro>('todos');
@@ -407,6 +462,48 @@ export class InventarioPage implements OnInit {
   ngOnInit(): void {
     void this.sb.getCurrentProfile().then((p) => this.esAdmin.set(!!p && rolesDe(p).includes('admin')));
     void this.cargar();
+    // Desde el aviso de los lunes se abre directo "Qué comprar"
+    if (this.route.snapshot.queryParamMap.get('ver') === 'comprar') this.verComprar();
+  }
+
+  verComprar(): void {
+    this.vista.set('comprar');
+    if (!this.sugCargados) void this.cargarSugeridos();
+  }
+
+  async cargarSugeridos(): Promise<void> {
+    this.sugCargados = true;
+    this.cargandoSug.set(true);
+    const { data, error } = await this.sb.client.rpc('compras_sugeridas', { p_dias: this.semanas() * 7 });
+    this.cargandoSug.set(false);
+    if (error) return this.toast.error(mensajeError(error));
+    this.sugeridos.set((data ?? []) as Sugerido[]);
+  }
+
+  porSemana(x: Sugerido): string {
+    const n = (x.vendidos_60 / 60) * 7;
+    return n >= 10 ? String(Math.round(n)) : n.toFixed(1).replace('.', ',').replace(',0', '');
+  }
+
+  async copiarLista(): Promise<void> {
+    const texto = `Pedido · ${formatoFechaCO(new Date().toISOString(), { day: 'numeric', month: 'long' })}\n\n`
+      + this.sugeridos().map((x) => `• ${x.nombre}: ${x.sugerido}`).join('\n');
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.toast.ok('Lista copiada: pégala en WhatsApp al proveedor');
+    } catch {
+      this.toast.error('No se pudo copiar la lista');
+    }
+  }
+
+  /** Abre "Registrar compra" con lo sugerido ya puesto (se ajusta lo que de verdad llegó) */
+  comprarSugeridos(): void {
+    this.abrirCompra();
+    const porId = new Map(this.productos().map((p) => [p.id, p]));
+    this.lineas.set(this.sugeridos().flatMap((x) => {
+      const p = porId.get(x.id);
+      return p ? [{ producto: p, cantidad: x.sugerido, costo: p.costo ?? null }] : [];
+    }));
   }
 
   async cargar(): Promise<void> {

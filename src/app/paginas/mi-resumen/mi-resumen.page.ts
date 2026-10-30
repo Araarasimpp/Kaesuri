@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MiMetaComponent } from '../../shared/mi-meta/mi-meta.component';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, rolesDe } from '../../core/services/supabase.service';
 import { ToastService } from '../../shared/toast/toast.service';
@@ -50,7 +51,7 @@ function rango(p: Periodo): { desde: string; hasta: string } {
   selector: 'app-mi-resumen',
   standalone: true,
   host: { class: 'jt' },
-  imports: [SkeletonComponent, FormsModule, RouterLink],
+  imports: [SkeletonComponent, FormsModule, RouterLink, MiMetaComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -113,6 +114,8 @@ function rango(p: Periodo): { desde: string; hasta: string } {
           </select>
         }
       </div>
+
+      @if (!esAdmin()) { <app-mi-meta></app-mi-meta> }
 
       @if (r(); as d) {
         <section class="heroe">

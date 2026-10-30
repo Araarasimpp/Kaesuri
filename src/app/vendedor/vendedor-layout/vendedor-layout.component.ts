@@ -3,7 +3,7 @@ import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.compon
 import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { bookOutline, homeOutline, personCircleOutline, trophyOutline, alertCircleOutline, cashOutline, storefrontOutline, peopleOutline } from 'ionicons/icons';
+import { bookOutline, homeOutline, personCircleOutline, trophyOutline, alertCircleOutline, cashOutline, storefrontOutline, peopleOutline, sparklesOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-vendedor-layout',
@@ -20,6 +20,7 @@ export class VendedorLayoutComponent {
     { label: 'Ranking', path: '/vendedor/ranking', icon: 'trophy-outline' },
     { label: 'Novedades', path: '/vendedor/novedades', icon: 'alert-circle-outline' },
     { label: 'Mis comisiones', path: '/vendedor/comisiones', icon: 'cash-outline' },
+    { label: 'Actualizaciones', path: '/vendedor/actualizaciones', icon: 'sparkles-outline' },
     { label: 'Mi perfil', path: '/vendedor/perfil', icon: 'person-circle-outline' },
     { label: 'Pedidos de la tienda', path: '/vendedor/pedidos-web', icon: 'storefront-outline' },
     { label: 'Recontactar', path: '/vendedor/recontactar', icon: 'people-outline' },
@@ -28,6 +29,6 @@ export class VendedorLayoutComponent {
   readonly principales = this.secciones.slice(0, 3);
 
   constructor() {
-    addIcons({ peopleOutline, storefrontOutline, cashOutline, alertCircleOutline, bookOutline, homeOutline, personCircleOutline, trophyOutline });
+    addIcons({ sparklesOutline, peopleOutline, storefrontOutline, cashOutline, alertCircleOutline, bookOutline, homeOutline, personCircleOutline, trophyOutline });
   }
 }

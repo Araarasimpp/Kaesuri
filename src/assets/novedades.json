@@ -1,0 +1,149 @@
+[
+  {
+    "id": "2026-10-30-tienda-web",
+    "fecha": "2026-10-30",
+    "titulo": "Tu propia tienda en línea para compartir",
+    "cuerpo": "Cada vendedor tiene un enlace a un catálogo con fotos y precios donde el cliente arma su pedido. Lo que pidan por tu enlace te llega a ti, con tu comisión normal.",
+    "roles": ["admin", "vendedor"],
+    "secciones": [
+      {
+        "titulo": "Cómo se usa",
+        "pasos": [
+          "Entra a Más → Pedidos de la tienda y toca Compartir enlace (o Copiar).",
+          "Ponlo en tus estados, Instagram o grupos. También puedes buscar un producto y compartir el enlace directo a ese producto.",
+          "Cuando alguien pide, te llega un aviso. Llama al cliente y toca Confirmar: el pedido pasa a Por alistar a tu nombre. Si no contesta o era de broma, toca Cancelar y escribe por qué."
+        ]
+      },
+      {
+        "titulo": "Qué tener en cuenta",
+        "puntos": [
+          "Si el cliente escribió un barrio que no está en la tabla, el domicilio sale \"Por definir\": pregúntale bien dónde queda y escribe el valor al confirmar.",
+          "Si a los 15 minutos nadie ha llamado al cliente te llega un recordatorio, y a la hora se le avisa al admin.",
+          "Abajo ves cuánta gente abrió tu catálogo, cuántos agregaron algo y cuántos pidieron."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-30-recontactar",
+    "fecha": "2026-10-30",
+    "titulo": "Clientes para recontactar",
+    "cuerpo": "Una lista de los clientes que ya te compraron y llevan uno, dos, tres o más meses sin volver, con un botón que abre WhatsApp con un mensaje listo y el enlace de tu catálogo.",
+    "roles": ["admin", "vendedor"],
+    "secciones": [
+      {
+        "titulo": "Cómo se usa",
+        "pasos": [
+          "Entra a Más → Recontactar y elige hace cuánto compraron.",
+          "Toca WhatsApp en un cliente: se abre la conversación con el mensaje escrito. Revísalo y envíalo.",
+          "El cliente queda marcado como \"Le escribiste\" y baja al final de la lista por 30 días."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-30-caja-ticket",
+    "fecha": "2026-10-30",
+    "titulo": "Local: cuadre de caja y ticket impreso",
+    "cuerpo": "En Ventas del local ahora se cuadra la caja al cerrar y cada venta tiene su ticket para la impresora de 58 mm, con la garantía y un QR para que el cliente vea su compra.",
+    "roles": ["admin", "venta_local"],
+    "secciones": [
+      {
+        "titulo": "Cuadrar la caja",
+        "pasos": [
+          "En Ventas, con el día de hoy elegido, toca Cuadrar caja.",
+          "Escribe la base con la que abriste (se sugiere la del último cuadre) y el efectivo que contaste.",
+          "La app te dice si cuadra, si falta o si sobra. Si no cuadra, escribe en la nota qué pasó: al admin le llega el aviso."
+        ]
+      },
+      {
+        "titulo": "Imprimir el ticket",
+        "puntos": [
+          "Después de registrar una venta sale arriba el botón Imprimir ticket. También está en cada venta de la lista.",
+          "En Android con Chrome se conecta directo a la impresora por Bluetooth. Si la impresora no aparece, activa \"Imprimir con la app RawBT\" en los tres puntos.",
+          "En iPhone el navegador no deja usar Bluetooth: toca Ver ticket y compártelo a la app de la impresora o por WhatsApp."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-30-metas",
+    "fecha": "2026-10-30",
+    "titulo": "Tu avance hacia la meta",
+    "cuerpo": "Si el admin te puso meta en Ranking, en tu panel ves cuánto llevas del mes y de la semana, cuánto te falta por día y con cuánto cierras el mes a este ritmo.",
+    "roles": ["vendedor", "domiciliario"],
+    "secciones": [
+      {
+        "titulo": "Qué tener en cuenta",
+        "puntos": [
+          "Cuentan los pedidos entregados (vendedores) y los domicilios entregados (domiciliarios), igual que en el ranking.",
+          "Te llega un aviso al pasar el 50 %, el 80 % y el 100 % de la meta del mes, y al cumplir la de la semana."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-30-que-comprar",
+    "fecha": "2026-10-30",
+    "titulo": "Inventario: qué comprar",
+    "cuerpo": "En Inventario → Qué comprar sale lo que se va a acabar según lo que se vende, con cuánto pedir para tener inventario de 2, 3, 4 o 6 semanas.",
+    "roles": ["admin", "despachador"],
+    "secciones": [
+      {
+        "titulo": "Cómo se usa",
+        "pasos": [
+          "Elige para cuántas semanas quieres tener inventario.",
+          "Toca Copiar lista y pégala en WhatsApp al proveedor.",
+          "Cuando llegue la mercancía, toca Registrar esta compra: se abre con lo sugerido para que ajustes lo que de verdad llegó."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-29-local-seguimiento",
+    "fecha": "2026-10-29",
+    "titulo": "Seguimiento del pedido para el cliente",
+    "cuerpo": "Cada pedido tiene un enlace donde el cliente ve en qué va (alistado, en camino, entregado), quién se lo lleva y la garantía. Al recibirlo puede calificar la entrega.",
+    "roles": ["admin", "vendedor", "despachador"],
+    "secciones": [
+      {
+        "titulo": "Cómo se usa",
+        "puntos": [
+          "En Mi panel, toca Seguimiento en un pedido para mandárselo al cliente por WhatsApp o copiarlo.",
+          "Las calificaciones se ven en Reportes. Si alguien califica con 3 estrellas o menos, le llega un aviso al admin."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-29-entregas",
+    "fecha": "2026-10-29",
+    "titulo": "Entregas: novedades y cobro con QR",
+    "cuerpo": "Si no se pudo entregar un pedido, el domiciliario lo reporta con el motivo y queda en Novedades para que el vendedor y el admin decidan si se reintenta o se devuelve. Para cobrar por transferencia se puede mostrar el QR de la cuenta.",
+    "roles": ["admin", "domiciliario", "vendedor", "despachador"],
+    "secciones": [
+      {
+        "titulo": "Qué tener en cuenta",
+        "puntos": [
+          "En la tarjeta del pedido, toca \"No se pudo entregar\" y elige el motivo (no contesta, dirección, sin dinero…).",
+          "Al entregar por transferencia puedes subir varias fotos del comprobante.",
+          "Los pedidos que llevan más de un día sin moverse le avisan a quien le toca."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2026-10-29-clientes",
+    "fecha": "2026-10-29",
+    "titulo": "Alerta de clientes con problemas y pedidos repetidos",
+    "cuerpo": "Al escribir el teléfono en Nuevo pedido, la app avisa si ese cliente ha rechazado pedidos, tiene devoluciones o fue marcado por el admin, y si ya hay un pedido parecido del mismo teléfono en las últimas 24 horas.",
+    "roles": ["admin", "vendedor", "venta_local"]
+  },
+  {
+    "id": "2026-10-29-dinero",
+    "fecha": "2026-10-29",
+    "titulo": "Comisiones, gastos, devoluciones y rentabilidad",
+    "cuerpo": "El vendedor ve sus comisiones por pagar y sus liquidaciones con el comprobante del pago. El admin registra los gastos, las devoluciones (y lo que se descuenta de la comisión) y ve cuánto deja cada producto.",
+    "roles": ["admin", "vendedor"]
+  }
+]

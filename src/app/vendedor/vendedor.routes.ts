@@ -47,6 +47,10 @@ export const VENDEDOR_ROUTES: Routes = [
         path: 'recontactar',
         loadComponent: () => import('../paginas/recontactar/recontactar.page').then((m) => m.RecontactarPage),
       },
+      {
+        path: 'actualizaciones',
+        loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
+      },
     ],
   },
 ];
