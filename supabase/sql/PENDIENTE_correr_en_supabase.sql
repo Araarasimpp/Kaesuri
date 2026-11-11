@@ -636,3 +636,24 @@ alter policy "conexiones: ver" on public.conexiones using ((select public.es_equ
 alter policy "metas: ver" on public.metas using ((select public.es_equipo()));
 alter policy "producto_colores_ver" on public.producto_colores using ((select public.es_equipo()));
 -- Después de correr esta sección, avísale a Claude para prender "Mi cuenta" en la tienda.
+
+-- ============================================================ 18. Chat del pedido como WhatsApp: fotos y notas de voz
+-- Bucket privado "chat" (una carpeta por pedido) con permisos solo para quien participa en el pedido,
+-- y la regla del texto: una foto o una nota de voz pueden ir sin texto.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('chat', 'chat', false, 10485760,
+  array['image/jpeg','image/png','image/webp','audio/mp4','audio/webm','audio/ogg','audio/mpeg','audio/aac','audio/x-m4a'])
+on conflict (id) do nothing;
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and policyname = 'chat_subir') then
+    create policy chat_subir on storage.objects for insert to authenticated
+      with check (bucket_id = 'chat' and (select public.chat_carpeta_ok(name)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and policyname = 'chat_ver') then
+    create policy chat_ver on storage.objects for select to authenticated
+      using (bucket_id = 'chat' and (select public.chat_carpeta_ok(name)));
+  end if;
+end $$;
+alter table public.pedido_mensajes drop constraint if exists pedido_mensajes_texto_check;
+alter table public.pedido_mensajes add constraint pedido_mensajes_texto_check check (length(texto) <= 1000
+  and (length(trim(texto)) >= 1 or (tipo in ('foto', 'audio') and adjunto is not null)));

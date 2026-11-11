@@ -42,7 +42,12 @@ interface Contacto {
   imports: [IonIcon, ChatPedidoComponent, AvatarComponent],
   styles: [
     `
-      @media (max-width: 760px) { .hoja-chat { height: 92dvh; } }
+      /* En el celular el chat ocupa toda la pantalla, como una app de mensajes */
+      @media (max-width: 760px) {
+        .hoja-chat { top: 0; height: 100dvh; max-height: none; border-top: 0; border-radius: 0; padding-top: env(safe-area-inset-top); }
+        .hoja-chat::before { display: none; }
+        .hoja-chat .hoja-head { touch-action: auto; }
+      }
       /* Cabecera como en WhatsApp: foto y nombre de con quién se habla */
       .hoja-chat .hoja-head { padding-left: 14px; gap: 8px; }
       .wa { display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: auto; }
