@@ -7,6 +7,7 @@ import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { RecortarFotoComponent } from '../../shared/recortar-foto/recortar-foto.component';
 import { TelegramPanelComponent } from '../../shared/telegram/telegram-panel.component';
 import { mensajeError } from '../../shared/formato';
+import { MisDatosPagoComponent } from './mis-datos-pago.component';
 
 const ETIQUETA_ROL: Record<string, string> = {
   admin: 'Admin', despachador: 'Despachador', vendedor: 'Vendedor', domiciliario: 'Domiciliario', venta_local: 'Venta local', recolector: 'Recolector',
@@ -17,7 +18,7 @@ const ETIQUETA_ROL: Record<string, string> = {
   selector: 'app-perfil',
   standalone: true,
   host: { class: 'jt' },
-  imports: [FormsModule, AvatarComponent, RecortarFotoComponent, TelegramPanelComponent],
+  imports: [FormsModule, AvatarComponent, RecortarFotoComponent, TelegramPanelComponent, MisDatosPagoComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -67,6 +68,10 @@ const ETIQUETA_ROL: Record<string, string> = {
           <app-telegram-panel modo="perfil"></app-telegram-panel>
         </section>
       }
+
+      <section class="panel">
+        <app-mis-datos-pago></app-mis-datos-pago>
+      </section>
 
       <section class="panel">
         <h2>Contraseña</h2>

@@ -3,6 +3,7 @@ import { TelegramPanelComponent } from '../../shared/telegram/telegram-panel.com
 import { CuentasPagoConfigComponent } from './cuentas-pago-config.component';
 import { WhatsappConfigComponent } from './whatsapp-config.component';
 import { ResumenesTelegramComponent } from './resumenes-telegram.component';
+import { DatosFiscalesComponent } from './datos-fiscales.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
@@ -22,7 +23,7 @@ interface Configuracion {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule, TelegramPanelComponent, CuentasPagoConfigComponent, WhatsappConfigComponent, ResumenesTelegramComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, TelegramPanelComponent, CuentasPagoConfigComponent, WhatsappConfigComponent, ResumenesTelegramComponent, DatosFiscalesComponent],
   templateUrl: './configuracion.page.html',
   styleUrls: ['./configuracion.page.scss'],
 })

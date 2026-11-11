@@ -158,7 +158,8 @@ export class NotificacionesService {
       return `${lista}?chat=${n.enlace.slice(5)}`;
     }
     // Secciones nuevas (comisiones, inventario, pedidos de la tienda…): si el área la tiene, se abre ahí
-    if (n.enlace === 'comisiones' && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/comisiones`;
+    // 'comisiones?pago=ID' abre ese pago con su comprobante
+    if (n.enlace?.split('?')[0] === 'comisiones' && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
     if (n.enlace === 'inventario' && (rol === 'admin' || rol === 'despachador')) return `${raiz}/inventario`;
     if ((n.enlace === 'pedidos-web' || n.enlace === 'recontactar') && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
     if (n.enlace === 'barrios' && rol === 'admin') return `${raiz}/barrios`;
