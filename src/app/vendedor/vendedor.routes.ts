@@ -55,6 +55,10 @@ export const VENDEDOR_ROUTES: Routes = [
         path: 'calendario',
         loadComponent: () => import('../paginas/calendario/calendario.page').then((m) => m.CalendarioPage),
       },
+      {
+        path: 'ayuda-clientes',
+        loadComponent: () => import('../paginas/ayuda-clientes/ayuda-clientes.page').then((m) => m.AyudaClientesPage),
+      },
     ],
   },
 ];

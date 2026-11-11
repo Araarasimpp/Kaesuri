@@ -159,6 +159,14 @@ export const ADMIN_ROUTES: Routes = [
         path: 'quietos',
         loadComponent: () => import('../paginas/quietos/quietos.page').then((m) => m.QuietosPage),
       },
+      {
+        path: 'cupones',
+        loadComponent: () => import('../paginas/cupones/cupones.page').then((m) => m.CuponesPage),
+      },
+      {
+        path: 'ayuda-clientes',
+        loadComponent: () => import('../paginas/ayuda-clientes/ayuda-clientes.page').then((m) => m.AyudaClientesPage),
+      },
     ],
   },
 ];

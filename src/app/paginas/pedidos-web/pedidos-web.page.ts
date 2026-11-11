@@ -9,6 +9,7 @@ import { enlaceWhatsapp } from '../../shared/whatsapp';
 import { EstadisticasTiendaComponent } from './estadisticas-tienda.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { EnlacesProductosComponent } from './enlaces-productos.component';
+import { MiCatalogoComponent } from './mi-catalogo.component';
 import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface Riesgo {
@@ -21,6 +22,7 @@ interface PedidoWeb {
   cliente_nombre: string; cliente_telefono: string; direccion: string; barrio: string; observaciones: string | null;
   valor_domicilio: number; domicilio_por_confirmar: boolean; items: ItemWeb[]; subtotal: number; pedido_id: string | null; numero: number | null;
   motivo: string | null; atendido_por: string | null; atendido_at: string | null; created_at: string; riesgo: Riesgo | null;
+  cupon?: string | null; descuento?: number;
   /** Señales del pedido para revisar antes de confirmar (varios pedidos seguidos, misma conexión, dirección con rechazos…) */
   sospecha?: { nivel: 'alto' | 'medio'; razones: string[] } | null;
 }
@@ -39,7 +41,7 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
 @Component({
   selector: 'app-pedidos-web',
   standalone: true,
-  imports: [PesosDirective, EnlacesProductosComponent, SkeletonComponent, FormsModule, EstadisticasTiendaComponent],
+  imports: [PesosDirective, EnlacesProductosComponent, MiCatalogoComponent, SkeletonComponent, FormsModule, EstadisticasTiendaComponent],
   host: { class: 'jt' },
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
@@ -91,6 +93,10 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
           : 'Los pedidos de este enlace llegan sin vendedor y los atiende el admin. Cada vendedor ve el suyo en esta misma página.' }}</p>
       </section>
 
+      @if (esVendedor()) {
+        <section class="panel"><app-mi-catalogo></app-mi-catalogo></section>
+      }
+
       <section class="panel">
         <app-enlaces-productos [base]="enlace()"></app-enlaces-productos>
       </section>
@@ -123,6 +129,9 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
             }
             <p class="dir"><a [href]="'tel:' + w.cliente_telefono">{{ w.cliente_telefono }}</a> · {{ w.direccion }} · <strong>{{ w.barrio }}</strong></p>
             @if (w.observaciones) { <p class="obs">"{{ w.observaciones }}"</p> }
+            @if (w.cupon) {
+              <p class="obs">🎟️ Usó el cupón <strong>{{ w.cupon }}</strong>: se le descontaron {{ pesos(w.descuento ?? 0) }} (ya están restados en los precios).</p>
+            }
             <ul class="items">
               @for (i of w.items; track $index) {
                 <li><span>{{ i.cantidad }} × {{ i.nombre }}@if (i.color || i.talla) { <small> · {{ variante(i) }}</small> }</span><span class="num">{{ pesos(i.precio * i.cantidad) }}</span></li>
