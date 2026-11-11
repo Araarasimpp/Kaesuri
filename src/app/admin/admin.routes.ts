@@ -135,6 +135,14 @@ export const ADMIN_ROUTES: Routes = [
         path: 'actualizaciones',
         loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
       },
+      {
+        path: 'deudas',
+        loadComponent: () => import('../paginas/deudas/deudas.page').then((m) => m.DeudasPage),
+      },
+      {
+        path: 'cuentas',
+        loadComponent: () => import('../paginas/cuentas/cuentas.page').then((m) => m.CuentasPage),
+      },
     ],
   },
 ];

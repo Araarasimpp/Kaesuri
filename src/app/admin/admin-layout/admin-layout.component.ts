@@ -33,6 +33,8 @@ import {
   cardOutline,
   trendingUpOutline,
   sparklesOutline,
+  documentTextOutline,
+  handLeftOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -69,6 +71,8 @@ export class AdminLayoutComponent {
     { label: 'Recolector', path: '/admin/recolector', icon: 'bag-handle-outline' },
     { label: 'Comisiones', path: '/admin/comisiones', icon: 'cash-outline' },
     { label: 'Gastos', path: '/admin/gastos', icon: 'card-outline' },
+    { label: 'Deudas', path: '/admin/deudas', icon: 'document-text-outline' },
+    { label: 'Cuentas por cobrar', path: '/admin/cuentas', icon: 'hand-left-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Rentabilidad', path: '/admin/rentabilidad', icon: 'trending-up-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
@@ -82,7 +86,7 @@ export class AdminLayoutComponent {
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
     { label: 'Pedidos de la tienda', path: '/admin/pedidos-web', icon: 'storefront-outline' },
     { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
-  { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
+    { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -94,6 +98,8 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      handLeftOutline,
+      documentTextOutline,
       sparklesOutline,
       trendingUpOutline,
       cardOutline,

@@ -322,3 +322,8 @@ drop function if exists public.jasta_rotulos_datos();
 drop function if exists public.jasta_marcar_rotulos(text, uuid[]);
 drop function if exists public.jasta_marcar_rotulos_alistador(uuid[]);
 drop function if exists public.jasta_despachador(text);
+
+-- ============================================================ 11. Aviso de deudas por vencer (8:25 a. m.)
+-- Al admin: deudas con proveedores que vencen en 3 días o ya vencieron. La función ya está creada.
+select cron.unschedule('recordar-deudas') where exists (select 1 from cron.job where jobname = 'recordar-deudas');
+select cron.schedule('recordar-deudas', '25 13 * * *', 'select public.recordar_deudas()');
