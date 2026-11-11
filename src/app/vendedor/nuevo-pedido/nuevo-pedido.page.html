@@ -97,7 +97,7 @@
           <div class="carrito-fila-precio">
             <label>
               Precio de venta
-              <input type="number" [(ngModel)]="item.precioUnitario" min="0" />
+              <input pesos [(ngModel)]="item.precioUnitario" min="0" />
             </label>
             <div class="carrito-montos">
               <span class="carrito-subtotal">{{ formatoMoneda(item.cantidad * item.precioUnitario) }}</span>
@@ -174,7 +174,7 @@
 
         <div class="field">
           <label>Valor del domicilio</label>
-          <input type="number" [(ngModel)]="valorDomicilio" min="0" />
+          <input pesos [(ngModel)]="valorDomicilio" min="0" />
         </div>
       </ng-container>
 
@@ -193,7 +193,7 @@
         </div>
         <div class="field" *ngIf="metodo === 'mixto'">
           <label>¿Cuánto en efectivo? (el resto, transferencia)</label>
-          <input type="number" [(ngModel)]="efectivo" min="0" />
+          <input pesos [(ngModel)]="efectivo" min="0" />
         </div>
       </ng-container>
 

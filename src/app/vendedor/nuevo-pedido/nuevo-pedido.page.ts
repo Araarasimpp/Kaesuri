@@ -21,6 +21,7 @@ interface Riesgo {
 }
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { BotonTicketComponent } from '../../shared/ticket/boton-ticket.component';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 interface ItemCarrito {
   /** Cada línea es un producto con un color y una talla */
   key: number;
@@ -36,7 +37,7 @@ interface ItemCarrito {
 @Component({
   selector: 'app-nuevo-pedido',
   standalone: true,
-  imports: [SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
+  imports: [PesosDirective, SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
   templateUrl: './nuevo-pedido.page.html',
   styleUrls: ['./nuevo-pedido.page.scss'],
 })

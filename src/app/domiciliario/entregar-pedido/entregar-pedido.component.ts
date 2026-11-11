@@ -5,6 +5,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { MetodoPago } from '../../shared/models/models';
 import { llevaComprobante } from '../../shared/pago';
 import { ComprobantesInputComponent } from '../../shared/comprobantes/comprobantes-input.component';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface PedidoResumen {
   id: string;
@@ -16,7 +17,7 @@ interface PedidoResumen {
 @Component({
   selector: 'app-entregar-pedido',
   standalone: true,
-  imports: [CommonModule, FormsModule, ComprobantesInputComponent],
+  imports: [PesosDirective, CommonModule, FormsModule, ComprobantesInputComponent],
   templateUrl: './entregar-pedido.component.html',
   styleUrls: ['./entregar-pedido.component.scss'],
 })

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface Zona {
   id: string;
@@ -23,7 +24,7 @@ function normalizar(t: string): string {
 @Component({
   selector: 'app-barrios',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule],
+  imports: [PesosDirective, SkeletonComponent, CommonModule, FormsModule],
   templateUrl: './barrios.page.html',
   styleUrls: ['./barrios.page.scss'],
 })

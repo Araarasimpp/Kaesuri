@@ -15,6 +15,7 @@ import { urlsComprobantes } from '../../shared/comprobantes';
 import { confirmar } from '../../shared/dialogo';
 import { mensajeError, numero, pesos, urlMini } from '../../shared/formato';
 import { formatoFechaCO, formatoHoraCO, hoyColombiaISO } from '../../shared/fecha-colombia';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface Prod {
   id: string;
@@ -56,7 +57,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
   selector: 'app-inventario',
   standalone: true,
   host: { class: 'jt' },
-  imports: [SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, VariantesAgotadasComponent],
+  imports: [PesosDirective, SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, VariantesAgotadasComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -338,7 +339,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
                 <div class="linea" [class.sin-costo]="!esAdmin()">
                   <span class="nom">{{ l.producto.nombre }}</span>
                   <input class="num" type="number" inputmode="numeric" min="1" [(ngModel)]="l.cantidad" (ngModelChange)="tocar()" aria-label="Cantidad" placeholder="Cant." />
-                  @if (esAdmin()) { <input class="num" type="number" inputmode="numeric" min="0" [(ngModel)]="l.costo" (ngModelChange)="tocar()" aria-label="Costo por unidad" placeholder="Costo c/u" /> }
+                  @if (esAdmin()) { <input class="num" pesos min="0" [(ngModel)]="l.costo" (ngModelChange)="tocar()" aria-label="Costo por unidad" placeholder="Costo c/u" /> }
                   <button type="button" class="quitar" (click)="quitarLinea(i)" aria-label="Quitar"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>
               }

@@ -13,6 +13,7 @@ import { urlsComprobantes } from '../../shared/comprobantes';
 import { confirmar } from '../../shared/dialogo';
 import { mensajeError, pesos } from '../../shared/formato';
 import { hoyColombiaISO } from '../../shared/fecha-colombia';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 export const CATEGORIAS_GASTO = [
   { id: 'arriendo', label: 'Arriendo' },
@@ -55,7 +56,7 @@ interface Resumen {
   selector: 'app-gastos',
   standalone: true,
   host: { class: 'jt' },
-  imports: [FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, SkeletonComponent],
+  imports: [PesosDirective, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, SkeletonComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -176,7 +177,7 @@ interface Resumen {
           <button class="b b-icono" aria-label="Cerrar" (click)="form.set(false)"><ion-icon name="close-outline"></ion-icon></button></div>
         <div class="hoja-body">
           <div class="fila-campos">
-            <div class="campo"><label for="gv">Valor</label><input id="gv" class="num" type="number" inputmode="numeric" min="0" step="1000" [(ngModel)]="valor" /></div>
+            <div class="campo"><label for="gv">Valor</label><input id="gv" class="num" pesos min="0" [(ngModel)]="valor" /></div>
             <div class="campo"><label for="gf">Fecha</label><input id="gf" type="date" [max]="hoy" [(ngModel)]="fecha" /></div>
           </div>
           <div class="campo"><label for="gc">Categoría</label>

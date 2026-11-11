@@ -37,17 +37,17 @@
 
         <div class="field">
           <label>Precio base (a lo que le sale al vendedor) *</label>
-          <input type="number" [(ngModel)]="form.precio_base" min="0" />
+          <input pesos [(ngModel)]="form.precio_base" min="0" />
         </div>
 
         <div class="field">
           <label>Precio sugerido (con comisión incluida) *</label>
-          <input type="number" [(ngModel)]="form.precio_sugerido" min="0" />
+          <input pesos [(ngModel)]="form.precio_sugerido" min="0" />
         </div>
 
         <div class="field">
           <label>Costo (lo que te sale a ti) *</label>
-          <input type="number" [(ngModel)]="form.costo" min="0" placeholder="Opcional" />
+          <input pesos [(ngModel)]="form.costo" min="0" placeholder="Opcional" />
         </div>
 
         <div class="field field-full">

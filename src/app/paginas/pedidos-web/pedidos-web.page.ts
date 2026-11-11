@@ -9,6 +9,7 @@ import { enlaceWhatsapp } from '../../shared/whatsapp';
 import { EstadisticasTiendaComponent } from './estadisticas-tienda.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { EnlacesProductosComponent } from './enlaces-productos.component';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface Riesgo {
   nivel: 'alto' | 'medio' | null; pedidos: number; entregados: number; rechazados: number; novedades: number; devoluciones: number;
@@ -20,6 +21,8 @@ interface PedidoWeb {
   cliente_nombre: string; cliente_telefono: string; direccion: string; barrio: string; observaciones: string | null;
   valor_domicilio: number; domicilio_por_confirmar: boolean; items: ItemWeb[]; subtotal: number; pedido_id: string | null; numero: number | null;
   motivo: string | null; atendido_por: string | null; atendido_at: string | null; created_at: string; riesgo: Riesgo | null;
+  /** Señales del pedido para revisar antes de confirmar (varios pedidos seguidos, misma conexión, dirección con rechazos…) */
+  sospecha?: { nivel: 'alto' | 'medio'; razones: string[] } | null;
 }
 
 /** Enlace de la tienda: /tienda/<primer nombre>-<primeros 8 caracteres del id> */
@@ -36,7 +39,7 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
 @Component({
   selector: 'app-pedidos-web',
   standalone: true,
-  imports: [EnlacesProductosComponent, SkeletonComponent, FormsModule, EstadisticasTiendaComponent],
+  imports: [PesosDirective, EnlacesProductosComponent, SkeletonComponent, FormsModule, EstadisticasTiendaComponent],
   host: { class: 'jt' },
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
@@ -62,6 +65,7 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
       .tot .num { font-family: var(--mono-font); }
       .riesgo { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--oro-wash); color: var(--oro-texto); font-size: 13px; }
       .riesgo.alto { background: var(--danger-wash); color: var(--danger); }
+      .riesgo-tip { margin-top: 2px; font-size: 12px; opacity: .85; }
       .obs { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13.5px; }
       .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; }
       .check input { margin-top: 3px; }
@@ -110,6 +114,13 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
                 <span>{{ w.riesgo!.rechazados }} cancelados después de salir · {{ w.riesgo!.devoluciones }} devoluciones · {{ w.riesgo!.entregados }} de {{ w.riesgo!.pedidos }} entregados</span>
               </div>
             }
+            @if (w.sospecha; as s) {
+              <div class="riesgo" [class.alto]="s.nivel === 'alto'">
+                <strong>🔎 {{ s.nivel === 'alto' ? 'Revisa este pedido antes de confirmarlo' : 'Ojo con este pedido' }}</strong>
+                @for (r of s.razones; track r) { <span>· {{ r }}</span> }
+                <span class="riesgo-tip">Llama al cliente para confirmar antes de despacharlo.</span>
+              </div>
+            }
             <p class="dir"><a [href]="'tel:' + w.cliente_telefono">{{ w.cliente_telefono }}</a> · {{ w.direccion }} · <strong>{{ w.barrio }}</strong></p>
             @if (w.observaciones) { <p class="obs">"{{ w.observaciones }}"</p> }
             <ul class="items">
@@ -147,7 +158,7 @@ export function enlaceTienda(u: { id: string; nombre: string | null } | null): s
           @if (a.tipo === 'confirmar') {
             <p class="ayuda" style="margin: 0">Confírmalo solo después de hablar con el cliente. Al confirmar, el pedido pasa a Pedidos por alistar a tu nombre.</p>
             <div class="campo"><label for="pw-dom">Domicilio{{ a.w.domicilio_por_confirmar ? ' (su barrio no está en la tabla)' : '' }}</label>
-              <input id="pw-dom" type="number" inputmode="numeric" min="0" step="1000" [(ngModel)]="domicilio" [placeholder]="a.w.domicilio_por_confirmar ? 'Escribe lo que vas a cobrar' : ''" /></div>
+              <input id="pw-dom" pesos min="0" [(ngModel)]="domicilio" [placeholder]="a.w.domicilio_por_confirmar ? 'Escribe lo que vas a cobrar' : ''" /></div>
             @if (a.w.domicilio_por_confirmar) {
               <p class="ayuda" style="margin: 0">El cliente escribió el barrio <strong>{{ a.w.barrio }}</strong>, que no está en la tabla de domicilios. Pregúntale bien dónde queda y cobra lo que corresponda.</p>
               <label class="check"><input type="checkbox" [(ngModel)]="guardarBarrio" />

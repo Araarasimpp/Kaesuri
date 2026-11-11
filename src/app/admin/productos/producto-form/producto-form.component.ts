@@ -16,10 +16,11 @@ import { VideosProductoComponent } from '../../../shared/videos-producto/videos-
 type ProductoForm = Omit<Producto, 'id'> & { id?: string };
 
 import { VariantesAgotadasComponent } from '../../../shared/variantes-agotadas/variantes-agotadas.component';
+import { PesosDirective } from '../../../shared/pesos/pesos.directive';
 @Component({
   selector: 'app-producto-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ColoresProductoComponent, TallasProductoComponent, FotosProductoComponent, VideosProductoComponent, VariantesAgotadasComponent],
+  imports: [PesosDirective, CommonModule, FormsModule, ColoresProductoComponent, TallasProductoComponent, FotosProductoComponent, VideosProductoComponent, VariantesAgotadasComponent],
   templateUrl: './producto-form.component.html',
   styleUrls: ['./producto-form.component.scss'],
 })
