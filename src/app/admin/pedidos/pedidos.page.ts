@@ -20,6 +20,8 @@ import { avisar, confirmar } from '../../shared/dialogo';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { ChatHojaComponent } from '../../shared/chat-pedido/chat-hoja.component';
+import { DespacharNacionalComponent } from '../../shared/envio-nacional/despachar-nacional.component';
+import { mensajeGuia } from '../../shared/envio-nacional/envio-nacional';
 
 interface ItemFila {
   nombre: string;
@@ -49,6 +51,13 @@ interface PedidoFila {
   /** Intentos de entrega que no se pudieron y el último motivo */
   novedades: number;
   ultima_novedad: string | null;
+  /** Envío nacional por transportadora */
+  envio_nacional: boolean;
+  destino_ciudad: string | null;
+  destino_departamento: string | null;
+  destinatario_cedula: string | null;
+  transportadora: string | null;
+  guia: string | null;
   productos: string;
   items: ItemFila[];
 }
@@ -68,13 +77,13 @@ type FiltroRotulo = 'todos' | 'pendiente' | 'impreso';
 
 const TAMANO_PAGINA = 50;
 const COLUMNAS =
-  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, cuadre_id, seguimiento, novedades, ultima_novedad, ' +
+  'id, numero, canal, vendedor_id, cliente_nombre, cliente_telefono, direccion, barrio, observaciones, estado, total, domiciliario_id, rotulo_impreso_at, alistado_at, created_at, cuadre_id, seguimiento, novedades, ultima_novedad, envio_nacional, destino_ciudad, destino_departamento, destinatario_cedula, transportadora, guia, ' +
   'pedido_items(cantidad, color, talla, producto:productos(nombre, imagen_url))';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule, RouterLink, ImagenPreviewComponent, ChatHojaComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, RouterLink, ImagenPreviewComponent, ChatHojaComponent, DespacharNacionalComponent],
   templateUrl: './pedidos.page.html',
   styleUrls: ['./pedidos.page.scss'],
 })
@@ -150,6 +159,26 @@ export class PedidosPage implements OnInit, OnDestroy {
     });
     await Promise.all([this.cargarPedidos(), this.cargarConteos(), this.cargarDomiciliarios()]);
     this.suscribirRealtime();
+  }
+
+  /** Pedido que se está despachando por transportadora */
+  despachando: PedidoFila | null = null;
+
+  abrirDespachoNacional(p: PedidoFila): void {
+    this.menuAbiertoId = null;
+    this.despachando = p;
+  }
+
+  async despachadoNacional(): Promise<void> {
+    this.despachando = null;
+    await Promise.all([this.cargarPedidos(this.pedidos.length), this.cargarConteos()]);
+  }
+
+  enviarGuia(p: PedidoFila): void {
+    this.menuAbiertoId = null;
+    const tel = (p.cliente_telefono ?? '').replace(/\D/g, '');
+    const num = tel.length === 10 ? '57' + tel : tel;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(mensajeGuia(p))}`, '_blank');
   }
 
   abrirChat(id: string): void {

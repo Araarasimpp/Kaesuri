@@ -59,6 +59,11 @@ export class NuevoPedidoPage implements OnInit {
   riesgo: Riesgo | null = null;
   direccion = '';
   barrio = '';
+  /** Envío nacional por transportadora (otra ciudad, pago anticipado) */
+  envioNacional = false;
+  destinoCiudad = '';
+  destinoDepartamento = '';
+  destinatarioCedula = '';
   zonas: { id: string; nombre: string; valor: number }[] = [];
   valorDomicilio: number = 0;
   observaciones = '';
@@ -407,6 +412,18 @@ export class NuevoPedidoPage implements OnInit {
       return;
     }
 
+    if (this.envioNacional && !this.editarId) {
+      if (this.destinoCiudad.trim().length < 3 || this.destinoDepartamento.trim().length < 3) {
+        this.errorMsg = 'Escribe la ciudad y el departamento de destino.';
+        return;
+      }
+      const cc = this.destinatarioCedula.replace(/[^0-9A-Za-z]/g, '');
+      if (cc.length < 5 || cc.length > 15) {
+        this.errorMsg = 'Revisa la cédula del destinatario (la pide la transportadora).';
+        return;
+      }
+    }
+
     this.guardando = true;
 
     const items = this.carrito.map((i) => ({
@@ -468,7 +485,19 @@ export class NuevoPedidoPage implements OnInit {
     }
 
     const numeroPedido = data as number;
-    avisar(`Pedido #${numeroPedido} creado con éxito.`);
+    if (this.envioNacional) {
+      const { data: ped } = await this.supabase.client.from('pedidos').select('id').eq('numero', numeroPedido).maybeSingle();
+      const { error: errEnvio } = ped
+        ? await this.supabase.client.rpc('marcar_envio_nacional', {
+            p_pedido: (ped as { id: string }).id, p_ciudad: this.destinoCiudad.trim(),
+            p_departamento: this.destinoDepartamento.trim(), p_cedula: this.destinatarioCedula.trim(),
+          })
+        : { error: { message: 'No se encontró el pedido' } };
+      if (errEnvio) avisar(`Pedido #${numeroPedido} creado, pero no quedó como envío nacional: ${errEnvio.message}`);
+      else avisar(`Pedido #${numeroPedido} creado como envío nacional a ${this.destinoCiudad.trim()}.`);
+    } else {
+      avisar(`Pedido #${numeroPedido} creado con éxito.`);
+    }
 
     const volverA = (this.route.snapshot.data['volverA'] as string) ?? '/vendedor';
     this.router.navigateByUrl(volverA);

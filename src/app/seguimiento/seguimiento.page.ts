@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { SupabaseService } from '../core/services/supabase.service';
 import { pesos } from '../shared/formato';
 import { formatoFechaCO, formatoHoraCO } from '../shared/fecha-colombia';
+import { urlRastreo } from '../shared/envio-nacional/envio-nacional';
 
 interface Seguimiento {
   id: number;
@@ -20,6 +21,11 @@ interface Seguimiento {
   barrio: string | null;
   total: number;
   domicilio: number;
+  envio_nacional?: boolean;
+  transportadora?: string | null;
+  guia?: string | null;
+  destino?: string | null;
+  enviado_at?: string | null;
   mensajero: string | null;
   novedad: string | null;
   novedad_at: string | null;
@@ -50,6 +56,11 @@ interface Seguimiento {
       .marca img { width: 40px; height: 40px; border-radius: 10px; background: #fff; object-fit: contain; }
       .marca strong { font-size: 16px; }
       .marca small { display: block; font-size: 12px; color: var(--text-muted); }
+      .guia-envio { display: flex; flex-direction: column; gap: 6px; }
+      .guia-num { font-family: var(--mono-font, monospace); font-size: 24px; letter-spacing: .04em; overflow-wrap: anywhere; }
+      .guia-acc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+      .guia-btn { display: flex; align-items: center; justify-content: center; height: 46px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; font-size: 15px; font-weight: 650; text-decoration: none; cursor: pointer; }
+      .guia-btn.pri { border-color: var(--accent); background: var(--accent); color: #fff; }
       .tarjeta { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
       h1 { margin: 0; font-size: 22px; line-height: 1.25; }
       .sub { margin: 4px 0 0; font-size: 14px; color: var(--text-soft); }
@@ -120,7 +131,7 @@ interface Seguimiento {
             <p class="sub">Compra en el local · {{ fecha(p.creado_at) }}</p>
           } @else {
             <h1>Hola {{ p.cliente }}, este es tu pedido #{{ p.id }}</h1>
-            <p class="sub">{{ p.barrio ? 'Entrega en ' + p.barrio : 'Pedido del ' + fecha(p.creado_at) }}</p>
+            <p class="sub">{{ p.envio_nacional && p.destino ? 'Envío a ' + p.destino : p.barrio ? 'Entrega en ' + p.barrio : 'Pedido del ' + fecha(p.creado_at) }}</p>
           }
           <span class="estado" [class.entregado]="p.estado === 'entregado'" [class.cancelado]="p.estado === 'cancelado'">{{ titulo() }}</span>
         </section>
@@ -145,6 +156,18 @@ interface Seguimiento {
           </section>
         }
 
+        @if (p.envio_nacional && p.guia) {
+          <section class="tarjeta guia-envio">
+            <h2>Tu guía de {{ p.transportadora }}</h2>
+            <strong class="guia-num">{{ p.guia }}</strong>
+            <p class="sub">Con este número sigues tu paquete en la página de {{ p.transportadora }}.</p>
+            <div class="guia-acc">
+              @if (rastreo(p.transportadora)) { <a class="guia-btn pri" [href]="rastreo(p.transportadora)" target="_blank" rel="noopener">Rastrear mi paquete</a> }
+              <button type="button" class="guia-btn" (click)="copiarGuia(p.guia)">{{ copiada() ? '¡Copiada!' : 'Copiar guía' }}</button>
+            </div>
+          </section>
+        }
+
         <section class="tarjeta">
           <h2>{{ p.canal === 'local' ? 'Lo que compraste' : 'Lo que pediste' }}</h2>
           <ul class="items">
@@ -153,7 +176,7 @@ interface Seguimiento {
             }
           </ul>
           <div class="total"><span>{{ p.canal === 'local' || p.estado === 'entregado' ? 'Total pagado' : 'Total a pagar' }}</span><strong>{{ pesos(p.total) }}</strong></div>
-          @if (p.domicilio) { <p class="total-nota">Incluye domicilio de {{ pesos(p.domicilio) }}</p> }
+          @if (p.domicilio) { <p class="total-nota">Incluye {{ p.envio_nacional ? 'envío' : 'domicilio' }} de {{ pesos(p.domicilio) }}</p> }
         </section>
 
         @if (p.estado === 'entregado') {
@@ -223,6 +246,16 @@ export class SeguimientoPage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
 
   s = signal<Seguimiento | null>(null);
+  rastreo = urlRastreo;
+  copiada = signal(false);
+
+  async copiarGuia(g: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(g);
+      this.copiada.set(true);
+      setTimeout(() => this.copiada.set(false), 2000);
+    } catch { /* sin portapapeles */ }
+  }
   cargando = signal(true);
   actualizado = signal('');
   pesos = pesos;

@@ -167,6 +167,16 @@
       </div>
 
       <ng-container *ngIf="!local">
+        <label class="envio-nacional" *ngIf="!editarId">
+          <input type="checkbox" [(ngModel)]="envioNacional" />
+          <span>Envío nacional por transportadora (otra ciudad, el cliente paga antes)</span>
+        </label>
+        <div class="envio-campos" *ngIf="envioNacional && !editarId">
+          <div class="field"><label>Ciudad de destino *</label><input type="text" maxlength="80" [(ngModel)]="destinoCiudad" placeholder="Ej: Medellín" /></div>
+          <div class="field"><label>Departamento *</label><input type="text" maxlength="60" [(ngModel)]="destinoDepartamento" placeholder="Ej: Antioquia" /></div>
+          <div class="field"><label>Cédula del destinatario *</label><input type="text" inputmode="numeric" maxlength="15" [(ngModel)]="destinatarioCedula" /></div>
+        </div>
+
         <div class="field">
           <label>Dirección *</label>
           <input type="text" [(ngModel)]="direccion" />
