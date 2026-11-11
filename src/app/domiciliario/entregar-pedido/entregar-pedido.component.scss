@@ -170,3 +170,11 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.propina {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  small { font-size: 12px; opacity: .7; }
+}

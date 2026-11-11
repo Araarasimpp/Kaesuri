@@ -7,6 +7,7 @@ import { EstadoPedido } from '../../shared/models/models';
 import { hoyColombiaISO, inicioDiaColombia, finDiaColombia, formatoFechaCO } from '../../shared/fecha-colombia';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { CalificacionesComponent } from './calificaciones.component';
+import { HorasVentasComponent } from './horas-ventas.component';
 
 interface ItemReporte {
   nombre: string;
@@ -42,7 +43,7 @@ type FiltroEstado = 'todos' | EstadoPedido;
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, FormsModule, CalificacionesComponent],
+  imports: [SkeletonComponent, CommonModule, FormsModule, CalificacionesComponent, HorasVentasComponent],
   templateUrl: './reportes.page.html',
   styleUrls: ['./reportes.page.scss'],
 })
@@ -54,6 +55,9 @@ export class ReportesPage implements OnInit {
   hasta = '';
   vendedorId = 'todos';
   estado: FiltroEstado = 'todos';
+  /** Domicilios, ventas del local o todas */
+  canal: 'todos' | 'domicilio' | 'local' = 'todos';
+  pestana: 'pedidos' | 'horas' = 'pedidos';
 
   vendedores: Vendedor[] = [];
   filas: FilaReporte[] = [];
@@ -65,7 +69,6 @@ export class ReportesPage implements OnInit {
     { valor: 'pendiente', etiqueta: 'Pendiente' },
     { valor: 'en_ruta', etiqueta: 'En ruta' },
     { valor: 'entregado', etiqueta: 'Entregado' },
-    { valor: 'cancelado', etiqueta: 'Cancelado' },
   ];
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
@@ -200,7 +203,9 @@ export class ReportesPage implements OnInit {
         .order('created_at', { ascending: false })
         .range(desde, desde + bloque - 1);
       if (this.vendedorId !== 'todos') query = query.eq('vendedor_id', this.vendedorId);
-      if (this.estado !== 'todos') query = query.eq('estado', this.estado);
+      // Los cancelados nunca cuentan en los reportes
+      query = this.estado !== 'todos' ? query.eq('estado', this.estado) : query.neq('estado', 'cancelado');
+      if (this.canal !== 'todos') query = query.eq('canal', this.canal);
 
       const { data, error } = await query;
       if (error || !data) break;

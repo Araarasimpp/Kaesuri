@@ -41,6 +41,8 @@ export class EntregarPedidoComponent {
   comprobantes: string[] = [];
   /** Pago mixto: cuánto recibió en efectivo; el resto es transferencia. */
   montoEfectivo: number | null = null;
+  /** Propina por transferencia (lo que el cliente transfirió de más) */
+  propina: number | null = null;
 
   guardando = false;
   errorMsg = '';
@@ -102,11 +104,19 @@ export class EntregarPedidoComponent {
         return;
       }
 
+      const propina = this.llevaComprobante ? Math.max(0, Math.round(Number(this.propina) || 0)) : 0;
+      if (propina > this.pedido.total) {
+        this.guardando = false;
+        this.errorMsg = 'Revisa la propina: es más que el valor del pedido.';
+        this.cdr.detectChanges();
+        return;
+      }
       const { error } = await this.supabase.client.rpc('entregar_pedido', {
         p_pedido_id: this.pedido.id,
         p_metodo: this.metodoPago,
         p_comprobantes: comprobantes,
         p_efectivo: this.metodoPago === 'mixto' ? this.montoEfectivo : null,
+        ...(propina > 0 ? { p_propina: propina } : {}),
       });
 
       this.guardando = false;

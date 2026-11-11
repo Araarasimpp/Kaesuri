@@ -563,3 +563,10 @@ revoke all on function public.recolector_productos(), public.recoleccion_compra(
   public.recoleccion_borrar_compra(bigint), public.recoleccion_recibir(uuid, numeric, text, date), public.recoleccion_borrar_entrega(bigint) from public, anon;
 grant execute on function public.recolector_productos(), public.recoleccion_compra(numeric, text, text, text[], uuid, integer, numeric),
   public.recoleccion_borrar_compra(bigint), public.recoleccion_recibir(uuid, numeric, text, date), public.recoleccion_borrar_entrega(bigint) to authenticated;
+
+-- ============================================================ 16. Propinas por transferencia: lo que entrega el domiciliario
+-- El "total a entregar" del cuadre también descuenta las propinas por transferencia (esa plata
+-- quedó en la cuenta del negocio y es del domiciliario). Es una columna calculada, por eso hay
+-- que borrarla y crearla otra vez (no se pierde nada: se recalcula sola).
+alter table public.cuadres drop column if exists total_a_entregar;
+alter table public.cuadres add column total_a_entregar numeric generated always as (total_efectivo - total_domicilios - total_propinas) stored;

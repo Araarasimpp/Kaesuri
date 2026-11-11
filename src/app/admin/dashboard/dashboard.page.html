@@ -34,6 +34,38 @@
       </div>
     </section>
 
+    <section class="local" *ngIf="local as l" aria-labelledby="t-local">
+      <div class="local-head">
+        <h2 id="t-local">Ventas del local</h2>
+        <div class="local-fechas">
+          <label>Desde <input type="date" [(ngModel)]="localDesde" (ngModelChange)="cargarLocal()" /></label>
+          <label>Hasta <input type="date" [(ngModel)]="localHasta" (ngModelChange)="cargarLocal()" /></label>
+        </div>
+      </div>
+      <div class="stats-row">
+        <a class="stat-card destacada" routerLink="/admin/ventas-local">
+          <span class="stat-label">Ganancia tienda</span>
+          <span class="stat-valor">{{ formatoMoneda(l.ganancia_tienda) }}</span>
+          <span class="stat-caption">Solo ventas del local</span>
+        </a>
+        <a class="stat-card" routerLink="/admin/ventas-local">
+          <span class="stat-label">Vendido</span>
+          <span class="stat-valor">{{ formatoMoneda(l.total) }}</span>
+          <span class="stat-caption">{{ l.ventas }} {{ l.ventas === 1 ? 'venta' : 'ventas' }} · {{ l.unidades }} {{ l.unidades === 1 ? 'unidad' : 'unidades' }}</span>
+        </a>
+        <div class="stat-card">
+          <span class="stat-label">Efectivo</span>
+          <span class="stat-valor">{{ formatoMoneda(l.efectivo) }}</span>
+          <span class="stat-caption">Lo que entró a la caja</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Transferencias</span>
+          <span class="stat-valor">{{ formatoMoneda(l.transferencia) }}</span>
+          <span class="stat-caption">Ticket promedio {{ formatoMoneda(l.ventas ? l.total / l.ventas : 0) }}</span>
+        </div>
+      </div>
+    </section>
+
     <section class="main-grid">
       <div class="panel panel-chart">
         <h2>Ventas de la semana</h2>

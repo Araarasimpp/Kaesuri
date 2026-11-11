@@ -25,6 +25,8 @@ interface PedidoSinCuadrar {
   barrio: string | null;
   total: number;
   valor_domicilio: number;
+  /** Propina por transferencia: quedó en la cuenta del negocio y es tuya */
+  propina: number | null;
   metodo_pago: MetodoPago | null;
   monto_efectivo: number | null;
   monto_transferencia: number | null;
@@ -121,7 +123,7 @@ export class CuadresPage implements OnInit {
       this.supabase.client
         .from('pedidos')
         .select(
-          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, comprobantes, entregado_at'
+          'id, numero, cliente_nombre, direccion, barrio, total, valor_domicilio, propina, metodo_pago, monto_efectivo, monto_transferencia, comprobante_url, comprobantes, entregado_at'
         )
         .eq('domiciliario_id', user.id)
         .eq('estado', 'entregado')
@@ -188,7 +190,7 @@ export class CuadresPage implements OnInit {
   // domicilio que te queda a ti. Si fue por transferencia, sale negativo:
   // significa que el negocio te debe ese domicilio.
   cuadreDe(p: PedidoSinCuadrar): number {
-    return this.efectivoDe(p) - p.valor_domicilio;
+    return this.efectivoDe(p) - p.valor_domicilio - Number(p.propina || 0);
   }
 
   get totalEfectivo(): number {
@@ -203,8 +205,12 @@ export class CuadresPage implements OnInit {
     return this.pedidosHoy.reduce((sum, p) => sum + p.valor_domicilio, 0);
   }
 
+  get totalPropinas(): number {
+    return this.pedidosHoy.reduce((sum, p) => sum + Number(p.propina || 0), 0);
+  }
+
   get totalCuadre(): number {
-    return this.totalEfectivo - this.totalDomicilios;
+    return this.totalEfectivo - this.totalDomicilios - this.totalPropinas;
   }
 
   get porDia(): {

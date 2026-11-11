@@ -1,8 +1,9 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { inicioDiaColombia, diaColombiaDe } from '../../shared/fecha-colombia';
+import { inicioDiaColombia, diaColombiaDe, hoyColombiaISO } from '../../shared/fecha-colombia';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface PedidoResumen {
@@ -43,7 +44,7 @@ interface DomiciliarioActivo {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [SkeletonComponent, CommonModule, RouterLink],
+  imports: [SkeletonComponent, CommonModule, RouterLink, FormsModule],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
 })
@@ -71,7 +72,25 @@ export class DashboardPage implements OnInit {
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
+    void this.cargarLocal();
     await this.cargarReporte();
+  }
+
+  // Ventas del local: lo vendido en el punto físico, cómo se pagó y lo que ganó la tienda (mes en curso por defecto)
+  local: { ventas: number; total: number; efectivo: number; transferencia: number; ganancia_tienda: number; unidades: number } | null = null;
+  localDesde = hoyColombiaISO().slice(0, 8) + '01';
+  localHasta = hoyColombiaISO();
+
+  async cargarLocal(): Promise<void> {
+    if (!this.localDesde || !this.localHasta) return;
+    const { data, error } = await this.supabase.client.rpc('resumen_local', { p_desde: this.localDesde, p_hasta: this.localHasta });
+    if (error || !data) return; // si falla, el resto del Dashboard se ve igual
+    const d = data as Record<string, number>;
+    this.local = {
+      ventas: Number(d['ventas']), total: Number(d['total']), efectivo: Number(d['efectivo']),
+      transferencia: Number(d['transferencia']), ganancia_tienda: Number(d['ganancia_tienda']), unidades: Number(d['unidades']),
+    };
+    this.cdr.detectChanges();
   }
 
   async cargarReporte(): Promise<void> {
