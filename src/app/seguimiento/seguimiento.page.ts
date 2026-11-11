@@ -33,7 +33,7 @@ interface Seguimiento {
   vendedora_telefono: string | null;
   negocio: string | null;
   telefonos: string | null;
-  items: { nombre: string; cantidad: number; color: string | null; talla: string | null }[];
+  items: { producto_id?: string | null; resena?: number | null; nombre: string; cantidad: number; color: string | null; talla: string | null }[];
   calificacion: { estrellas: number; comentario: string | null } | null;
 }
 
@@ -114,6 +114,12 @@ interface Seguimiento {
       .enviar { margin-top: 10px; height: 46px; border: 0; border-radius: var(--radius); background: var(--accent); color: #fff; font: inherit; font-size: 15px; font-weight: 650; cursor: pointer; }
       .enviar:disabled { opacity: .6; }
       .gracias { margin: 8px 0 0; font-size: 14px; color: var(--text-soft); line-height: 1.45; }
+      .res-prod { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+      .res-prod:last-of-type { border-bottom: 0; }
+      .res-prod > span { font-size: 14px; font-weight: 600; }
+      .res-prod .estrellas button, .res-prod .estrellas span { width: 38px; height: 38px; font-size: 30px; }
+      .res-prod textarea { margin-top: 4px; }
+      .res-prod .listo-res { font-size: 12.5px; color: var(--efectivo-texto, #15803d); font-weight: 600; }
       .error-cal { margin: 8px 0 0; font-size: 13px; color: var(--danger); }
     `,
   ],
@@ -215,6 +221,38 @@ interface Seguimiento {
           </section>
         }
 
+        @if (p.estado === 'entregado' && productosCalif().length) {
+          <section class="tarjeta califica">
+            <h2>¿Qué tal tus productos?</h2>
+            <p class="sub" style="margin: 0 0 4px">Califícalos: tu opinión ayuda a otros clientes a elegir.</p>
+            @for (i of productosCalif(); track i.producto_id) {
+              <div class="res-prod">
+                <span>{{ i.nombre }}</span>
+                @if (i.resena) {
+                  <div class="estrellas fijas" [attr.aria-label]="i.resena + ' de 5 estrellas'">
+                    @for (n of [1, 2, 3, 4, 5]; track n) { <span [class.on]="n <= i.resena!">★</span> }
+                  </div>
+                  <small class="listo-res">✓ Gracias por tu reseña</small>
+                } @else {
+                  <div class="estrellas" role="radiogroup" [attr.aria-label]="'Calificación de ' + i.nombre">
+                    @for (n of [1, 2, 3, 4, 5]; track n) {
+                      <button type="button" role="radio" [attr.aria-checked]="resenasSel()[i.producto_id!] === n" [attr.aria-label]="n + (n === 1 ? ' estrella' : ' estrellas')"
+                        [class.on]="n <= (resenasSel()[i.producto_id!] || 0)" (click)="elegirResena(i.producto_id!, n)">★</button>
+                    }
+                  </div>
+                  @if (resenasSel()[i.producto_id!]) {
+                    <textarea [(ngModel)]="comentariosProd[i.producto_id!]" maxlength="400" rows="2" placeholder="¿Qué te pareció? (opcional)"></textarea>
+                  }
+                }
+              </div>
+            }
+            @if (errorRes()) { <p class="error-cal" role="alert">{{ errorRes() }}</p> }
+            @if (hayResenasNuevas()) {
+              <button class="enviar" (click)="enviarResenas(p)" [disabled]="enviandoRes()">{{ enviandoRes() ? 'Enviando…' : 'Enviar reseñas' }}</button>
+            }
+          </section>
+        }
+
         <section class="contacto">
           @if (p.vendedora_telefono) {
             <a class="wa" [class.solo]="!telefonoTienda()" [href]="whatsapp(p)" target="_blank" rel="noopener">WhatsApp a {{ p.vendedora || 'la tienda' }}</a>
@@ -240,6 +278,35 @@ interface Seguimiento {
 export class SeguimientoPage implements OnInit, OnDestroy {
   private sb = inject(SupabaseService);
   estrellas = signal(0);
+
+  /** Reseñas de productos (estrellas elegidas por producto, antes de enviarlas) */
+  resenasSel = signal<Record<string, number>>({});
+  comentariosProd: Record<string, string> = {};
+  enviandoRes = signal(false);
+  errorRes = signal('');
+  productosCalif = computed(() => {
+    const vistos = new Set<string>();
+    return (this.s()?.items ?? []).filter((i) => i.producto_id && !vistos.has(i.producto_id) && (vistos.add(i.producto_id), true));
+  });
+  hayResenasNuevas = computed(() => this.productosCalif().some((i) => !i.resena && this.resenasSel()[i.producto_id!]));
+  elegirResena(id: string, n: number): void {
+    this.resenasSel.update((r) => ({ ...r, [id]: n }));
+  }
+
+  async enviarResenas(p: Seguimiento): Promise<void> {
+    const codigo = this.route.snapshot.paramMap.get('codigo') ?? '';
+    const sel = this.resenasSel();
+    const nuevas = this.productosCalif().filter((i) => !i.resena && sel[i.producto_id!])
+      .map((i) => ({ producto_id: i.producto_id!, estrellas: sel[i.producto_id!], comentario: (this.comentariosProd[i.producto_id!] ?? '').trim() }));
+    if (!nuevas.length) return;
+    this.enviandoRes.set(true);
+    this.errorRes.set('');
+    const { error } = await this.sb.client.rpc('calificar_productos', { p_codigo: codigo, p_resenas: nuevas });
+    this.enviandoRes.set(false);
+    if (error) return this.errorRes.set((error.message ?? '').replace(/^.*?ERROR:\s*/, ''));
+    const porId = new Map(nuevas.map((n) => [n.producto_id, n.estrellas]));
+    this.s.set({ ...p, items: p.items.map((i) => (i.producto_id && porId.has(i.producto_id) ? { ...i, resena: porId.get(i.producto_id)! } : i)) });
+  }
   comentario = '';
   enviando = signal(false);
   errorCal = signal('');

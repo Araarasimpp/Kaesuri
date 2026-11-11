@@ -1,7 +1,9 @@
-import { Component, ElementRef, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ClienteDireccion, ClienteService, ClienteTarjeta, ConfigTarjeta } from '../core/services/cliente.service';
 import { SupabaseService } from '../core/services/supabase.service';
+import { recargoWompi } from '../shared/recargo-wompi';
 import { mensajeError, pesos, urlImagen, urlMini } from '../shared/formato';
 import { PAISES, bandera, errorTelefono, limpiarNombre, unirTelefono } from '../shared/paises';
 import { SkeletonComponent } from '../shared/skeleton/skeleton.component';
@@ -10,15 +12,47 @@ interface Color { nombre: string; hex: string | null; imagen_url: string | null 
 interface ProductoTienda {
   id: string; nombre: string; precio: number; imagen_url: string | null; tallas: string[]; colores: Color[];
   agotado: boolean; disponibles: number | null; categoria?: string | null;
+  /** Puesto entre los 10 más vendidos de los últimos 30 días */
+  top?: number | null;
+  /** Promedio de estrellas y cuántas reseñas tiene */
+  rating?: number | null; resenas?: number;
+  /** Agregado en los últimos 15 días */
+  nuevo?: boolean;
 }
+interface Resena { estrellas: number; comentario: string | null; cliente: string | null; fecha: string }
+interface UltimoPedido { items: { producto_id: string; cantidad: number; color: string | null; talla: string | null }[]; fecha: string }
+interface Cupon { codigo: string; tipo: 'porcentaje' | 'valor'; valor: number; minimo: number; descripcion: string | null }
 interface Tienda {
   negocio: string | null; telefonos: string | null;
-  vendedora: { id: string; nombre: string; telefono: string | null } | null;
+  vendedora: { id: string; nombre: string; telefono: string | null; foto_url?: string | null; bio?: string | null; destacados?: string[] } | null;
+  /** Hay pago en línea (Wompi) activo */
+  pagos_linea?: boolean;
   barrios: { barrio: string; domicilio: number }[];
   productos: ProductoTienda[];
 }
 interface Linea { producto_id: string; nombre: string; precio: number; imagen_url: string | null; cantidad: number; color: string | null; talla: string | null; max: number }
-interface Hecho { id: number; total: number; domicilioPendiente: boolean }
+interface Hecho { id: number; total: number; domicilioPendiente: boolean; codigo: string; pagado?: boolean }
+
+/** Marca de la tarjeta por sus primeros números */
+function marcaDe(n: string): string {
+  const d = n.replace(/\D/g, '');
+  if (/^4/.test(d)) return 'VISA';
+  if (/^(5[1-5]|2[2-7])/.test(d)) return 'Mastercard';
+  if (/^3[47]/.test(d)) return 'Amex';
+  if (/^3(0[0-5]|[68])/.test(d)) return 'Diners';
+  return '';
+}
+function luhn(n: string): boolean {
+  const d = n.replace(/\D/g, '');
+  if (d.length < 13 || d.length > 19) return false;
+  let s = 0;
+  for (let i = 0; i < d.length; i++) {
+    let x = Number(d[d.length - 1 - i]);
+    if (i % 2) { x *= 2; if (x > 9) x -= 9; }
+    s += x;
+  }
+  return s % 10 === 0;
+}
 
 function normal(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -43,7 +77,8 @@ function parecido(a: string, b: string): number {
 @Component({
   selector: 'app-tienda',
   standalone: true,
-  host: { class: 'jt' },
+  // El diseño de la tienda (tarjetas, banner, carrito) está en global.scss bajo app-tienda.tv2
+  host: { class: 'tv2' },
   imports: [SkeletonComponent, FormsModule],
   styles: [
     `
@@ -53,9 +88,6 @@ function parecido(a: string, b: string): number {
       .scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
       .caja { max-width: 1080px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom)); }
       .marca { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-      .marca img { width: 44px; height: 44px; border-radius: 12px; background: #fff; object-fit: contain; }
-      .marca h1 { margin: 0; font-size: 19px; line-height: 1.2; }
-      .marca small { display: block; font-size: 13px; color: var(--text-soft); }
       .filtros { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0 12px; background: var(--bg); }
       .precio-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
       .compartir-p { height: 36px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text-soft);
@@ -123,8 +155,9 @@ function parecido(a: string, b: string): number {
       .sug-barrios button:hover, .sug-barrios button:focus-visible { background: var(--hover); }
       .sug-barrios small { color: var(--text-muted); font-family: var(--mono-font); white-space: nowrap; }
       .barrio-ok { margin: 4px 0 0; font-size: 13px; color: var(--efectivo-texto); font-weight: 600; }
-      .barrio-nuevo { margin: 6px 0 0; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--oro-wash); color: var(--oro-texto); font-size: 13px; line-height: 1.4; }
-      .barrio-nuevo .link { border: 0; background: none; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; padding: 0 0 0 4px; }
+      .pista-barrio { display: block; margin: -2px 0 2px; font-size: 12.5px; line-height: 1.4; color: var(--text-muted); }
+      .pista-barrio strong { color: var(--text-soft); }
+      .link-wa { font-weight: 650; color: var(--efectivo-texto); }
       .barrio-falta { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-wash); color: var(--text); font-size: 13.5px; }
       .barrio-falta strong { color: var(--danger); }
       .chips-barrio { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -134,6 +167,12 @@ function parecido(a: string, b: string): number {
       .totales .fin { font-size: 16px; font-weight: 700; }
       .totales .num { font-family: var(--mono-font); }
       .nota { margin: 0; font-size: 12.5px; color: var(--text-muted); }
+      .formas-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .formas-pago button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+      .formas-pago button strong { font-size: 14.5px; }
+      .formas-pago button small { font-size: 12px; color: var(--text-muted); line-height: 1.3; }
+      .formas-pago button.on { border-color: var(--accent); background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent); }
+      .formas-pago button:disabled { opacity: .45; cursor: not-allowed; }
       .error { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-wash); color: var(--danger); font-size: 13.5px; }
       .listo { max-width: 520px; margin: 30px auto 0; padding: 26px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); text-align: center; }
       .listo .ok { width: 56px; height: 56px; margin: 0 auto 10px; display: grid; place-items: center; border-radius: 50%; background: var(--ok-wash); color: var(--efectivo-texto); font-size: 28px; }
@@ -147,47 +186,129 @@ function parecido(a: string, b: string): number {
     <div class="scroll" #scroll>
     <div class="caja">
       <header class="marca">
-        <img src="assets/icon/logo.png" alt="" />
-        <div>
-          <h1>{{ t()?.negocio || 'Variedades JYB' }}</h1>
-          <small>{{ t()?.vendedora ? 'Catálogo de ' + primerNombre(t()!.vendedora!.nombre) : 'Catálogo' }} · Pide aquí y te lo llevamos</small>
-        </div>
+        @if (cli.activo) {
+        <button type="button" class="t-yo" (click)="irCuenta()">
+          @if (cli.perfil(); as p) {
+            <span class="t-yo-foto dentro" aria-hidden="true">@if (p.avatar_url) { <img [src]="p.avatar_url" alt="" referrerpolicy="no-referrer" /> } @else { {{ iniciales(p.nombre || p.email || '') }} }</span>
+            <span class="t-yo-txt"><strong>Hola, {{ primerNombre(p.nombre || '') || 'bienvenido' }}</strong><small>Mi cuenta</small></span>
+          } @else {
+            <span class="t-yo-foto" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
+            <span class="t-yo-txt"><strong>Ingresar</strong><small>Entra o crea tu cuenta</small></span>
+          }
+        </button>
+        } @else { <span></span> }
+        <button type="button" class="t-icono-carrito" (click)="lineas().length && abrirCarrito()" [attr.aria-label]="'Mi pedido: ' + unidades() + ' productos'">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+          @if (unidades()) { <span class="t-badge">{{ unidades() }}</span> }
+        </button>
       </header>
 
       @if (hecho(); as h) {
         <section class="listo" role="status">
           <div class="ok" aria-hidden="true">✓</div>
-          <h2>¡Recibimos tu pedido!</h2>
+          <h2>{{ h.pagado ? '¡Pago aprobado!' : '¡Recibimos tu pedido!' }}</h2>
+          @if (h.pagado) {
+            <p>Tu pedido quedó pagado. {{ t()?.vendedora ? primerNombre(t()!.vendedora!.nombre) : 'La tienda' }} te contacta al {{ telefonoMostrar() }} para coordinar el envío. Lo puedes seguir en Mi cuenta → Mis compras.</p>
+          } @else {
           <p>{{ t()?.vendedora ? primerNombre(t()!.vendedora!.nombre) : 'La tienda' }} te va a llamar o escribir al {{ telefonoMostrar() }} para confirmarlo. Después de confirmado, te lo enviamos.</p>
+          }
           <p><strong>Total: {{ pesos(h.total) }}</strong>{{ h.domicilioPendiente ? ' + domicilio (te lo confirman)' : ', domicilio incluido' }}</p>
+          <a class="wa t-ver-pedido" [href]="'/pago/' + h.codigo">Ver mi pedido y su seguimiento →</a>
           @if (whatsapp(); as w) { <a class="wa" [href]="w" target="_blank" rel="noopener">Escribir por WhatsApp</a> }
           <button class="b mas" (click)="hecho.set(null)">Seguir viendo productos</button>
         </section>
       } @else if (t(); as tienda) {
         @if (avisoProducto()) { <p class="aviso-prod" role="status">{{ avisoProducto() }}</p> }
+        @if (tienda.vendedora; as v) {
+          @if ((v.foto_url || v.bio) && !q().trim() && !categoria() && !soloFavs()) {
+            <section class="t-vend" aria-label="Tu asesora">
+              @if (v.foto_url) { <img class="t-vend-foto" [src]="v.foto_url" alt="" referrerpolicy="no-referrer" /> } @else { <span class="t-vend-foto t-vend-ini" aria-hidden="true">{{ iniciales(v.nombre) }}</span> }
+              <div class="t-vend-txt">
+                <strong>{{ primerNombre(v.nombre) }} <small>· tu asesora</small></strong>
+                @if (v.bio) { <p>{{ v.bio }}</p> }
+              </div>
+              @if (whatsappVendedora(); as w) { <a class="t-vend-wa" [href]="w" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">WhatsApp</a> }
+            </section>
+          }
+        }
+        @if (!q().trim() && !categoria() && !soloFavs()) {
+          <section class="t-hero">
+            <div class="t-hero-txt">
+              <span class="t-pill">{{ masVendidos().length ? '🔥 Lo más pedido' : 'Nuevo' }}</span>
+              <h2>Lo que buscas, en la puerta de tu casa</h2>
+              <p>Pide en minutos y paga {{ t()?.pagos_linea ? 'al recibir o en línea' : 'al recibir' }}.</p>
+              <button type="button" (click)="irAProductos()">Ver productos →</button>
+            </div>
+            @if (urlMini(heroImg()); as u) { <img [src]="u" alt="" /> }
+          </section>
+        }
+        @if (ultimo(); as u) {
+          @if (!q().trim() && !categoria() && !soloFavs() && !lineas().length) {
+            <button type="button" class="t-repetir" (click)="repetir(u)">
+              <span class="t-repetir-ico" aria-hidden="true">🔁</span>
+              <span><strong>Repetir mi último pedido</strong><small>{{ resumenUltimo(u) }}</small></span>
+              <span class="t-flecha" aria-hidden="true">›</span>
+            </button>
+          }
+        }
         <div class="filtros">
           <input type="search" [ngModel]="q()" (ngModelChange)="q.set($event); limite.set(40)" placeholder="Buscar producto" aria-label="Buscar producto" />
           <button type="button" class="solo" [class.on]="soloDisp()" [attr.aria-pressed]="soloDisp()" (click)="soloDisp.set(!soloDisp())">Disponibles</button>
+          @if (favs().size) {
+            <button type="button" class="solo" [class.on]="soloFavs()" [attr.aria-pressed]="soloFavs()" (click)="soloFavs.set(!soloFavs())">♥ Favoritos</button>
+          }
           @if (categorias().length > 1) {
-            <div class="cats" role="group" aria-label="Categorías">
-              <button type="button" [class.on]="!categoria()" [attr.aria-pressed]="!categoria()" (click)="elegirCategoria(null)">Todo</button>
+            <div class="cats t-cats" role="group" aria-label="Categorías">
+              <button type="button" [class.on]="!categoria()" [attr.aria-pressed]="!categoria()" (click)="elegirCategoria(null)"><span class="t-cat-ico" aria-hidden="true">🛍️</span><span class="t-cat-nom">Todo</span></button>
               @for (c of categorias(); track c.nombre) {
-                <button type="button" [class.on]="categoria() === c.nombre" [attr.aria-pressed]="categoria() === c.nombre" (click)="elegirCategoria(c.nombre)">{{ c.nombre }}<small>{{ c.n }}</small></button>
+                <button type="button" [class.on]="categoria() === c.nombre" [attr.aria-pressed]="categoria() === c.nombre" (click)="elegirCategoria(c.nombre)"><span class="t-cat-ico" aria-hidden="true">{{ icono(c.nombre) }}</span><span class="t-cat-nom">{{ c.nombre }}</span></button>
               }
             </div>
           }
         </div>
+        @if (!q().trim() && !categoria() && !soloFavs() && destacados().length) {
+          <section class="tienda-top t-dest" aria-labelledby="t-dest">
+            <h2 id="t-dest">⭐ Recomendados por {{ primerNombre(tienda.vendedora!.nombre) }}</h2>
+            <div class="tienda-carrusel">
+              @for (p of destacados(); track p.id) {
+                <button type="button" class="tienda-mini" (click)="abrir(p)">
+                  @if (urlMini(p.imagen_url); as u) { <img [src]="u" alt="" loading="lazy" /> } @else { <span class="ini">{{ p.nombre.charAt(0) }}</span> }
+                  <span class="nom">{{ p.nombre }}</span><strong>{{ pesos(p.precio) }}</strong>
+                </button>
+              }
+            </div>
+          </section>
+        }
+        @if (!q().trim() && !categoria() && masVendidos().length >= 3) {
+          <section class="tienda-top" aria-labelledby="t-top">
+            <h2 id="t-top">🔥 Lo más vendido</h2>
+            <div class="tienda-carrusel">
+              @for (p of masVendidos(); track p.id) {
+                <button type="button" class="tienda-mini" (click)="abrir(p)">
+                  @if (urlMini(p.imagen_url); as u) { <img [src]="u" alt="" loading="lazy" /> } @else { <span class="ini">{{ p.nombre.charAt(0) }}</span> }
+                  <span class="puesto">#{{ p.top }}</span>
+                  <span class="nom">{{ p.nombre }}</span><strong>{{ pesos(p.precio) }}</strong>
+                </button>
+              }
+            </div>
+          </section>
+        }
+        <div class="t-titulo" id="t-productos"><h2>{{ soloFavs() ? 'Tus favoritos' : categoria() || (q().trim() ? 'Resultados' : 'Todos los productos') }}</h2><span>{{ filtrados().length }}</span></div>
         <div class="rejilla">
           @for (p of filtrados().slice(0, limite()); track p.id) {
             <article class="prod" [class.agot]="p.agotado">
               <button type="button" class="foto" (click)="abrir(p)" [attr.aria-label]="'Ver ' + p.nombre">
                 @if (urlMini(p.imagen_url); as u) { <img [src]="u" alt="" loading="lazy" decoding="async" /> } @else { <span class="ini">{{ p.nombre.charAt(0) }}</span> }
-                @if (p.agotado) { <span class="etq-agot">Agotado</span> }
+                @if (p.agotado) { <span class="etq-agot">Agotado</span> } @else if (p.top && p.top <= 3) { <span class="t-best">Más vendido</span> } @else if (p.nuevo) { <span class="t-best t-nuevo">Nuevo</span> }
               </button>
+              <button type="button" class="t-fav" [class.on]="favs().has(p.id)" (click)="alternarFav(p)" [attr.aria-label]="(favs().has(p.id) ? 'Quitar de' : 'Agregar a') + ' favoritos'" [attr.aria-pressed]="favs().has(p.id)">{{ favs().has(p.id) ? '♥' : '♡' }}</button>
               <div class="info">
                 <h2 (click)="abrir(p)">{{ p.nombre }}</h2>
-                <span class="precio">{{ pesos(p.precio) }}</span>
-                <button class="agregar" [disabled]="p.agotado" (click)="rapido(p)">{{ p.agotado ? 'Agotado' : enCarrito(p) ? 'Agregar otro' : 'Agregar' }}</button>
+                @if (p.resenas) { <span class="t-rating" [attr.aria-label]="p.rating + ' de 5 estrellas, ' + p.resenas + ' reseñas'"><b>★</b> {{ p.rating }} <small>({{ p.resenas }})</small></span> }
+                <div class="t-precio-fila">
+                  <span class="precio">{{ pesos(p.precio) }}</span>
+                  @if (enCarrito(p)) { <span class="t-en-pedido" aria-label="Ya está en tu pedido">✓</span> }
+                </div>
               </div>
             </article>
           } @empty {
@@ -205,65 +326,133 @@ function parecido(a: string, b: string): number {
     </div>
     </div>
 
+    @if (avisoAgregado()) { <p class="t-toast" role="status">{{ avisoAgregado() }}</p> }
     @if (lineas().length && !verCarrito() && !sel() && !hecho()) {
-      <button class="carrito" (click)="verCarrito.set(true)">
-        <span>Ver mi pedido · {{ unidades() }} {{ unidades() === 1 ? 'producto' : 'productos' }}</span><strong>{{ pesos(subtotal()) }}</strong>
+      <button class="carrito" (click)="abrirCarrito()">
+        <span>🛍️ Ver mi pedido · {{ unidades() }} {{ unidades() === 1 ? 'producto' : 'productos' }}</span><strong>{{ pesos(subtotal()) }} →</strong>
       </button>
     }
 
     @if (sel(); as p) {
-      <button class="velo" aria-label="Cerrar" (click)="sel.set(null)"></button>
-      <div class="hoja hoja-centro" role="dialog" aria-labelledby="t-prod">
-        <div class="hoja-head"><h2 id="t-prod">{{ p.nombre }}</h2></div>
-        <div class="hoja-body">
-          <div class="galeria">
-            @for (f of fotos(); track f) { <img [src]="f" alt="" loading="lazy" /> }
-          </div>
-          <div class="precio-fila">
-            <span class="precio">{{ pesos(p.precio) }}</span>
-            <button type="button" class="compartir-p" (click)="compartirProducto(p)">{{ avisoCopiado() ? '¡Enlace copiado!' : 'Compartir' }}</button>
-          </div>
-          @if (descripcion()) { <p class="desc">{{ descripcion() }}</p> }
-          @if (p.colores.length) {
-            <div class="campo"><span class="etq">Color</span>
-              <div class="opciones">
-                @for (c of p.colores; track c.nombre) {
-                  <button type="button" class="op" [class.on]="color() === c.nombre" (click)="color.set(c.nombre)">
-                    @if (c.hex) { <i [style.--tono]="c.hex"></i> }{{ c.nombre }}</button>
-                }
-              </div>
-            </div>
-          }
-          @if (p.tallas.length) {
-            <div class="campo"><span class="etq">Talla</span>
-              <div class="opciones">
-                @for (tl of p.tallas; track tl) { <button type="button" class="op" [class.on]="talla() === tl" (click)="talla.set(tl)">{{ tl }}</button> }
-              </div>
-            </div>
-          }
-          @if (!p.agotado) {
-            <div class="campo"><span class="etq">Cantidad</span>
-              <span class="paso">
-                <button type="button" (click)="cant.set(cant() - 1)" [disabled]="cant() <= 1" aria-label="Menos">−</button>
-                <span>{{ cant() }}</span>
-                <button type="button" (click)="cant.set(cant() + 1)" [disabled]="cant() >= maximo(p)" aria-label="Más">+</button>
-              </span>
-            </div>
-          }
-          @if (errorSel()) { <p class="error" role="alert">{{ errorSel() }}</p> }
+      <div class="t-pantalla" role="dialog" aria-modal="true" [attr.aria-label]="p.nombre">
+        <div class="t-barra">
+          <button type="button" class="t-circ" (click)="cerrarPantalla()" aria-label="Volver">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <span class="t-barra-tit">Detalle</span>
+          <span class="t-barra-der">
+            <button type="button" class="t-circ" [class.fav-on]="favs().has(p.id)" (click)="alternarFav(p)" [attr.aria-label]="(favs().has(p.id) ? 'Quitar de' : 'Agregar a') + ' favoritos'" [attr.aria-pressed]="favs().has(p.id)">{{ favs().has(p.id) ? '♥' : '♡' }}</button>
+            <button type="button" class="t-circ" (click)="compartirProducto(p)" aria-label="Compartir">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+            </button>
+          </span>
         </div>
-        <div class="hoja-pie">
-          <button class="b" (click)="sel.set(null)">Cerrar</button>
-          <button class="b b-pri" [disabled]="p.agotado" (click)="agregarSel(p)">{{ p.agotado ? 'Agotado' : 'Agregar · ' + pesos(p.precio * cant()) }}</button>
+        <div class="t-pantalla-body" #detalle>
+          <div class="t-foto-grande">
+            <div class="t-fotos" #fotosCaja (scroll)="alDeslizar(fotosCaja)">
+              @for (f of fotos(); track f) { <img [src]="f" alt="" /> } @empty { <span class="ini">{{ p.nombre.charAt(0) }}</span> }
+            </div>
+            @if (p.agotado) { <span class="etq-agot">Agotado</span> } @else if (p.top && p.top <= 10) { <span class="t-best">Más vendido</span> } @else if (p.nuevo) { <span class="t-best t-nuevo">Nuevo</span> }
+            @if (fotos().length > 1) { <span class="t-contador">{{ fotoI() + 1 }}/{{ fotos().length }}</span> }
+          </div>
+          @if (fotos().length > 1) {
+            <div class="t-miniaturas">
+              @for (f of fotos(); track f; let k = $index) {
+                <button type="button" [class.on]="fotoI() === k" (click)="verFoto(fotosCaja, k)" [attr.aria-label]="'Foto ' + (k + 1)"><img [src]="f" alt="" loading="lazy" /></button>
+              }
+            </div>
+          }
+          <div class="t-det">
+            <div class="t-det-cab">
+              <span class="t-cat">{{ p.categoria || 'Producto' }}</span>
+              @if (p.resenas) { <span class="t-rating"><b>★</b> {{ p.rating }} <small>({{ p.resenas }} {{ p.resenas === 1 ? 'reseña' : 'reseñas' }})</small></span> }
+            </div>
+            <h1 class="t-det-nom">{{ p.nombre }}</h1>
+            <span class="precio">{{ pesos(p.precio) }}</span>
+            @if (avisoCopiado()) { <p class="t-copiado" role="status">¡Enlace copiado!</p> }
+            @if (descripcion()) {
+              <div class="t-bloque"><h3>Descripción</h3><p class="desc">{{ descripcion() }}</p></div>
+            }
+            @if (p.colores.length) {
+              <div class="t-bloque"><h3>Color{{ color() ? ': ' + color() : '' }}</h3>
+                <div class="opciones">
+                  @for (c of p.colores; track c.nombre) {
+                    <button type="button" class="op" [class.on]="color() === c.nombre" (click)="elegirColor(c.nombre, fotosCaja)">
+                      @if (c.hex) { <i [style.--tono]="c.hex"></i> }{{ c.nombre }}</button>
+                  }
+                </div>
+              </div>
+            }
+            @if (p.tallas.length) {
+              <div class="t-bloque"><h3>Talla</h3>
+                <div class="opciones">
+                  @for (tl of p.tallas; track tl) { <button type="button" class="op" [class.on]="talla() === tl" (click)="talla.set(tl)">{{ tl }}</button> }
+                </div>
+              </div>
+            }
+            @if (!p.agotado) {
+              <div class="t-bloque t-cant"><h3>Cantidad</h3>
+                <span class="paso">
+                  <button type="button" (click)="cant.set(cant() - 1)" [disabled]="cant() <= 1" aria-label="Menos">−</button>
+                  <span>{{ cant() }}</span>
+                  <button type="button" (click)="cant.set(cant() + 1)" [disabled]="cant() >= maximo(p)" aria-label="Más">+</button>
+                </span>
+              </div>
+            }
+            @if (errorSel()) { <p class="error" role="alert">{{ errorSel() }}</p> }
+            @if (resenas().length) {
+              <div class="t-bloque"><h3>Reseñas</h3>
+                <ul class="t-resenas">
+                  @for (r of resenas().slice(0, verTodasResenas() ? 20 : 3); track $index) {
+                    <li>
+                      <div><span class="t-estr" [attr.aria-label]="r.estrellas + ' de 5 estrellas'">{{ '★★★★★'.slice(0, r.estrellas) }}<em>{{ '★★★★★'.slice(r.estrellas) }}</em></span>
+                        <small>{{ r.cliente || 'Cliente' }} · {{ fechaCorta(r.fecha) }}</small></div>
+                      @if (r.comentario) { <p>{{ r.comentario }}</p> }
+                    </li>
+                  }
+                </ul>
+                @if (resenas().length > 3 && !verTodasResenas()) { <button type="button" class="t-link" (click)="verTodasResenas.set(true)">Ver las {{ resenas().length }} reseñas</button> }
+              </div>
+            }
+            @if (relacionados().length) {
+              <section class="tienda-relac" aria-labelledby="t-rel">
+                <h3 id="t-rel">Te puede gustar</h3>
+                <div class="tienda-carrusel">
+                  @for (r of relacionados(); track r.id) {
+                    <button type="button" class="tienda-mini" (click)="abrir(r)">
+                      @if (urlMini(r.imagen_url); as u) { <img [src]="u" alt="" loading="lazy" /> } @else { <span class="ini">{{ r.nombre.charAt(0) }}</span> }
+                      <span class="nom">{{ r.nombre }}</span><strong>{{ pesos(r.precio) }}</strong>
+                    </button>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        </div>
+        <div class="t-pantalla-pie">
+          @if (p.agotado) {
+            <button class="b b-pri" disabled>Agotado</button>
+          } @else {
+            <button class="b t-btn-sec" (click)="agregarSel(p)">Agregar al carrito</button>
+            <button class="b b-pri" (click)="comprarYa(p)">Comprar ahora</button>
+          }
         </div>
       </div>
     }
 
     @if (verCarrito()) {
-      <button class="velo" aria-label="Cerrar" (click)="verCarrito.set(false)"></button>
-      <div class="hoja hoja-centro" role="dialog" aria-labelledby="t-car">
-        <div class="hoja-head"><h2 id="t-car">Tu pedido</h2></div>
-        <div class="hoja-body">
+      <div class="t-pantalla" role="dialog" aria-modal="true" aria-labelledby="t-car">
+        <div class="t-barra">
+          <button type="button" class="t-circ" (click)="paso() === 'finalizar' ? volverAlCarrito() : cerrarPantalla()" aria-label="Volver">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <span class="t-barra-tit" id="t-car">{{ paso() === 'finalizar' ? 'Finaliza tu compra' : 'Mi pedido' }}</span>
+          <span class="t-barra-der"><span class="t-circ t-circ-num" aria-hidden="true">{{ unidades() }}</span></span>
+        </div>
+
+        @if (paso() === 'carrito') {
+        <!-- ===== Paso 1: Mi pedido ===== -->
+        <div class="t-pantalla-body t-carro-body">
           <ul class="lineas">
             @for (l of lineas(); track $index) {
               <li>
@@ -277,15 +466,108 @@ function parecido(a: string, b: string): number {
                     <span>{{ l.cantidad }}</span>
                     <button type="button" (click)="cambiar($index, 1)" [disabled]="l.cantidad >= l.max" aria-label="Más">+</button>
                   </span>
-                  <button class="quitar" (click)="quitar($index)">Quitar</button>
+                  <button class="quitar" (click)="quitar($index)" [attr.aria-label]="'Quitar ' + l.nombre">🗑 Quitar</button>
                 </span>
               </li>
             } @empty {
               <li><span></span><span class="nota">Todavía no has agregado productos.</span><span></span></li>
             }
           </ul>
+          <div class="totales">
+            <div class="fin"><span>Productos ({{ unidades() }})</span><span class="num">{{ pesos(subtotal()) }}</span></div>
+          </div>
+          <p class="nota">En el siguiente paso eliges a dónde te lo llevamos y cómo pagas.</p>
+        </div>
+        <div class="t-pantalla-pie">
+          <button class="b b-pri" (click)="irFinalizar()" [disabled]="!lineas().length">Continuar compra →</button>
+        </div>
+        } @else {
+        <!-- ===== Paso 2: Finaliza tu compra (como en las tiendas en línea) ===== -->
+        <div class="t-pantalla-body t-carro-body fc">
+          <!-- Productos -->
+          <ul class="fc-prods">
+            @for (l of lineas(); track $index) {
+              <li>
+                <span class="fc-foto">@if (urlMini(l.imagen_url); as u) { <img [src]="u" alt="" /> }@if (l.cantidad > 1) { <b>{{ l.cantidad }}</b> }</span>
+                <span class="fc-prod-txt"><span>{{ l.nombre }}</span>@if (l.color || l.talla) { <small>{{ variante(l) }}</small> }</span>
+                <span class="fc-prod-v num">{{ pesos(l.precio * l.cantidad) }}</span>
+              </li>
+            }
+          </ul>
 
-          <p class="nota" style="margin: 4px 0 0">Los datos con <span class="obl">*</span> son obligatorios.</p>
+          @if (cli.activo && cli.listo() && !cli.perfil()) {
+            <div class="t-cuenta-aviso"><span>¿Tienes cuenta? Tus datos y direcciones salen solos.</span><button type="button" (click)="irCuenta()">Ingresar</button></div>
+          }
+
+          <!-- Forma de entrega -->
+          <section class="fc-sec" aria-labelledby="fc-entrega">
+            <h3 id="fc-entrega">Forma de entrega</h3>
+            @if (dirElegida(); as d) {
+              <div class="fc-dir">
+                <svg class="fc-pin" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a7.5 7.5 0 0 0-7.5 7.5C4.5 15.1 12 22 12 22s7.5-6.9 7.5-12.5A7.5 7.5 0 0 0 12 2Zm0 10.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z"/></svg>
+                <span class="fc-dir-txt"><strong>{{ d.direccion }}</strong><small>{{ d.barrio }} · {{ d.etiqueta }}</small>
+                  <button type="button" class="fc-link" (click)="verDirecciones.set(!verDirecciones())">{{ verDirecciones() ? 'Listo' : 'Cambiar dirección' }}</button></span>
+              </div>
+            }
+            @if (verDirecciones() || !dirElegida()) {
+              @if (misDirs().length) {
+                <div class="t-mis-dirs" role="radiogroup" aria-label="Dirección de entrega">
+                  @for (d of misDirs(); track d.id) {
+                    <button type="button" role="radio" [attr.aria-checked]="dirSel() === d.id" [class.on]="dirSel() === d.id" (click)="usarDireccion(d); verDirecciones.set(false)">
+                      <span class="radio" aria-hidden="true"></span>
+                      <span><strong>{{ d.etiqueta }}{{ d.principal ? ' · principal' : '' }}</strong><small>{{ d.direccion }} · {{ d.barrio }}</small></span>
+                    </button>
+                  }
+                  <button type="button" role="radio" [attr.aria-checked]="dirSel() === 'otra'" [class.on]="dirSel() === 'otra'" (click)="otraDireccion()">
+                    <span class="radio" aria-hidden="true"></span><span><strong>Otra dirección</strong><small>Escríbela y, si quieres, la guardamos</small></span>
+                  </button>
+                </div>
+              }
+              @if (!misDirs().length || dirSel() === 'otra') {
+          <div class="campo"><label for="td">Dirección <span class="obl">*</span></label>
+            <input id="td" autocomplete="street-address" maxlength="200" required [class.mal]="intentado() && errDir()" [(ngModel)]="direccion" placeholder="Ej: Cra 45 # 12-30 apto 201" />
+            @if (intentado() && errDir()) { <p class="error-campo">{{ errDir() }}</p> }</div>
+          <div class="campo barrio-campo"><label for="tb">Barrio <span class="obl">*</span></label>
+            <small class="pista-barrio">Escribe tu barrio y elígelo de la lista. <strong>Si no eres de Cali, escribe solo el nombre de tu ciudad</strong> (ej: Jamundí, Palmira, Yumbo), no el barrio.</small>
+            <input id="tb" maxlength="120" autocomplete="off" required role="combobox" aria-autocomplete="list" [attr.aria-expanded]="sugerencias().length > 0"
+              [class.mal]="intentado() && errBarrio()" [class.ok]="!!barrioElegido()" [ngModel]="barrio()" (ngModelChange)="escribirBarrio($event)"
+              (focus)="enBarrio.set(true)" (blur)="salirBarrio()" placeholder="Ej: San Fernando, o Jamundí si no eres de Cali" />
+            @if (sugerencias().length) {
+              <ul class="sug-barrios" role="listbox">
+                @for (b of sugerencias(); track b.barrio) {
+                  <li role="option"><button type="button" (mousedown)="$event.preventDefault()" (click)="elegirBarrio(b.barrio)">
+                    <span>{{ b.barrio }}</span><small>{{ pesos(b.domicilio) }}</small></button></li>
+                }
+              </ul>
+            }
+            @if (barrioElegido(); as b) {
+              <p class="barrio-ok">✓ {{ b }} · domicilio {{ pesos(domicilio()!) }}</p>
+            } @else if (barrio().trim().length >= 3 && (!enBarrio() || !sugerencias().length)) {
+              <div class="barrio-falta" role="alert">
+                <strong>No encontramos "{{ barrio().trim() }}" en la lista.</strong>
+                @if (parecidos().length) {
+                  <span>¿Es alguno de estos?</span>
+                  <div class="chips-barrio">@for (b of parecidos(); track b.barrio) { <button type="button" (click)="elegirBarrio(b.barrio)">{{ b.barrio }}</button> }</div>
+                }
+                <span>Revisa cómo lo escribiste. Si no vives en Cali, escribe solo el nombre de tu ciudad o municipio, no el barrio.</span>
+                @if (whatsappAyuda(); as w) { <a class="link-wa" [href]="w" target="_blank" rel="noopener">¿No aparece? Escríbenos por WhatsApp</a> }
+              </div>
+            } @else if (intentado() && errBarrio() && (!enBarrio() || !sugerencias().length)) { <p class="error-campo">{{ errBarrio() }}</p> }
+          </div>
+          @if (cli.perfil()) {
+            <label class="t-guardar-dir"><input type="checkbox" [(ngModel)]="guardarDir" />Guardar esta dirección en mi cuenta</label>
+          }
+              }
+            }
+          </section>
+
+          <!-- Quién recibe -->
+          <section class="fc-sec" aria-labelledby="fc-recibe">
+            <h3 id="fc-recibe">Quién recibe</h3>
+            @if (contactoListo() && !editarContacto()) {
+              <div class="fc-fila"><span><strong>{{ nombre }}</strong><small>Celular {{ telefonoMostrar() }}</small></span>
+                <button type="button" class="fc-link" (click)="editarContacto.set(true)">Cambiar</button></div>
+            } @else {
           <div class="campo"><label for="tn">Tu nombre <span class="obl">*</span></label>
             <input id="tn" autocomplete="name" required [class.mal]="intentado() && errNombre()" [ngModel]="nombre" (ngModelChange)="nombre = limpiar($event)" />
             @if (intentado() && errNombre()) { <p class="error-campo">{{ errNombre() }}</p> }</div>
@@ -298,59 +580,159 @@ function parecido(a: string, b: string): number {
             </div>
             @if ((telefono || intentado()) && errTel()) { <p class="error-campo">{{ errTel() }}</p> }
           </div>
-          <div class="campo"><label for="td">Dirección <span class="obl">*</span></label>
-            <input id="td" autocomplete="street-address" maxlength="200" required [class.mal]="intentado() && errDir()" [(ngModel)]="direccion" placeholder="Ej: Cra 45 # 12-30 apto 201" />
-            @if (intentado() && errDir()) { <p class="error-campo">{{ errDir() }}</p> }</div>
-          <div class="campo barrio-campo"><label for="tb">Barrio <span class="obl">*</span></label>
-            <input id="tb" maxlength="120" autocomplete="off" required role="combobox" aria-autocomplete="list" [attr.aria-expanded]="sugerencias().length > 0"
-              [class.mal]="intentado() && errBarrio()" [class.ok]="!!barrioElegido()" [ngModel]="barrio()" (ngModelChange)="escribirBarrio($event)"
-              (focus)="enBarrio.set(true)" (blur)="salirBarrio()" placeholder="Escribe tu barrio y elígelo de la lista" />
-            @if (sugerencias().length) {
-              <ul class="sug-barrios" role="listbox">
-                @for (b of sugerencias(); track b.barrio) {
-                  <li role="option"><button type="button" (mousedown)="$event.preventDefault()" (click)="elegirBarrio(b.barrio)">
-                    <span>{{ b.barrio }}</span><small>{{ pesos(b.domicilio) }}</small></button></li>
-                }
-              </ul>
             }
-            @if (barrioElegido(); as b) {
-              <p class="barrio-ok">✓ {{ b }} · domicilio {{ pesos(domicilio()!) }}</p>
-            } @else if (barrioNoEsta()) {
-              <p class="barrio-nuevo">Listo: te confirmamos el valor del domicilio a <strong>{{ barrio().trim() }}</strong> cuando te llamemos.
-                <button type="button" class="link" (click)="barrioNoEsta.set(false); enBarrio.set(true)">Cambiar</button></p>
-            } @else if (barrio().trim().length >= 3 && !enBarrio()) {
-              <div class="barrio-falta" role="alert">
-                <strong>No encontramos "{{ barrio().trim() }}" en la lista.</strong>
-                @if (parecidos().length) {
-                  <span>¿Es alguno de estos?</span>
-                  <div class="chips-barrio">@for (b of parecidos(); track b.barrio) { <button type="button" (click)="elegirBarrio(b.barrio)">{{ b.barrio }}</button> }</div>
+          </section>
+
+          <!-- Envío -->
+          <section class="fc-sec" aria-labelledby="fc-envio">
+            <h3 id="fc-envio">Envío</h3>
+            <div class="fc-opcion on">
+              <span class="fc-radio" aria-hidden="true"></span>
+              <span class="fc-op-txt"><strong>{{ domicilio() !== null ? textoLlegada() : 'Domicilio' }}</strong><small>{{ domicilio() !== null ? 'Domicilio a ' + barrioOficial() : 'Elige tu barrio para ver el valor' }}</small></span>
+              <span class="fc-op-v num">{{ domicilio() !== null ? (domicilio() ? pesos(domicilio()!) : 'Gratis') : '—' }}</span>
+            </div>
+          </section>
+
+          <!-- Medios de pago -->
+          <section class="fc-sec" aria-labelledby="fc-pago">
+            <h3 id="fc-pago">Medios de pago</h3>
+            <div class="fc-pagos" role="radiogroup" aria-label="Medio de pago">
+              <button type="button" role="radio" class="fc-opcion" [attr.aria-checked]="formaPago() === 'contra_entrega'" [class.on]="formaPago() === 'contra_entrega'" (click)="formaPago.set('contra_entrega')">
+                <span class="fc-radio" aria-hidden="true"></span>
+                <span class="fc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg></span>
+                <span class="fc-op-txt"><strong>Pagar al recibir</strong><small>Efectivo o transferencia cuando te llegue</small></span>
+              </button>
+              @if (t()?.pagos_linea) {
+              <button type="button" role="radio" class="fc-opcion" [attr.aria-checked]="formaPago() === 'en_linea'" [class.on]="formaPago() === 'en_linea'" (click)="formaPago.set('en_linea')">
+                <span class="fc-radio" aria-hidden="true"></span>
+                <span class="fc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h4"/></svg></span>
+                <span class="fc-op-txt"><strong>{{ tarjetasOn() ? 'Otros medios en línea' : 'Pagar ahora en línea' }}</strong><small>{{ tarjetasOn() ? 'PSE, Nequi, Daviplata o Bancolombia (en la página de Wompi)' : 'Tarjeta de crédito o débito, PSE, Nequi, Daviplata o Bancolombia' }}</small>
+                  <span class="fc-marcas">@if (!tarjetasOn()) { <i>VISA</i><i>Mastercard</i> }<i>PSE</i><i>Nequi</i><i>Daviplata</i></span></span>
+              </button>
+              }
+              @if (tarjetasOn()) {
+                @for (tj of misTarjetas(); track tj.id) {
+                  <button type="button" role="radio" class="fc-opcion fc-tj" [attr.aria-checked]="formaPago() === 'tarjeta' && tarjetaSel() === tj.id" [class.on]="formaPago() === 'tarjeta' && tarjetaSel() === tj.id" (click)="elegirTarjeta(tj.id)">
+                    <span class="fc-radio" aria-hidden="true"></span>
+                    <span class="fc-ico fc-marca" aria-hidden="true">{{ abrevMarca(tj.marca) }}</span>
+                    <span class="fc-op-txt"><strong>{{ tj.marca || 'Tarjeta' }} **** {{ tj.ultimos4 }}</strong><small>Vence {{ tj.exp_mes }}/{{ tj.exp_anio }}</small></span>
+                  </button>
                 }
-                <button type="button" class="b" (click)="barrioNoEsta.set(true)">Mi barrio no está en la lista</button>
+                <button type="button" role="radio" class="fc-opcion fc-tj" [attr.aria-checked]="formaPago() === 'tarjeta' && tarjetaSel() === 'nueva'" [class.on]="formaPago() === 'tarjeta' && tarjetaSel() === 'nueva'" (click)="elegirTarjeta('nueva')">
+                  <span class="fc-radio" aria-hidden="true"></span>
+                  <span class="fc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h4"/></svg></span>
+                  <span class="fc-op-txt"><strong>{{ misTarjetas().length ? 'Nueva tarjeta' : 'Tarjeta de crédito o débito' }}</strong><small>Visa, Mastercard, Amex o Diners · la puedes guardar</small></span>
+                </button>
+              }
+            </div>
+            @if (formaPago() === 'tarjeta' && tarjetaSel() === 'nueva') {
+              <div class="fc-tarjeta">
+                <div class="campo"><label for="tcn">Número de la tarjeta</label>
+                  <div class="fc-num"><input id="tcn" inputmode="numeric" autocomplete="cc-number" maxlength="23" [ngModel]="tNumero()" (ngModelChange)="escribirNumero($event)" placeholder="0000 0000 0000 0000" />
+                    @if (marcaTarjeta()) { <b>{{ marcaTarjeta() }}</b> }</div></div>
+                <div class="campo"><label for="tct">Nombre como aparece en la tarjeta</label>
+                  <input id="tct" autocomplete="cc-name" maxlength="60" [(ngModel)]="tTitular" /></div>
+                <div class="fc-dos">
+                  <div class="campo"><label for="tcv">Vence (MM/AA)</label>
+                    <input id="tcv" inputmode="numeric" autocomplete="cc-exp" maxlength="5" [ngModel]="tVence" (ngModelChange)="escribirVence($event)" placeholder="08/29" /></div>
+                  <div class="campo"><label for="tcc">Código de seguridad</label>
+                    <input id="tcc" inputmode="numeric" autocomplete="cc-csc" maxlength="4" [(ngModel)]="tCvc" placeholder="CVC" /></div>
+                </div>
+                <label class="t-guardar-dir"><input type="checkbox" [(ngModel)]="tGuardar" />Guardar esta tarjeta para mis próximas compras</label>
               </div>
-            } @else if (intentado() && errBarrio() && !enBarrio()) { <p class="error-campo">{{ errBarrio() }}</p> }
-          </div>
+            }
+            @if (formaPago() === 'tarjeta') {
+              <div class="campo fc-cuotas"><label for="tcu">Cuotas</label>
+                <select id="tcu" [ngModel]="cuotas()" (ngModelChange)="cuotas.set(+$event)">
+                  @for (n of opcionesCuotas; track n) { <option [value]="n">{{ n === 1 ? '1 cuota (de contado)' : n + ' cuotas de ' + pesos(cuotaDe(n)) + ' aprox.' }}</option> }
+                </select>
+                <small class="nota">Con tarjeta débito siempre es 1 cuota. El interés de las cuotas lo pone tu banco.</small>
+              </div>
+              <p class="nota">Pagas seguro con <strong>Wompi</strong> (de Bancolombia): los datos de tu tarjeta van directo a Wompi y Variedades JYB nunca los ve. Al pagar aceptas el
+                @if (cfgTarjeta()?.terminos) { <a [href]="cfgTarjeta()!.terminos" target="_blank" rel="noopener">reglamento de Wompi</a> } @else { reglamento de Wompi }
+                y la @if (cfgTarjeta()?.datos) { <a [href]="cfgTarjeta()!.datos" target="_blank" rel="noopener">autorización de datos</a> } @else { autorización de datos }.</p>
+            } @else if (enLinea()) { <p class="nota">Pagas seguro en <strong>Wompi</strong> (de Bancolombia). Con tarjeta de crédito eliges ahí en cuántas cuotas.</p> }
+            @if (pagoMensaje()) { <p class="error" role="alert">{{ pagoMensaje() }}</p> }
+          </section>
+
+          @if (cli.perfil(); as p) {
+            <!-- Facturación -->
+            <section class="fc-sec" aria-labelledby="fc-fact">
+              <button type="button" class="fc-fila fc-fila-btn" (click)="irCuenta()">
+                <span><strong id="fc-fact" class="fc-h">Facturación</strong>
+                  <small>{{ nombre || p.nombre }}{{ p.documento ? ' - ' + p.tipo_doc + ' ' + p.documento : ' · agrega tu documento (opcional)' }}</small></span>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </section>
+          }
+
+          <!-- Indicaciones -->
+          <section class="fc-sec">
           <div class="campo"><label for="to">Observaciones (opcional)</label>
             <input id="to" maxlength="300" [(ngModel)]="observaciones" placeholder="Ej: llamar antes, portería, después de las 3 pm" /></div>
+          </section>
 
-          <div class="totales">
-            <div><span>Productos</span><span class="num">{{ pesos(subtotal()) }}</span></div>
-            <div><span>Domicilio</span><span class="num">{{ domicilio() !== null ? pesos(domicilio()!) : barrioNoEsta() ? 'Te lo confirmamos' : 'Elige tu barrio' }}</span></div>
-            <div class="fin"><span>Total</span><span class="num">{{ pesos(subtotal() + (domicilio() ?? 0)) }}</span></div>
+          <!-- Resumen -->
+          <section class="fc-sec fc-resumen" aria-labelledby="fc-res">
+            <h3 id="fc-res">Resumen de compra</h3>
+            <div class="fc-r"><span>{{ unidades() === 1 ? 'Producto' : 'Productos (' + unidades() + ')' }}</span><span class="num">{{ pesos(subtotal()) }}</span></div>
+            <div class="fc-r"><span>Envío</span><span class="num">{{ domicilio() !== null ? (domicilio() ? pesos(domicilio()!) : 'Gratis') : '—' }}</span></div>
+            @if (descuento()) { <div class="fc-r fc-desc"><span>Cupón {{ cupon()!.codigo }}</span><span class="num">− {{ pesos(descuento()) }}</span></div> }
+            @if (enLinea()) { <div class="fc-r"><span>Costo del pago en línea</span><span class="num">{{ domicilio() !== null ? pesos(recargo()) : '—' }}</span></div> }
+          <div class="tienda-cupon fc-cupon">
+            @if (cupon(); as c) {
+              <div class="cupon-ok">
+                <span>🎟️ Cupón <strong>{{ c.codigo }}</strong>{{ c.descripcion ? ' · ' + c.descripcion : '' }}
+                  @if (descuento()) { <small>Te ahorras {{ pesos(descuento()) }}</small> } @else { <small class="falta">Es para compras desde {{ pesos(c.minimo) }}</small> }</span>
+                <button type="button" class="link" (click)="quitarCupon()">Quitar</button>
+              </div>
+            } @else if (verCupon()) {
+              <div class="cupon-form">
+                <input [ngModel]="cuponTexto()" (ngModelChange)="cuponTexto.set($event.toUpperCase())" placeholder="Código del cupón" aria-label="Código del cupón" autocapitalize="characters" maxlength="30" />
+                <button type="button" class="b" [disabled]="aplicando() || !cuponTexto().trim()" (click)="aplicarCupon()">{{ aplicando() ? '…' : 'Aplicar' }}</button>
+              </div>
+              @if (errorCupon()) { <p class="error-campo">{{ errorCupon() }}</p> }
+            } @else {
+              <button type="button" class="link" (click)="verCupon.set(true)">Ingresar código de cupón</button>
+            }
           </div>
-          <p class="nota">Pagas al recibir. Antes de enviarlo, {{ t()?.vendedora ? primerNombre(t()!.vendedora!.nombre) : 'la tienda' }} te contacta para confirmar tu pedido.</p>
+
+            <div class="fc-r fc-total"><span>Total</span><span class="num">{{ pesos(total()) }}</span></div>
+            <p class="nota">{{ enLinea() ? 'Cuando se apruebe el pago, ' : 'Pagas al recibir. Antes de enviarlo, ' }}{{ t()?.vendedora ? primerNombre(t()!.vendedora!.nombre) : 'la tienda' }} te contacta para {{ enLinea() ? 'coordinar el envío' : 'confirmar tu pedido' }}.</p>
+          </section>
           @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
         </div>
-        <div class="hoja-pie">
-          <button class="b" (click)="verCarrito.set(false)">Seguir comprando</button>
-          <button class="b b-pri" (click)="enviar()" [disabled]="enviando() || !lineas().length">{{ enviando() ? 'Enviando…' : 'Hacer pedido' }}</button>
+        <div class="t-pantalla-pie fc-pie">
+          <button type="button" class="fc-pie-total" (click)="irAlResumen()" aria-label="Ver resumen de compra">
+            <span class="num">{{ pesos(total()) }}</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+          </button>
+          <button class="b b-pri" (click)="enviar()" [disabled]="enviando() || !lineas().length">{{ enviando() ? (formaPago() === 'tarjeta' ? 'Procesando el pago…' : enLinea() ? 'Abriendo el pago…' : 'Enviando…') : formaPago() === 'tarjeta' ? 'Pagar ' + pesos(total()) : enLinea() ? 'Pagar y finalizar' : 'Confirmar pedido' }}</button>
         </div>
+        }
       </div>
     }
   `,
 })
 export class TiendaPage implements OnInit {
-  private sb = inject(SupabaseService);
+  sb = inject(SupabaseService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  cli = inject(ClienteService);
+  /** Direcciones guardadas en la cuenta del cliente; cuál eligió para este pedido */
+  misDirs = computed<ClienteDireccion[]>(() => this.cli.perfil()?.direcciones ?? []);
+  dirSel = signal<number | 'otra' | null>(null);
+  /** Paso del pedido: la lista de productos, luego "Finaliza tu compra" */
+  paso = signal<'carrito' | 'finalizar'>('carrito');
+  verDirecciones = signal(false);
+  editarContacto = signal(false);
+  dirElegida = computed(() => {
+    const id = this.dirSel();
+    return typeof id === 'number' ? this.misDirs().find((d) => d.id === id) ?? null : null;
+  });
+  total = computed(() => this.subtotal() - this.descuento() + (this.domicilio() ?? 0) + this.recargo());
+  guardarDir = true;
+  private datosCuentaPuestos = false;
 
   t = signal<Tienda | null>(null);
   cargando = signal(true);
@@ -370,13 +752,80 @@ export class TiendaPage implements OnInit {
   barrio = signal('');
   /** El barrio tal como está en la tabla de domicilios (cuando lo eligió o lo escribió igual) */
   barrioElegido = signal<string | null>(null);
-  /** El cliente dijo que su barrio no está: el domicilio se lo confirma la vendedora */
-  barrioNoEsta = signal(false);
   enBarrio = signal(false);
   intentado = signal(false);
   error = signal('');
   enviando = signal(false);
   hecho = signal<Hecho | null>(null);
+  /** Pagar al recibir o pagar ya en línea con Wompi (el cliente paga la comisión de Wompi) */
+  /** Al recibir, con tarjeta aquí mismo (cuenta de cliente) o en Wompi (PSE, Nequi, Daviplata, tarjeta) */
+  formaPago = signal<'contra_entrega' | 'en_linea' | 'tarjeta'>('contra_entrega');
+  enLinea = computed(() => this.formaPago() !== 'contra_entrega');
+  // ---- Tarjetas (Wompi): guardadas, nueva y cuotas
+  cfgTarjeta = signal<ConfigTarjeta | null>(null);
+  tarjetasOn = computed(() => !!this.cli.perfil() && !!this.cfgTarjeta()?.activo);
+  misTarjetas = computed<ClienteTarjeta[]>(() => this.cli.perfil()?.tarjetas ?? []);
+  tarjetaSel = signal<number | 'nueva' | null>(null);
+  cuotas = signal(1);
+  readonly opcionesCuotas = [1, 2, 3, 4, 6, 9, 12, 18, 24, 36];
+  tNumero = signal('');
+  tTitular = '';
+  tVence = '';
+  tCvc = '';
+  tGuardar = true;
+  pagoMensaje = signal('');
+  /** Si el banco rechaza, el pedido ya quedó creado: el siguiente intento cobra el mismo pedido */
+  private codigoPendiente: string | null = null;
+  marcaTarjeta = computed(() => marcaDe(this.tNumero()));
+  recargo = computed(() => (this.enLinea() && this.domicilio() !== null ? recargoWompi(this.subtotal() - this.descuento() + this.domicilio()!) : 0));
+  /** Cupón de descuento (el valor final lo calcula el servidor al pedir) */
+  cupon = signal<Cupon | null>(null);
+  cuponTexto = signal('');
+  verCupon = signal(false);
+  aplicando = signal(false);
+  errorCupon = signal('');
+  descuento = computed(() => {
+    const c = this.cupon();
+    const sub = this.subtotal();
+    if (!c || sub < Number(c.minimo)) return 0;
+    return c.tipo === 'porcentaje' ? Math.round((sub * Math.min(Number(c.valor), 90)) / 100) : Math.min(Number(c.valor), sub);
+  });
+  /** Los 10 más vendidos (de los últimos 30 días) que hay disponibles */
+  /** Los que eligió el vendedor para su catálogo (sin los agotados), en su orden */
+  destacados = computed(() => {
+    const t = this.t();
+    const porId = new Map((t?.productos ?? []).map((p) => [p.id, p]));
+    return (t?.vendedora?.destacados ?? []).map((id) => porId.get(id)).filter((p): p is ProductoTienda => !!p && !p.agotado);
+  });
+  masVendidos = computed(() => (this.t()?.productos ?? []).filter((p) => p.top && !p.agotado).sort((a, b) => a.top! - b.top!).slice(0, 10));
+  /** Productos de la misma categoría (los más vendidos primero) */
+  relacionados = computed(() => {
+    const p = this.sel();
+    if (!p) return [];
+    const todos = (this.t()?.productos ?? []).filter((x) => x.id !== p.id && !x.agotado);
+    const orden = (a: ProductoTienda, b: ProductoTienda) => (a.top ?? 99) - (b.top ?? 99);
+    const misma = todos.filter((x) => (x.categoria ?? 'Otros') === (p.categoria ?? 'Otros')).sort(orden);
+    const extra = misma.length < 4 ? todos.filter((x) => x.top && !misma.includes(x)).sort(orden) : [];
+    return [...misma, ...extra].slice(0, 8);
+  });
+
+  async aplicarCupon(): Promise<void> {
+    this.errorCupon.set('');
+    this.aplicando.set(true);
+    const { data, error } = await this.sb.client.rpc('tienda_cupon', { p_codigo: this.cuponTexto().trim(), p_subtotal: this.subtotal() });
+    this.aplicando.set(false);
+    if (error) {
+      const m = mensajeError(error);
+      return this.errorCupon.set(/cup[oó]n|compras desde/i.test(m) ? m : 'No pudimos revisar ese cupón. Intenta otra vez.');
+    }
+    this.cupon.set(data as Cupon);
+    this.verCupon.set(false);
+  }
+
+  quitarCupon(): void {
+    this.cupon.set(null);
+    this.cuponTexto.set('');
+  }
 
   nombre = '';
   telefono = '';
@@ -407,7 +856,7 @@ export class TiendaPage implements OnInit {
     }
   }
 
-  /** Anota lo que pasa en el catálogo (para las estadísticas de la vendedora); si falla, no importa */
+  /** Anota lo que pasa en el catálogo (para las estadísticas de el vendedor); si falla, no importa */
   private evento(tipo: 'visita' | 'ver' | 'agregar', producto: string | null = null): void {
     void this.sb.client.rpc('tienda_evento', { p_vendedor: this.vendedoraId, p_tipo: tipo, p_producto: producto, p_sesion: this.sesion }).then();
   }
@@ -428,11 +877,62 @@ export class TiendaPage implements OnInit {
   filtrados = computed(() => {
     const q = normal(this.q());
     const c = this.categoria();
-    return (this.t()?.productos ?? []).filter((p) => (!q || normal(p.nombre).includes(q)) && (!this.soloDisp() || !p.agotado) && (!c || p.categoria === c));
+    const f = this.soloFavs() ? this.favs() : null;
+    return (this.t()?.productos ?? []).filter((p) => (!q || normal(p.nombre).includes(q)) && (!this.soloDisp() || !p.agotado) && (!c || p.categoria === c) && (!f || f.has(p.id)));
   });
+  /** Favoritos del cliente (se guardan en su celular) */
+  favs = signal<Set<string>>(TiendaPage.leerFavs());
+  soloFavs = signal(false);
+  /** Foto del banner: el más vendido con foto */
+  heroImg = computed(() => this.masVendidos().find((p) => p.imagen_url)?.imagen_url ?? (this.t()?.productos ?? []).find((p) => p.imagen_url && !p.agotado)?.imagen_url ?? null);
+
+  private static leerFavs(): Set<string> {
+    try {
+      return new Set((JSON.parse(localStorage.getItem('tienda-favoritos') ?? '[]') as unknown[]).map(String));
+    } catch {
+      return new Set();
+    }
+  }
+
+  alternarFav(p: ProductoTienda): void {
+    const n = new Set(this.favs());
+    const on = !n.has(p.id);
+    if (on) n.add(p.id);
+    else n.delete(p.id);
+    this.favs.set(n);
+    if (!n.size) this.soloFavs.set(false);
+    this.guardarFavsLocal(n);
+    // Con cuenta: también queda en la cuenta (así los ve en cualquier celular)
+    if (this.cli.perfil()) void this.cli.favorito(p.id, on);
+    else if (on) this.avisar('♥ Guardado en este celular · ingresa a tu cuenta para tenerlos en cualquier lado');
+  }
+  private guardarFavsLocal(n: Set<string>): void {
+    try {
+      localStorage.setItem('tienda-favoritos', JSON.stringify([...n]));
+    } catch { /* sin almacenamiento */ }
+  }
+  /** Al entrar con cuenta: los favoritos del celular se suben y se unen con los de la cuenta (una vez) */
+  private favsUnidos = false;
+  private async unirFavoritos(enCuenta: string[]): Promise<void> {
+    if (this.favsUnidos) return;
+    this.favsUnidos = true;
+    const cuenta = new Set(enCuenta);
+    const faltan = [...this.favs()].filter((id) => !cuenta.has(id));
+    for (const id of faltan) {
+      const r = await this.cli.favorito(id, true);
+      if (r) r.forEach((x) => cuenta.add(x));
+    }
+    const todos = new Set([...cuenta]);
+    this.favs.set(todos);
+    this.guardarFavsLocal(todos);
+  }
+
+  irAProductos(): void {
+    document.getElementById('t-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   unidades = computed(() => this.lineas().reduce((s, l) => s + l.cantidad, 0));
   subtotal = computed(() => this.lineas().reduce((s, l) => s + l.cantidad * l.precio, 0));
-  /** Domicilio de la tabla de barrios; null si el barrio no está (lo confirma la vendedora) */
+  /** Domicilio de la tabla de barrios; null si el barrio no está (lo confirma el vendedor) */
   domicilio = computed(() => {
     const b = this.barrioElegido();
     const f = b ? (this.t()?.barrios ?? []).find((x) => x.barrio === b) : undefined;
@@ -482,13 +982,12 @@ export class TiendaPage implements OnInit {
   }
   errBarrio(): string {
     if (this.barrio().trim().length < 2) return 'Escribe tu barrio.';
-    if (!this.barrioElegido() && !this.barrioNoEsta()) return 'Elige tu barrio de la lista o toca "Mi barrio no está en la lista".';
+    if (!this.barrioElegido()) return 'Elige tu barrio de la lista. Si no eres de Cali, escribe solo el nombre de tu ciudad.';
     return '';
   }
 
   escribirBarrio(v: string): void {
     this.barrio.set(v);
-    this.barrioNoEsta.set(false);
     this.enBarrio.set(true);
     // Si lo escribió igual a uno de la lista (sin importar tildes o mayúsculas), queda elegido
     const n = normal(v);
@@ -498,7 +997,6 @@ export class TiendaPage implements OnInit {
   elegirBarrio(b: string): void {
     this.barrio.set(b);
     this.barrioElegido.set(b);
-    this.barrioNoEsta.set(false);
     this.enBarrio.set(false);
   }
 
@@ -524,16 +1022,136 @@ export class TiendaPage implements OnInit {
         /* sin almacenamiento */
       }
     });
+    // Estimado de entrega cada vez que cambia el barrio
+    effect(() => {
+      const b = this.barrioElegido();
+      untracked(() => this.pedirEstimado(b));
+    });
+    // Con cuenta de cliente: sus favoritos (de la cuenta y de este celular) quedan unidos
+    effect(() => {
+      const p = this.cli.perfil();
+      if (p) void untracked(() => this.unirFavoritos(p.favoritos ?? []));
+    });
+    // Con cuenta de cliente: ¿está activo el pago con tarjeta aquí mismo?
+    effect(() => {
+      if (this.cli.perfil() && !this.cfgTarjeta()) void untracked(() => this.cli.configTarjeta()).then((c) => this.cfgTarjeta.set(c));
+    });
+    // Si cambia el carrito, el pedido que quedó esperando pago ya no sirve: el siguiente intento crea uno nuevo
+    effect(() => {
+      this.lineas();
+      this.codigoPendiente = null;
+    });
+    // Cliente con cuenta: sus datos y su dirección principal salen llenos (una vez, ya con la lista de barrios)
+    effect(() => {
+      const p = this.cli.perfil();
+      const t = this.t();
+      if (!p || !t || this.datosCuentaPuestos) return;
+      this.datosCuentaPuestos = true;
+      untracked(() => {
+        if (p.nombre) this.nombre = p.nombre;
+        if (p.telefono) { this.prefijo = p.prefijo || '57'; this.telefono = p.telefono; }
+        const d = p.direcciones.find((x) => x.principal) ?? p.direcciones[0];
+        if (d) this.usarDireccion(d);
+        else this.dirSel.set('otra');
+      });
+    });
+  }
+
+  elegirTarjeta(id: number | 'nueva'): void {
+    this.formaPago.set('tarjeta');
+    this.tarjetaSel.set(id);
+    this.pagoMensaje.set('');
+    if (id === 'nueva') setTimeout(() => document.getElementById('tcn')?.focus(), 50);
+  }
+  escribirNumero(v: string): void {
+    const d = v.replace(/\D/g, '').slice(0, 19);
+    this.tNumero.set(d.replace(/(\d{4})(?=\d)/g, '$1 '));
+  }
+  escribirVence(v: string): void {
+    const d = v.replace(/\D/g, '').slice(0, 4);
+    this.tVence = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+  }
+  abrevMarca(m: string | null): string {
+    const x = (m || '').toUpperCase();
+    return x.startsWith('VISA') ? 'VISA' : x.startsWith('MASTER') ? 'MC' : x.startsWith('AMEX') || x.startsWith('AMERICAN') ? 'AMEX' : x.startsWith('DINERS') ? 'DC' : '••';
+  }
+  cuotaDe(n: number): number {
+    return Math.ceil(this.total() / n / 100) * 100;
+  }
+  /** Revisa la tarjeta nueva antes de crear el pedido */
+  private errorTarjeta(): string {
+    if (!luhn(this.tNumero())) return 'Revisa el número de la tarjeta.';
+    if (this.tTitular.trim().length < 3) return 'Escribe el nombre como aparece en la tarjeta.';
+    const m = /^(\d{2})\/(\d{2})$/.exec(this.tVence);
+    if (!m || +m[1] < 1 || +m[1] > 12) return 'Escribe el vencimiento así: 08/29.';
+    const hoy = new Date();
+    const fin = new Date(2000 + +m[2], +m[1], 0);
+    if (fin < new Date(hoy.getFullYear(), hoy.getMonth(), 1)) return 'Esa tarjeta ya está vencida.';
+    if (!/^\d{3,4}$/.test(this.tCvc)) return 'Escribe el código de seguridad (3 o 4 números de atrás).';
+    return '';
+  }
+
+  irCuenta(): void {
+    void this.router.navigate(['/tienda/cuenta'], { queryParams: { volver: location.pathname + location.search } });
+  }
+
+  iniciales(n: string): string {
+    const p = n.trim().split(/\s+/).filter(Boolean);
+    return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || '·';
+  }
+
+  /** Elige una dirección guardada: llena dirección y barrio (las indicaciones van en observaciones) */
+  usarDireccion(d: ClienteDireccion): void {
+    this.dirSel.set(d.id);
+    this.direccion = d.direccion;
+    this.escribirBarrio(d.barrio);
+    this.enBarrio.set(false);
+    // Las indicaciones de la dirección van en observaciones (y se quitan las de la dirección anterior)
+    const sin = this.indicacionesPuestas ? this.observaciones.replace(' · ' + this.indicacionesPuestas, '').replace(this.indicacionesPuestas, '').replace(/^ · /, '').trim() : this.observaciones;
+    this.observaciones = d.indicaciones ? (sin ? sin + ' · ' : '') + d.indicaciones : sin;
+    this.indicacionesPuestas = d.indicaciones ?? '';
+  }
+  private indicacionesPuestas = '';
+
+  otraDireccion(): void {
+    if (this.indicacionesPuestas) {
+      this.observaciones = this.observaciones.replace(' · ' + this.indicacionesPuestas, '').replace(this.indicacionesPuestas, '').replace(/^ · /, '').trim();
+      this.indicacionesPuestas = '';
+    }
+    this.dirSel.set('otra');
+    this.direccion = '';
+    this.barrio.set('');
+    this.barrioElegido.set(null);
+    this.guardarDir = true;
+    setTimeout(() => document.getElementById('td')?.focus(), 50);
+  }
+
+  /** Después del pedido: guarda en la cuenta la dirección nueva y el celular si no lo tenía */
+  private async guardarEnCuenta(): Promise<void> {
+    const p = this.cli.perfil();
+    if (!p) return;
+    try {
+      if (!p.telefono || !p.nombre) {
+        await this.cli.guardarDatos({ nombre: this.nombre.trim(), prefijo: this.prefijo, telefono: this.telefono, tipo_doc: p.tipo_doc, documento: p.documento ?? '' });
+      }
+      const nueva = !this.misDirs().length || this.dirSel() === 'otra';
+      const yaEsta = this.misDirs().some((d) => d.direccion.trim().toLowerCase() === this.direccion.trim().toLowerCase() && d.barrio === this.barrioOficial());
+      if (nueva && this.guardarDir && !yaEsta && this.barrioOficial()) {
+        await this.cli.guardarDireccion({ id: null, etiqueta: this.misDirs().length ? 'Otra' : 'Casa', direccion: this.direccion.trim(), barrio: this.barrioOficial(), indicaciones: '', principal: !this.misDirs().length });
+      }
+    } catch { /* no es grave: el pedido ya quedó */ }
   }
 
   async ngOnInit(): Promise<void> {
     const codigo = this.route.snapshot.paramMap.get('codigo');
     if (codigo) {
+      // Código del vendedor: los primeros 8 caracteres de su id al final del enlace
       const id = codigo.toLowerCase().match(/([0-9a-f]{8})$/)?.[1];
       if (!id) return this.cargando.set(false);
       this.vendedoraId = id;
     }
     this.clave = 'tienda-carrito-' + (this.vendedoraId ?? 'general');
+    this.leerGuardados();
     try {
       const guardado = JSON.parse(localStorage.getItem(this.clave) ?? '[]') as Linea[];
       if (Array.isArray(guardado)) this.lineas.set(guardado);
@@ -546,16 +1164,41 @@ export class TiendaPage implements OnInit {
     const t = data as Tienda;
     this.t.set(t);
     this.evento('visita');
+    // El barrio guardado se vuelve a buscar ya con la lista de domicilios
+    if (this.barrio()) { this.escribirBarrio(this.barrio()); this.enBarrio.set(false); }
     // Lo guardado se ajusta a lo que hay hoy (precio, agotados)
     const porId = new Map(t.productos.map((p) => [p.id, p]));
     this.lineas.update((ls) => ls.filter((l) => porId.has(l.producto_id) && !porId.get(l.producto_id)!.agotado)
       .map((l) => ({ ...l, precio: Number(porId.get(l.producto_id)!.precio), max: this.maximo(porId.get(l.producto_id)!) })));
     document.title = (t.vendedora ? 'Catálogo de ' + this.primerNombre(t.vendedora.nombre) : 'Catálogo') + ' · ' + (t.negocio || 'Variedades JYB');
-    // Enlace directo a un producto (?p=<id>): se abre solo
-    const pid = this.route.snapshot.queryParamMap.get('p');
-    const directo = pid ? t.productos.find((x) => x.id === pid) : undefined;
+    this.revisarEntrada();
+  }
+
+  /**
+   * Lo que pide la entrada a la tienda: "Volver a comprar" (desde Mis compras) o un producto directo (?p=<id>).
+   * Se revisa al abrir y cada vez que se vuelve a la tienda (la app reutiliza la pantalla que ya estaba abierta).
+   */
+  private revisarEntrada(): void {
+    const t = this.t();
+    if (!t) return;
+    try {
+      const rep = JSON.parse(sessionStorage.getItem('tienda-repetir') ?? 'null') as { items?: UltimoPedido['items'] } | null;
+      if (rep?.items?.length) {
+        sessionStorage.removeItem('tienda-repetir');
+        this.repetir({ fecha: '', items: rep.items });
+        return;
+      }
+    } catch { /* sin almacenamiento */ }
+    const pid = new URLSearchParams(location.search).get('p');
+    if (!pid || this.sel()?.id === pid) return;
+    const directo = t.productos.find((x) => x.id === pid);
     if (directo) void this.abrir(directo);
-    else if (pid) this.avisoProducto.set('Ese producto ya no está disponible. Mira los demás 👇');
+    else this.avisoProducto.set('Ese producto ya no está disponible. Mira los demás 👇');
+  }
+
+  /** Al volver a la tienda desde Mi cuenta (pantalla reutilizada) */
+  ionViewWillEnter(): void {
+    this.revisarEntrada();
   }
 
   primerNombre(n: string): string {
@@ -573,7 +1216,7 @@ export class TiendaPage implements OnInit {
   /** Aviso cuando el enlace era de un producto que ya no está */
   avisoProducto = signal('');
 
-  /** Comparte el producto abierto (con el mismo catálogo de la vendedora) */
+  /** Comparte el producto abierto (con el mismo catálogo de el vendedor) */
   async compartirProducto(p: ProductoTienda): Promise<void> {
     const url = `${location.origin}${location.pathname}?p=${p.id}`;
     try {
@@ -585,9 +1228,199 @@ export class TiendaPage implements OnInit {
   }
   avisoCopiado = signal(false);
 
+  /** Pantallas completas (detalle y pedido): el botón atrás del celular las cierra */
+  private enPantalla = false;
+  private abrirPantalla(): void {
+    if (this.enPantalla) return;
+    this.enPantalla = true;
+    try { history.pushState({ tiendaPantalla: true }, ''); } catch { /* sin historial */ }
+  }
+  /** Pasa a "Finaliza tu compra" (con su propio paso en el historial, para el botón atrás del celular) */
+  irFinalizar(): void {
+    if (!this.lineas().length) return;
+    this.paso.set('finalizar');
+    this.verDirecciones.set(false);
+    this.editarContacto.set(!this.contactoListo());
+    try { history.pushState({ tiendaPantalla: true, finalizar: true }, ''); } catch { /* sin historial */ }
+    setTimeout(() => document.querySelector('.fc')?.scrollTo({ top: 0 }), 0);
+  }
+  volverAlCarrito(): void {
+    if (history.state?.finalizar) return history.back();
+    this.paso.set('carrito');
+  }
+  /** Nombre y celular ya están bien: se muestran en una línea con "Cambiar" */
+  contactoListo(): boolean {
+    return !this.errNombre() && !this.errTel();
+  }
+  /** Estimado de entrega aprendido de las entregas anteriores (por hora y barrio) */
+  estimado = signal<{ cuando: 'hoy' | 'manana'; desde?: string; hasta?: string } | null>(null);
+  private barrioEstimado = '';
+  textoLlegada(): string {
+    const e = this.estimado();
+    if (!e?.desde || !e.hasta) return e?.cuando === 'manana' ? 'Llega mañana' : this.llegada();
+    const [d, a] = [this.hora12(e.desde), this.hora12(e.hasta)];
+    const rango = d.sufijo === a.sufijo ? `${d.h} y ${a.h} ${a.sufijo}` : `${d.h} ${d.sufijo} y ${a.h} ${a.sufijo}`;
+    return `Llega ${e.cuando === 'hoy' ? 'hoy' : 'mañana'} entre ${rango}`;
+  }
+  private hora12(hhmm: string): { h: string; sufijo: string } {
+    const [H, M] = hhmm.split(':').map(Number);
+    return { h: `${H % 12 || 12}:${String(M).padStart(2, '0')}`, sufijo: H < 12 ? 'a. m.' : 'p. m.' };
+  }
+  private pedirEstimado(barrio: string | null): void {
+    if (!barrio || barrio === this.barrioEstimado) return;
+    this.barrioEstimado = barrio;
+    void this.sb.client.rpc('tienda_estimado', { p_barrio: barrio }).then(({ data, error }) => {
+      if (!error && this.barrioEstimado === barrio) this.estimado.set(data as { cuando: 'hoy' | 'manana'; desde?: string; hasta?: string });
+    });
+  }
+
+  /** "Llega hoy" si pide antes de las 2 p. m. (no domingo); si no, el siguiente día hábil (si no hay estimado) */
+  llegada(): string {
+    const ahora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+    const dia = ahora.getDay();
+    if (dia !== 0 && ahora.getHours() < 14) return 'Llega hoy';
+    const sig = (dia + 1) % 7;
+    if (sig === 0) return 'Llega el lunes';
+    return dia === 0 ? 'Llega mañana' : 'Llega mañana';
+  }
+  irAlResumen(): void {
+    document.querySelector('.fc-resumen')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  cerrarPantalla(): void {
+    if (this.enPantalla && history.state?.finalizar) {
+      // Cierra los dos pasos de una
+      this.paso.set('carrito');
+      return history.go(-2);
+    }
+    if (this.enPantalla && history.state?.tiendaPantalla) return history.back();
+    this.enPantalla = false;
+    this.sel.set(null);
+    this.verCarrito.set(false);
+  }
+  @HostListener('window:popstate')
+  alVolver(): void {
+    // Atrás desde "Finaliza tu compra" vuelve a la lista de productos
+    if (this.verCarrito() && this.paso() === 'finalizar' && history.state?.tiendaPantalla) {
+      this.paso.set('carrito');
+      return;
+    }
+    this.enPantalla = false;
+    this.sel.set(null);
+    this.verCarrito.set(false);
+  }
+  abrirCarrito(): void {
+    this.abrirPantalla();
+    this.paso.set('carrito');
+    this.sel.set(null);
+    this.verCarrito.set(true);
+  }
+
+  /** Ícono de cada categoría (por palabras, así aguanta nombres parecidos) */
+  icono(c: string): string {
+    const n = normal(c);
+    const mapa: [RegExp, string][] = [
+      [/jug|beb|nin/, '🧸'], [/organiz/, '🗂️'], [/cocin/, '🍳'], [/herram/, '🔧'], [/bellez|cuidad/, '💄'], [/tecno|celul|electr/, '📱'],
+      [/limpi/, '🧽'], [/hogar|casa/, '🏠'], [/carro|moto/, '🏍️'], [/ilumin|solar|luz|lampar/, '💡'], [/deport|camp/, '⛺'], [/bols|malet/, '🎒'],
+      [/mascot/, '🐾'], [/ropa|moda/, '👕'], [/salud/, '💊'], [/oficin|escol/, '✏️'],
+    ];
+    return mapa.find(([r]) => r.test(n))?.[1] ?? '🛍️';
+  }
+
+  /** Foto que se ve en el detalle */
+  fotoI = signal(0);
+  alDeslizar(el: HTMLElement): void {
+    const i = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    if (i !== this.fotoI()) this.fotoI.set(i);
+  }
+  verFoto(el: HTMLElement, i: number): void {
+    this.fotoI.set(i);
+    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+  }
+  elegirColor(c: string, el: HTMLElement): void {
+    this.color.set(c);
+    // La foto del color queda de primera
+    this.fotoI.set(0);
+    el.scrollTo({ left: 0 });
+  }
+
+  resenas = signal<Resena[]>([]);
+  verTodasResenas = signal(false);
+  fechaCorta(iso: string): string {
+    return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Bogota' });
+  }
+
+  avisoAgregado = signal('');
+  private avisar(t: string): void {
+    this.avisoAgregado.set(t);
+    setTimeout(() => this.avisoAgregado() === t && this.avisoAgregado.set(''), 2200);
+  }
+
+  /** Último pedido hecho desde este celular (para repetirlo) */
+  ultimo = signal<UltimoPedido | null>(null);
+  resumenUltimo(u: UltimoPedido): string {
+    const porId = new Map((this.t()?.productos ?? []).map((p) => [p.id, p]));
+    const nombres = u.items.map((i) => porId.get(i.producto_id)?.nombre).filter((x): x is string => !!x);
+    const n = u.items.reduce((s, i) => s + i.cantidad, 0);
+    return `${n} ${n === 1 ? 'producto' : 'productos'}` + (nombres.length ? ' · ' + nombres.slice(0, 2).join(', ') + (nombres.length > 2 ? '…' : '') : '');
+  }
+  repetir(u: UltimoPedido): void {
+    const porId = new Map((this.t()?.productos ?? []).map((p) => [p.id, p]));
+    let faltan = 0;
+    for (const i of u.items) {
+      const p = porId.get(i.producto_id);
+      const colorOk = !i.color || !!p?.colores.some((c) => c.nombre === i.color);
+      const tallaOk = !i.talla || !!p?.tallas.includes(i.talla);
+      if (!p || p.agotado || !colorOk || !tallaOk) { faltan++; continue; }
+      this.agregar(p, i.cantidad, i.color, i.talla);
+    }
+    if (!this.lineas().length) return this.avisar('Esos productos ya no están disponibles 😕');
+    this.abrirCarrito();
+    if (faltan) this.avisar(faltan === 1 ? 'Un producto ya no está disponible' : `${faltan} productos ya no están disponibles`);
+  }
+  private claveUltimo(): string {
+    return 'tienda-ultimo-' + (this.vendedoraId ?? 'general');
+  }
+  /** Guarda el pedido y los datos del cliente en este celular */
+  private guardarUltimo(): void {
+    try {
+      const u: UltimoPedido = { fecha: new Date().toISOString(), items: this.lineas().map((l) => ({ producto_id: l.producto_id, cantidad: l.cantidad, color: l.color, talla: l.talla })) };
+      localStorage.setItem(this.claveUltimo(), JSON.stringify(u));
+      localStorage.setItem('tienda-datos', JSON.stringify({ nombre: this.nombre.trim(), prefijo: this.prefijo, telefono: this.telefono, direccion: this.direccion.trim(), barrio: this.barrioOficial() }));
+      this.ultimo.set(u);
+    } catch { /* sin almacenamiento */ }
+  }
+  private leerGuardados(): void {
+    try {
+      const u = JSON.parse(localStorage.getItem(this.claveUltimo()) ?? 'null') as UltimoPedido | null;
+      if (u && Array.isArray(u.items) && u.items.length) this.ultimo.set(u);
+      const d = JSON.parse(localStorage.getItem('tienda-datos') ?? 'null') as { nombre?: string; prefijo?: string; telefono?: string; direccion?: string; barrio?: string } | null;
+      if (d) {
+        this.nombre = d.nombre ?? '';
+        this.prefijo = d.prefijo || '57';
+        this.telefono = d.telefono ?? '';
+        this.direccion = d.direccion ?? '';
+        if (d.barrio) this.escribirBarrio(d.barrio);
+        this.enBarrio.set(false);
+      }
+    } catch { /* nada guardado */ }
+  }
+
+  @ViewChild('detalle') private detalle?: ElementRef<HTMLElement>;
+
   async abrir(p: ProductoTienda): Promise<void> {
     this.evento('ver', p.id);
+    this.abrirPantalla();
+    this.verCarrito.set(false);
     this.sel.set(p);
+    this.fotoI.set(0);
+    this.resenas.set([]);
+    this.verTodasResenas.set(false);
+    this.detalle?.nativeElement.scrollTo({ top: 0 });
+    if (p.resenas) {
+      void this.sb.client.rpc('tienda_resenas', { p_producto: p.id }).then(({ data }) => {
+        if (this.sel()?.id === p.id && Array.isArray(data)) this.resenas.set(data as Resena[]);
+      });
+    }
     this.color.set(p.colores.length === 1 ? p.colores[0].nombre : null);
     this.talla.set(p.tallas.length === 1 ? p.tallas[0] : null);
     this.cant.set(1);
@@ -601,18 +1434,23 @@ export class TiendaPage implements OnInit {
     this.fotosExtra.set(d.imagenes ?? []);
   }
 
-  /** Sin colores ni tallas se agrega directo; si tiene, se abre para elegir */
-  rapido(p: ProductoTienda): void {
-    if (p.agotado) return;
-    if (p.colores.length > 1 || p.tallas.length > 1) return void this.abrir(p);
-    this.agregar(p, 1, p.colores[0]?.nombre ?? null, p.tallas[0] ?? null);
+  private elegido(p: ProductoTienda): boolean {
+    if (p.colores.length && !this.color()) return this.errorSel.set('Elige el color.'), false;
+    if (p.tallas.length && !this.talla()) return this.errorSel.set('Elige la talla.'), false;
+    this.agregar(p, this.cant(), this.color(), this.talla());
+    return true;
   }
 
+  /** Agrega y vuelve al catálogo */
   agregarSel(p: ProductoTienda): void {
-    if (p.colores.length && !this.color()) return this.errorSel.set('Elige el color.');
-    if (p.tallas.length && !this.talla()) return this.errorSel.set('Elige la talla.');
-    this.agregar(p, this.cant(), this.color(), this.talla());
-    this.sel.set(null);
+    if (!this.elegido(p)) return;
+    this.cerrarPantalla();
+    this.avisar('✓ Agregado a tu pedido');
+  }
+
+  /** Agrega y abre de una vez el pedido para terminarlo */
+  comprarYa(p: ProductoTienda): void {
+    if (this.elegido(p)) this.abrirCarrito();
   }
 
   private agregar(p: ProductoTienda, cantidad: number, color: string | null, talla: string | null): void {
@@ -652,7 +1490,7 @@ export class TiendaPage implements OnInit {
   }
 
   /** El barrio como está en la tabla de domicilios (si lo escribió distinto), o tal cual */
-  private barrioOficial(): string {
+  barrioOficial(): string {
     return this.barrioElegido() ?? this.barrio().trim();
   }
 
@@ -674,19 +1512,104 @@ export class TiendaPage implements OnInit {
       document.getElementById(id)?.focus();
       return this.error.set('Revisa los datos marcados en rojo.');
     }
+    // Con tarjeta: primero la tarjeta (si es nueva, Wompi la convierte en token) y después el pedido
+    const conTarjeta = this.formaPago() === 'tarjeta';
+    this.pagoMensaje.set('');
+    if (conTarjeta && !this.tarjetaSel()) return this.pagoMensaje.set('Elige una tarjeta.');
+    if (conTarjeta && this.tarjetaSel() === 'nueva') {
+      const malo = this.errorTarjeta();
+      if (malo) return this.pagoMensaje.set(malo);
+    }
     this.enviando.set(true);
+    let token: { id: string; brand: string; last_four: string; exp_month: string; exp_year: string; card_holder: string } | null = null;
+    if (conTarjeta && this.tarjetaSel() === 'nueva') {
+      try {
+        const [mes, anio] = this.tVence.split('/');
+        token = await this.cli.tokenizar({ numero: this.tNumero(), titular: this.tTitular, mes, anio, cvc: this.tCvc });
+      } catch (e) {
+        this.enviando.set(false);
+        return this.pagoMensaje.set((e as Error).message);
+      }
+    }
+    if (conTarjeta && this.codigoPendiente) return this.cobrarTarjeta(this.codigoPendiente, token, null);
     const { data, error } = await this.sb.client.rpc('tienda_pedir', {
       p_vendedor: this.vendedoraId, p_nombre: this.nombre.trim(), p_telefono: unirTelefono(this.prefijo, this.telefono),
       p_direccion: this.direccion.trim(), p_barrio: this.barrioOficial(), p_observaciones: this.observaciones.trim(),
       p_items: this.lineas().map((l) => ({ producto_id: l.producto_id, cantidad: l.cantidad, color: l.color, talla: l.talla })),
+      p_pago: this.enLinea() ? 'en_linea' : 'contra_entrega',
+      p_cupon: this.cupon()?.codigo ?? null,
     });
+    if (error) {
+      this.enviando.set(false);
+      return this.error.set(mensajeError(error));
+    }
+    const r = data as { id: number; codigo: string; subtotal: number; domicilio: number; domicilio_por_confirmar: boolean; pago: string };
+    this.guardarUltimo();
+    await this.guardarEnCuenta();
+    if (conTarjeta) return this.cobrarTarjeta(r.codigo, token, r);
+    if (r.pago === 'en_linea') {
+      // El pedido ya quedó guardado: se va a Wompi a pagar (y si algo falla, la página del pago deja reintentar)
+      this.lineas.set([]);
+      this.cupon.set(null);
+      const pago = await this.sb.client.functions.invoke('wompi-pagar', { body: { codigo: r.codigo, origen: location.origin } });
+      const url = (pago.data as { url?: string } | null)?.url;
+      location.assign(url && url.startsWith('https://checkout.wompi.co/') ? url : `/pago/${r.codigo}`);
+      return;
+    }
     this.enviando.set(false);
-    if (error) return this.error.set(mensajeError(error));
-    const r = data as { id: number; subtotal: number; domicilio: number; domicilio_por_confirmar: boolean };
-    this.hecho.set({ id: r.id, total: Number(r.subtotal) + Number(r.domicilio), domicilioPendiente: r.domicilio_por_confirmar });
+    this.hecho.set({ id: r.id, total: Number(r.subtotal) + Number(r.domicilio), domicilioPendiente: r.domicilio_por_confirmar, codigo: r.codigo });
     this.lineas.set([]);
-    this.verCarrito.set(false);
+    this.cupon.set(null);
+    this.cerrarPantalla();
     this.scroll?.nativeElement.scrollTo({ top: 0 });
+  }
+
+  /** Cobra el pedido con la tarjeta elegida (guardada o nueva) sin salir de la tienda */
+  private async cobrarTarjeta(codigo: string, token: { id: string; brand: string; last_four: string; exp_month: string; exp_year: string; card_holder: string } | null,
+    r: { id: number; subtotal: number; domicilio: number; domicilio_por_confirmar: boolean } | null): Promise<void> {
+    this.codigoPendiente = codigo;
+    try {
+      const sel = this.tarjetaSel();
+      const res = await this.cli.pagarConTarjeta({
+        codigo, cuotas: this.cuotas(),
+        ...(typeof sel === 'number' ? { tarjeta_id: sel } : {
+          token: token!.id, guardar: this.tGuardar,
+          tarjeta: { marca: token!.brand, ultimos4: token!.last_four, titular: token!.card_holder, exp_mes: token!.exp_month, exp_anio: token!.exp_year },
+        }),
+      });
+      if (res.guardada) void this.cli.cargar();
+      if (res.pagado) {
+        this.codigoPendiente = null;
+        this.enviando.set(false);
+        this.tNumero.set(''); this.tCvc = ''; this.tVence = ''; this.tTitular = '';
+        this.hecho.set({ id: r?.id ?? 0, total: this.total(), domicilioPendiente: !!r?.domicilio_por_confirmar, codigo, pagado: true });
+        this.lineas.set([]);
+        this.cupon.set(null);
+        this.cerrarPantalla();
+        this.scroll?.nativeElement.scrollTo({ top: 0 });
+        return;
+      }
+      if (res.estado === 'PENDING') {
+        // El banco todavía no responde: la página del pedido muestra cuando se apruebe
+        this.lineas.set([]);
+        location.assign(`/pago/${codigo}`);
+        return;
+      }
+      this.enviando.set(false);
+      this.pagoMensaje.set('Tu banco no aprobó el pago' + (res.mensaje ? ` (${res.mensaje})` : '') + '. Intenta con otra tarjeta o elige otro medio de pago.');
+    } catch (e) {
+      this.enviando.set(false);
+      this.pagoMensaje.set((e as Error).message);
+    }
+  }
+
+  /** WhatsApp de la tienda para que el cliente pida ayuda con su barrio */
+  whatsappAyuda(): string | null {
+    const t = this.t();
+    const tel = (t?.vendedora?.telefono ?? t?.telefonos?.split(/[-,/]/)[0] ?? '').replace(/\D/g, '');
+    if (tel.length < 7) return null;
+    const num = tel.length === 10 ? '57' + tel : tel;
+    return `https://wa.me/${num}?text=${encodeURIComponent(`Hola, quiero hacer un pedido del catálogo pero no encuentro mi barrio: ${this.barrio().trim()}.`)}`;
   }
 
   whatsapp(): string | null {
@@ -695,5 +1618,14 @@ export class TiendaPage implements OnInit {
     if (tel.length < 7) return null;
     const num = tel.length === 10 ? '57' + tel : tel;
     return `https://wa.me/${num}?text=${encodeURIComponent(`Hola, acabo de hacer un pedido en el catálogo a nombre de ${this.nombre.trim()}.`)}`;
+  }
+
+  /** WhatsApp de el vendedor para preguntarle algo desde su catálogo */
+  whatsappVendedora(): string | null {
+    const v = this.t()?.vendedora;
+    const tel = (v?.telefono ?? '').replace(/\D/g, '');
+    if (!v || tel.length < 7) return null;
+    const num = tel.length === 10 ? '57' + tel : tel;
+    return `https://wa.me/${num}?text=${encodeURIComponent(`Hola ${this.primerNombre(v.nombre)}, vi tu catálogo y tengo una pregunta.`)}`;
   }
 }

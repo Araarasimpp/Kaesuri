@@ -39,6 +39,7 @@ import {
   swapHorizontalOutline,
   calendarOutline,
   hourglassOutline,
+  pricetagOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -96,6 +97,7 @@ export class AdminLayoutComponent {
     { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
     { label: 'Calendario', path: '/admin/calendario', icon: 'calendar-outline' },
     { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
+    { label: 'Cupones', path: '/admin/cupones', icon: 'pricetag-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -107,6 +109,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      pricetagOutline,
       hourglassOutline,
       calendarOutline,
       swapHorizontalOutline,

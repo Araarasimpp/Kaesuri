@@ -193,3 +193,294 @@ table.tabla-cel .solo-cel {
     height: 22px;
   }
 }
+
+/* Catálogo público: "Lo más vendido", "Te puede gustar" y cupón */
+app-tienda .tienda-top { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+app-tienda .tienda-top h2, app-tienda .tienda-relac h3 { margin: 0; font-size: 16px; }
+app-tienda .tienda-relac { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--border); }
+app-tienda .tienda-carrusel { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+app-tienda .tienda-mini { position: relative; flex: 0 0 128px; display: flex; flex-direction: column; gap: 4px; padding: 0 0 8px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; overflow: hidden; scroll-snap-align: start; }
+app-tienda .tienda-mini img, app-tienda .tienda-mini .ini { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-2); display: grid; place-items: center; font-size: 28px; font-weight: 700; color: var(--text-muted); }
+app-tienda .tienda-mini .nom { padding: 0 8px; font-size: 12.5px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+app-tienda .tienda-mini strong { padding: 0 8px; font-family: var(--mono-font); font-size: 13.5px; }
+app-tienda .tienda-mini .puesto { position: absolute; top: 6px; left: 6px; padding: 1px 7px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 11.5px; font-weight: 800; }
+app-tienda .tienda-cupon .link { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+app-tienda .tienda-cupon .cupon-form { display: flex; gap: 8px; }
+app-tienda .tienda-cupon .cupon-form input { flex: 1; min-width: 0; text-transform: uppercase; }
+app-tienda .tienda-cupon .cupon-ok { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--ok-wash); font-size: 14px; }
+app-tienda .tienda-cupon .cupon-ok small { display: block; color: var(--efectivo-texto); font-weight: 600; }
+app-tienda .tienda-cupon .cupon-ok small.falta { color: var(--oro-texto); }
+app-tienda .totales .desc-linea { color: var(--efectivo-texto); }
+
+/* ===== Catálogo público: diseño de tienda (lila suave, tarjetas redondeadas, botones tipo píldora) ===== */
+app-tienda.tv2.tv2.tv2 {
+  --t-acc: #6b4fe0;
+  --t-acc-2: #5a3fd0;
+  --t-wash: color-mix(in srgb, var(--t-acc) 10%, var(--surface));
+  --t-wash-2: color-mix(in srgb, var(--t-acc) 18%, var(--surface));
+  --t-sombra: 0 6px 20px rgba(60, 40, 140, .08);
+  background: color-mix(in srgb, var(--t-acc) 4%, var(--bg));
+}
+app-tienda.tv2.tv2.tv2 .scroll { background: color-mix(in srgb, var(--t-acc) 4%, var(--bg)); }
+app-tienda.tv2.tv2.tv2 .marca { position: relative; padding-right: 56px; min-height: 44px; }
+app-tienda.tv2.tv2.tv2 .t-icono-carrito { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: var(--surface); color: var(--text); box-shadow: var(--t-sombra); cursor: pointer; }
+/* ===== Finaliza tu compra (tienda) ===== */
+app-tienda.tv2.tv2.tv2 .fc { display: flex; flex-direction: column; gap: 12px; padding-bottom: 24px; }
+app-tienda.tv2.tv2.tv2 .fc-prods { list-style: none; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; border-radius: 18px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .fc-prods li { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+app-tienda.tv2.tv2.tv2 .fc-foto { position: relative; width: 56px; height: 56px; border-radius: 12px; background: color-mix(in srgb, var(--t-acc) 7%, var(--surface)); overflow: visible; }
+app-tienda.tv2.tv2.tv2 .fc-foto img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+app-tienda.tv2.tv2.tv2 .fc-foto b { position: absolute; right: -6px; bottom: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--t-acc); color: #fff;
+  font-size: 12px; line-height: 22px; text-align: center; box-shadow: 0 0 0 2px var(--surface); }
+app-tienda.tv2.tv2.tv2 .fc-prod-txt span { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+app-tienda.tv2.tv2.tv2 .fc-prod-txt small { display: block; font-size: 12.5px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .fc-prod-v { font-weight: 700; white-space: nowrap; }
+app-tienda.tv2.tv2.tv2 .fc-sec { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .fc-sec h3, app-tienda.tv2.tv2.tv2 .fc-h { margin: 0; font-size: 17px; font-weight: 750; color: var(--text); }
+app-tienda.tv2.tv2.tv2 .fc-dir { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; padding: 14px; border: 1.5px solid var(--t-acc); border-radius: 14px; }
+app-tienda.tv2.tv2.tv2 .fc-pin { color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .fc-dir-txt strong { display: block; font-size: 16px; }
+app-tienda.tv2.tv2.tv2 .fc-dir-txt small { display: block; margin: 2px 0 6px; font-size: 13px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .fc-link { padding: 0; border: 0; background: none; color: var(--t-acc); font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .fc-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+app-tienda.tv2.tv2.tv2 .fc-fila strong { display: block; font-size: 15px; }
+app-tienda.tv2.tv2.tv2 .fc-fila small { display: block; font-size: 13px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .fc-fila-btn { width: 100%; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .fc-fila-btn svg { color: var(--t-acc); flex-shrink: 0; }
+app-tienda.tv2.tv2.tv2 .fc-pagos { display: flex; flex-direction: column; gap: 8px; }
+app-tienda.tv2.tv2.tv2 .fc-opcion { display: grid; grid-template-columns: 20px auto minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; padding: 12px; border: 1px solid var(--border);
+  border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 div.fc-opcion { grid-template-columns: 20px minmax(0, 1fr) auto; cursor: default; }
+app-tienda.tv2.tv2.tv2 .fc-opcion.on { border-color: var(--t-acc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--t-acc) 22%, transparent); }
+app-tienda.tv2.tv2.tv2 .fc-radio { width: 20px; height: 20px; border: 2px solid var(--border-strong); border-radius: 50%; box-sizing: border-box; }
+app-tienda.tv2.tv2.tv2 .fc-opcion.on .fc-radio { border: 6px solid var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .fc-ico { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .fc-op-txt strong { display: block; font-size: 15px; }
+app-tienda.tv2.tv2.tv2 .fc-op-txt small { display: block; font-size: 12.5px; color: var(--text-muted); line-height: 1.35; }
+app-tienda.tv2.tv2.tv2 .fc-op-v { font-weight: 700; white-space: nowrap; }
+app-tienda.tv2.tv2.tv2 .fc-marcas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+app-tienda.tv2.tv2.tv2 .fc-marcas i { padding: 2px 7px; border-radius: 6px; background: color-mix(in srgb, var(--efectivo) 14%, var(--surface)); color: var(--efectivo-texto); font-size: 11px; font-style: normal; font-weight: 700; }
+app-tienda.tv2.tv2.tv2 .fc-r { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+app-tienda.tv2.tv2.tv2 .fc-desc { color: var(--efectivo-texto); }
+app-tienda.tv2.tv2.tv2 .fc-total { margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 20px; font-weight: 800; }
+app-tienda.tv2.tv2.tv2 .fc-cupon { margin: 0; }
+app-tienda.tv2.tv2.tv2 .fc-marca { font-size: 11px; font-weight: 800; letter-spacing: .02em; color: #1a1f71; background: #fff; }
+app-tienda.tv2.tv2.tv2 .fc-tarjeta { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; background: color-mix(in srgb, var(--t-acc) 5%, var(--surface)); }
+app-tienda.tv2.tv2.tv2 .fc-tarjeta .campo, app-tienda.tv2.tv2.tv2 .fc-cuotas { margin: 0; }
+app-tienda.tv2.tv2.tv2 .fc-num { position: relative; }
+app-tienda.tv2.tv2.tv2 .fc-num input { width: 100%; padding-right: 96px; letter-spacing: .06em; box-sizing: border-box; }
+app-tienda.tv2.tv2.tv2 .fc-num b { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 800; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .fc-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+app-tienda.tv2.tv2.tv2 .fc-cuotas select { width: 100%; }
+app-tienda.tv2.tv2.tv2 .fc-pie { display: flex; align-items: center; gap: 12px; }
+/* Tarjetas primero (como en las tiendas grandes) */
+app-tienda.tv2.tv2.tv2 .fc-pagos .fc-tj { order: -1; }
+app-tienda.tv2.tv2.tv2 .t-guardar-dir input { accent-color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .fc-pie .b-pri { flex: 1; }
+app-tienda.tv2.tv2.tv2 .fc-pie-total { display: inline-flex; align-items: center; gap: 4px; padding: 0 4px; border: 0; background: none; color: var(--text); font: inherit; font-size: 21px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+app-tienda.tv2.tv2.tv2 .fc-pie-total svg { color: var(--t-acc); }
+/* Quién soy (arriba a la izquierda): foto o iniciales y saludo; lleva a Mi cuenta */
+app-tienda.tv2.tv2.tv2 .t-yo { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-yo-foto { flex-shrink: 0; width: 44px; height: 44px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
+  background: var(--surface); color: var(--text); box-shadow: var(--t-sombra); font-size: 14px; font-weight: 700; }
+app-tienda.tv2.tv2.tv2 .t-yo-foto.dentro { background: var(--t-acc); color: #fff; }
+app-tienda.tv2.tv2.tv2 .t-yo-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+app-tienda.tv2.tv2.tv2 .t-yo-txt { min-width: 0; display: flex; flex-direction: column; }
+app-tienda.tv2.tv2.tv2 .t-yo-txt strong { font-size: 17px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+app-tienda.tv2.tv2.tv2 .t-yo-txt small { font-size: 13px; color: var(--text-soft); }
+/* Direcciones guardadas en el pedido */
+app-tienda.tv2.tv2.tv2 .t-mis-dirs { display: flex; flex-direction: column; gap: 8px; }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs button { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; align-items: start; padding: 12px; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs button.on { border-color: var(--t-acc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--t-acc) 25%, transparent); }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs strong { display: block; font-size: 14px; }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs small { display: block; font-size: 12.5px; color: var(--text-muted); line-height: 1.35; }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs .radio { width: 18px; height: 18px; margin-top: 1px; border: 2px solid var(--border-strong); border-radius: 50%; }
+app-tienda.tv2.tv2.tv2 .t-mis-dirs button.on .radio { border: 5px solid var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-cuenta-aviso { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--t-acc) 8%, var(--surface)); font-size: 13.5px; }
+app-tienda.tv2.tv2.tv2 .t-cuenta-aviso button { border: 0; background: none; padding: 0; color: var(--t-acc); font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+app-tienda.tv2.tv2.tv2 .t-guardar-dir { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+app-tienda.tv2.tv2.tv2 .t-guardar-dir input { width: 18px; height: 18px; }
+app-tienda.tv2.tv2.tv2 .t-badge { position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--t-acc);
+  color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+
+/* Banner */
+app-tienda.tv2.tv2.tv2 .t-hero { position: relative; display: flex; align-items: center; gap: 10px; min-height: 170px; margin: 0 0 14px; padding: 18px 16px 18px 20px;
+  border-radius: 22px; overflow: hidden; background: linear-gradient(135deg, var(--t-wash-2), var(--t-wash)); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .t-hero-txt { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+app-tienda.tv2.tv2.tv2 .t-pill { padding: 3px 10px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 650; }
+app-tienda.tv2.tv2.tv2 .t-hero h2 { margin: 2px 0 0; font-size: 21px; line-height: 1.2; font-weight: 800; letter-spacing: -.01em; }
+app-tienda.tv2.tv2.tv2 .t-hero p { margin: 0; font-size: 13.5px; color: var(--text-soft); }
+app-tienda.tv2.tv2.tv2 .t-hero-txt button { margin-top: 6px; height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--t-acc); color: #fff;
+  font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-hero img { width: 38%; max-width: 180px; aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 10px 18px rgba(60, 40, 140, .22)); }
+
+/* Buscador y categorías */
+app-tienda.tv2.tv2.tv2 .filtros { background: color-mix(in srgb, var(--t-acc) 4%, var(--bg)); }
+app-tienda.tv2.tv2.tv2 .filtros input { border: 0; background: var(--surface); box-shadow: var(--t-sombra); padding-left: 16px; }
+app-tienda.tv2.tv2.tv2 .solo { border: 0; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .solo.on, app-tienda.tv2.tv2.tv2 .cats button.on { border-color: var(--t-acc); background: var(--t-acc); color: #fff; font-weight: 650; }
+app-tienda.tv2.tv2.tv2 .cats button { border-color: transparent; background: var(--surface); box-shadow: 0 2px 8px rgba(60, 40, 140, .06); }
+app-tienda.tv2.tv2.tv2 .t-titulo { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 0 10px; }
+app-tienda.tv2.tv2.tv2 .t-titulo h2 { margin: 0; font-size: 17px; font-weight: 750; }
+app-tienda.tv2.tv2.tv2 .t-titulo span { font-size: 13px; color: var(--text-muted); }
+
+/* Tarjetas de producto */
+app-tienda.tv2.tv2.tv2 .prod { position: relative; border: 0; border-radius: 20px; box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .foto { margin: 8px 8px 0; width: calc(100% - 16px); border-radius: 16px; overflow: hidden; background: var(--t-wash); }
+app-tienda.tv2.tv2.tv2 .foto img { mix-blend-mode: multiply; }
+app-tienda.tv2.tv2.tv2 .info { gap: 4px; padding: 10px 12px 12px; }
+app-tienda.tv2.tv2.tv2 .info h2 { font-size: 14px; font-weight: 650; }
+app-tienda.tv2.tv2.tv2 .t-precio-fila { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; }
+app-tienda.tv2.tv2.tv2 .precio { margin-top: 0; font-size: 15.5px; }
+app-tienda.tv2.tv2.tv2 .t-en-pedido { flex-shrink: 0; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--t-wash-2); color: var(--t-acc); font-size: 13px; font-weight: 800; }
+app-tienda.tv2.tv2.tv2 .t-rating { display: inline-flex; align-items: baseline; gap: 3px; font-size: 12.5px; font-weight: 650; color: var(--text); }
+app-tienda.tv2.tv2.tv2 .t-rating b { color: #f5a524; }
+app-tienda.tv2.tv2.tv2 .t-rating small { font-weight: 400; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .t-nuevo { background: #12b886; }
+app-tienda.tv2.tv2.tv2 .t-fav { position: absolute; top: 14px; right: 14px; z-index: 2; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%;
+  background: var(--surface); color: var(--text-soft); font-size: 17px; line-height: 1; box-shadow: 0 2px 8px rgba(0, 0, 0, .08); cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-fav.on { color: #e5484d; }
+app-tienda.tv2.tv2.tv2 .t-best { position: absolute; top: 8px; left: 8px; padding: 3px 9px; border-radius: 999px; background: var(--t-acc); color: #fff; font-size: 11px; font-weight: 700; }
+app-tienda.tv2.tv2.tv2 .etq-agot { border-radius: 999px; }
+
+/* Botón flotante del pedido */
+app-tienda.tv2.tv2.tv2 .carrito { background: var(--t-acc); color: #fff; box-shadow: 0 10px 26px color-mix(in srgb, var(--t-acc) 45%, transparent); }
+
+/* Detalle del producto */
+app-tienda.tv2.tv2.tv2 .t-galeria-caja { position: relative; margin: -4px -4px 4px; padding: 14px 10px; border-radius: 20px; background: var(--t-wash); }
+app-tienda.tv2.tv2.tv2 .t-galeria-caja .galeria img { background: transparent; mix-blend-mode: multiply; }
+app-tienda.tv2.tv2.tv2 .t-best.grande { top: 12px; left: auto; right: 54px; font-size: 12px; padding: 4px 11px; }
+app-tienda.tv2.tv2.tv2 .t-fav.grande { top: 10px; right: 10px; }
+app-tienda.tv2.tv2.tv2 .t-cat { align-self: flex-start; font-size: 13px; font-weight: 650; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .hoja .precio { font-size: 24px; font-weight: 800; }
+app-tienda.tv2.tv2.tv2 .op { border-color: var(--border); background: var(--surface); }
+app-tienda.tv2.tv2.tv2 .op.on { border-color: var(--t-acc); background: var(--t-acc); color: #fff; }
+app-tienda.tv2.tv2.tv2 .paso button { border: 0; border-radius: 50%; background: var(--t-wash); color: var(--text); }
+app-tienda.tv2.tv2.tv2 .hoja-pie .b { border-radius: 999px; height: 48px; }
+app-tienda.tv2.tv2.tv2 .hoja-pie .b-pri { background: var(--t-acc); border-color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .hoja-pie .t-btn-sec { border: 1.5px solid var(--t-acc); color: var(--t-acc); background: var(--surface); }
+
+/* Carrito */
+app-tienda.tv2.tv2.tv2 .lineas { display: flex; flex-direction: column; gap: 10px; }
+app-tienda.tv2.tv2.tv2 .lineas li { grid-template-columns: 64px minmax(0, 1fr) auto; padding: 10px; border: 0; border-radius: 18px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .lineas img, app-tienda.tv2.tv2.tv2 .lineas .mini { width: 64px; height: 64px; border-radius: 14px; background: var(--t-wash); mix-blend-mode: multiply; }
+app-tienda.tv2.tv2.tv2 .lineas .nom { font-size: 14px; }
+app-tienda.tv2.tv2.tv2 .lineas .paso { padding: 2px; border-radius: 999px; background: var(--t-wash); }
+app-tienda.tv2.tv2.tv2 .lineas .paso button { width: 30px; height: 30px; background: var(--surface); font-size: 16px; }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .link { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 16px; background: var(--t-wash);
+  color: var(--text); text-decoration: none; font-weight: 600; }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .link::before { content: '🎁'; }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .link::after { content: '›'; margin-left: auto; font-size: 20px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .cupon-ok .link { display: inline; width: auto; padding: 0; background: none; color: var(--accent); text-decoration: underline; font-weight: 400; }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .cupon-ok .link::before, app-tienda.tv2.tv2.tv2 .tienda-cupon .cupon-ok .link::after { content: none; }
+app-tienda.tv2.tv2.tv2 .tienda-cupon .cupon-ok { border-radius: 16px; }
+app-tienda.tv2.tv2.tv2 .totales { padding: 14px 16px; border-radius: 18px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .totales .fin { padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border); font-size: 18px; }
+app-tienda.tv2.tv2.tv2 .formas-pago button { border-radius: 16px; }
+app-tienda.tv2.tv2.tv2 .formas-pago button.on { border-color: var(--t-acc); background: var(--t-wash); box-shadow: inset 0 0 0 1px var(--t-acc); }
+
+/* Lo más vendido y Te puede gustar */
+app-tienda.tv2.tv2.tv2 .tienda-mini { border: 0; border-radius: 18px; box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .tienda-mini img, app-tienda.tv2.tv2.tv2 .tienda-mini .ini { background: var(--t-wash); }
+app-tienda.tv2.tv2.tv2 .tienda-mini .puesto { background: var(--t-acc); }
+/* En modo oscuro las fotos no se mezclan con el fondo (se verían apagadas) */
+body.dark app-tienda.tv2.tv2.tv2 .foto img, body.dark app-tienda.tv2.tv2.tv2 .t-galeria-caja .galeria img,
+body.dark app-tienda.tv2.tv2.tv2 .lineas img, body.dark app-tienda.tv2.tv2.tv2 .lineas .mini { mix-blend-mode: normal; }
+
+app-tienda.tv2.tv2.tv2 .t-ver-pedido { background: var(--t-acc); }
+
+/* Categorías con ícono */
+app-tienda.tv2.tv2.tv2 .t-cats { gap: 12px; padding-top: 4px; padding-bottom: 2px; }
+app-tienda.tv2.tv2.tv2 .t-cats button { height: auto; width: 68px; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; box-shadow: none;
+  white-space: normal; color: var(--text-soft); font-size: 11.5px; line-height: 1.2; }
+app-tienda.tv2.tv2.tv2 .t-cat-ico { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); box-shadow: var(--t-sombra); font-size: 25px;
+  transition: background 160ms ease, transform 160ms ease; }
+app-tienda.tv2.tv2.tv2 .t-cat-nom { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; }
+app-tienda.tv2.tv2.tv2 .t-cats button.on { background: none; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-cats button.on .t-cat-ico { background: var(--t-acc); box-shadow: 0 6px 16px color-mix(in srgb, var(--t-acc) 40%, transparent); }
+app-tienda.tv2.tv2.tv2 .t-cats button:active .t-cat-ico { transform: scale(.94); }
+
+/* La vendedora del catálogo: foto, frase y WhatsApp */
+app-tienda.tv2.tv2.tv2 .t-vend { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 12px 14px; border-radius: 18px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .t-vend-foto { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-vend-ini { display: grid; place-items: center; background: var(--t-wash-2); color: var(--t-acc); font-weight: 800; }
+app-tienda.tv2.tv2.tv2 .t-vend-txt { min-width: 0; flex: 1; }
+app-tienda.tv2.tv2.tv2 .t-vend-txt strong { display: block; font-size: 15px; }
+app-tienda.tv2.tv2.tv2 .t-vend-txt small { font-weight: 500; color: var(--text-muted); font-size: 12.5px; }
+app-tienda.tv2.tv2.tv2 .t-vend-txt p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: var(--text-soft); }
+app-tienda.tv2.tv2.tv2 .t-vend-wa { flex-shrink: 0; padding: 8px 12px; border-radius: 999px; background: #1fa855; color: #fff; font-size: 12.5px; font-weight: 700; text-decoration: none; }
+app-tienda.tv2.tv2.tv2 .t-dest .tienda-mini { border-color: color-mix(in srgb, var(--t-acc) 35%, var(--border)); }
+
+/* Repetir el último pedido */
+app-tienda.tv2.tv2.tv2 .t-repetir { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 12px; padding: 12px 14px; border: 0; border-radius: 18px;
+  background: var(--surface); box-shadow: var(--t-sombra); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-repetir-ico { width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center; border-radius: 14px; background: var(--t-wash); font-size: 20px; }
+app-tienda.tv2.tv2.tv2 .t-repetir strong { display: block; font-size: 14.5px; }
+app-tienda.tv2.tv2.tv2 .t-repetir small { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .t-flecha { margin-left: auto; font-size: 24px; color: var(--text-muted); }
+
+/* Aviso "Agregado" */
+app-tienda.tv2.tv2.tv2 .t-toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 260; margin: 0; padding: 10px 18px;
+  border-radius: 999px; background: #1d1b2e; color: #fff; font-size: 14px; font-weight: 600; white-space: nowrap; box-shadow: 0 8px 24px rgba(0, 0, 0, .2); animation: t-sube 200ms ease; }
+@keyframes t-sube { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+/* Pantallas completas: detalle del producto y mi pedido */
+app-tienda.tv2.tv2.tv2 .t-pantalla { position: fixed; inset: 0; z-index: 240; display: flex; flex-direction: column; background: color-mix(in srgb, var(--t-acc) 4%, var(--bg));
+  animation: t-entra 220ms ease; }
+@keyframes t-entra { from { opacity: 0; transform: translateX(24px); } }
+app-tienda.tv2.tv2.tv2 .t-barra { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; }
+app-tienda.tv2.tv2.tv2 .t-barra-tit { flex: 1; text-align: center; font-size: 17px; font-weight: 750; }
+app-tienda.tv2.tv2.tv2 .t-barra-der { display: flex; gap: 8px; min-width: 44px; justify-content: flex-end; }
+app-tienda.tv2.tv2.tv2 .t-circ { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--surface);
+  color: var(--text); box-shadow: var(--t-sombra); font: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-circ.fav-on { color: #e5484d; }
+app-tienda.tv2.tv2.tv2 .t-circ-num { background: var(--t-acc); color: #fff; font-size: 15px; font-weight: 750; cursor: default; }
+app-tienda.tv2.tv2.tv2 .t-pantalla-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box; padding: 4px 16px 24px;
+  display: flex; flex-direction: column; gap: 14px; }
+app-tienda.tv2.tv2.tv2 .t-pantalla-pie { display: flex; gap: 10px; width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-radius: 24px 24px 0 0; box-shadow: 0 -6px 24px rgba(60, 40, 140, .08); }
+app-tienda.tv2.tv2.tv2 .t-pantalla-pie .b { flex: 1; height: 52px; border-radius: 999px; font-size: 15px; font-weight: 700; }
+app-tienda.tv2.tv2.tv2 .t-pantalla-pie .b-pri { background: var(--t-acc); border-color: var(--t-acc); color: #fff; }
+app-tienda.tv2.tv2.tv2 .t-pantalla-pie .t-btn-sec { border: 1.5px solid var(--t-acc); color: var(--t-acc); background: var(--surface); }
+app-tienda.tv2.tv2.tv2 .t-foto-grande { position: relative; flex-shrink: 0; border-radius: 26px; background: var(--t-wash); overflow: hidden; }
+app-tienda.tv2.tv2.tv2 .t-fotos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 1 / .9; max-height: 52vh; }
+app-tienda.tv2.tv2.tv2 .t-fotos::-webkit-scrollbar { display: none; }
+app-tienda.tv2.tv2.tv2 .t-fotos img, app-tienda.tv2.tv2.tv2 .t-fotos .ini { flex: 0 0 100%; width: 100%; height: 100%; object-fit: contain; box-sizing: border-box; padding: 18px;
+  scroll-snap-align: start; mix-blend-mode: multiply; }
+app-tienda.tv2.tv2.tv2 .t-fotos .ini { display: grid; place-items: center; font-size: 64px; font-weight: 750; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-foto-grande .t-best, app-tienda.tv2.tv2.tv2 .t-foto-grande .etq-agot { top: 14px; left: 14px; font-size: 12px; padding: 4px 11px; }
+app-tienda.tv2.tv2.tv2 .t-contador { position: absolute; right: 14px; bottom: 12px; padding: 2px 9px; border-radius: 999px; background: rgba(255, 255, 255, .85); color: #333; font-size: 12px; font-weight: 650; }
+app-tienda.tv2.tv2.tv2 .t-miniaturas { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; padding: 2px; }
+app-tienda.tv2.tv2.tv2 .t-miniaturas button { flex: 0 0 64px; height: 64px; padding: 0; border: 2px solid transparent; border-radius: 16px; background: var(--t-wash); overflow: hidden; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-miniaturas button.on { border-color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-miniaturas img { width: 100%; height: 100%; object-fit: contain; padding: 5px; box-sizing: border-box; mix-blend-mode: multiply; }
+app-tienda.tv2.tv2.tv2 .t-det { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 0; }
+app-tienda.tv2.tv2.tv2 .t-det-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+app-tienda.tv2.tv2.tv2 .t-det .t-cat { font-size: 13px; }
+app-tienda.tv2.tv2.tv2 .t-det .t-rating { font-size: 13.5px; }
+app-tienda.tv2.tv2.tv2 .t-det-nom { margin: -6px 0 0; font-size: 22px; line-height: 1.25; font-weight: 800; letter-spacing: -.01em; }
+app-tienda.tv2.tv2.tv2 .t-det .precio { margin-top: -6px; font-size: 26px; font-weight: 800; color: var(--t-acc); }
+app-tienda.tv2.tv2.tv2 .t-copiado { margin: -6px 0 0; font-size: 13px; color: var(--efectivo-texto); font-weight: 600; }
+app-tienda.tv2.tv2.tv2 .t-bloque { display: flex; flex-direction: column; gap: 8px; }
+app-tienda.tv2.tv2.tv2 .t-bloque h3 { margin: 0; font-size: 15px; font-weight: 750; }
+app-tienda.tv2.tv2.tv2 .t-cant { flex-direction: row; align-items: center; justify-content: space-between; }
+app-tienda.tv2.tv2.tv2 .t-det .op { min-height: 40px; padding: 0 16px; border-radius: 999px; }
+app-tienda.tv2.tv2.tv2 .t-resenas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+app-tienda.tv2.tv2.tv2 .t-resenas li { padding: 10px 12px; border-radius: 16px; background: var(--surface); box-shadow: var(--t-sombra); }
+app-tienda.tv2.tv2.tv2 .t-resenas li > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+app-tienda.tv2.tv2.tv2 .t-resenas small { font-size: 12px; color: var(--text-muted); }
+app-tienda.tv2.tv2.tv2 .t-resenas p { margin: 6px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--text-soft); }
+app-tienda.tv2.tv2.tv2 .t-estr { color: #f5a524; font-size: 15px; letter-spacing: 1px; }
+app-tienda.tv2.tv2.tv2 .t-estr em { font-style: normal; color: var(--border-strong); }
+app-tienda.tv2.tv2.tv2 .t-link { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--t-acc); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+app-tienda.tv2.tv2.tv2 .t-pantalla .tienda-relac { margin-top: 0; }
+app-tienda.tv2.tv2.tv2 .t-carro-body { gap: 16px; }
+body.dark app-tienda.tv2.tv2.tv2 .t-fotos img, body.dark app-tienda.tv2.tv2.tv2 .t-miniaturas img { mix-blend-mode: normal; }
+@media (min-width: 900px) {
+  app-tienda.tv2.tv2.tv2 .t-barra { max-width: 720px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+}
+

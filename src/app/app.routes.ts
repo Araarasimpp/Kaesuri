@@ -27,6 +27,11 @@ export const routes: Routes = [
     loadComponent: () => import('./tienda/tienda.page').then((m) => m.TiendaPage),
   },
   {
+    // Pública (sin sesión): el pedido que el cliente hizo en la tienda, hasta que lo confirmen
+    path: 'pago/:codigo',
+    loadComponent: () => import('./pago/pago.page').then((m) => m.PagoPage),
+  },
+  {
     // Pública (sin sesión): el cliente ve en qué va su pedido
     path: 'seguimiento/:codigo',
     loadComponent: () => import('./seguimiento/seguimiento.page').then((m) => m.SeguimientoPage),
