@@ -161,7 +161,7 @@ export class NotificacionesService {
     // 'comisiones?pago=ID' abre ese pago con su comprobante
     if (n.enlace?.split('?')[0] === 'comisiones' && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
     if (n.enlace === 'inventario' && (rol === 'admin' || rol === 'despachador')) return `${raiz}/inventario`;
-    if ((n.enlace === 'pedidos-web' || n.enlace === 'recontactar') && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
+    if ((n.enlace === 'pedidos-web' || n.enlace === 'recontactar' || n.enlace === 'ayuda-clientes') && (rol === 'admin' || rol === 'vendedor')) return `${raiz}/${n.enlace}`;
     if (['barrios', 'deudas', 'transferencias'].includes(n.enlace ?? '') && rol === 'admin') return `${raiz}/${n.enlace}`;
     if (n.enlace === 'calendario') return `${raiz}/calendario`;
     if (n.enlace === 'ventas-local') return rol === 'admin' ? `${raiz}/ventas-local` : raiz;

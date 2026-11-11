@@ -23,6 +23,11 @@ export const routes: Routes = [
     loadComponent: () => import('./tienda/tienda.page').then((m) => m.TiendaPage),
   },
   {
+    // Cuenta del cliente de la tienda (va antes de tienda/:codigo)
+    path: 'tienda/cuenta',
+    loadComponent: () => import('./tienda/cuenta/cuenta.page').then((m) => m.CuentaPage),
+  },
+  {
     path: 'tienda/:codigo',
     loadComponent: () => import('./tienda/tienda.page').then((m) => m.TiendaPage),
   },

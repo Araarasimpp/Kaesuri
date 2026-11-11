@@ -163,6 +163,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'cupones',
         loadComponent: () => import('../paginas/cupones/cupones.page').then((m) => m.CuponesPage),
       },
+      {
+        path: 'ayuda-clientes',
+        loadComponent: () => import('../paginas/ayuda-clientes/ayuda-clientes.page').then((m) => m.AyudaClientesPage),
+      },
     ],
   },
 ];
