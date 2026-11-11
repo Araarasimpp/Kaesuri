@@ -5,6 +5,21 @@ import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, inicioDe } from '../../core/services/supabase.service';
 import { tomarErrorDeEnlace } from '../enlace-correo';
 
+/** 'si' = este celular ya entra con Face ID; 'pendiente' = lo pidió y se activa al entrar con la contraseña */
+function leerBio(): string | null {
+  try {
+    return localStorage.getItem('jyb-face-id');
+  } catch {
+    return null;
+  }
+}
+function guardarBio(v: 'si' | 'pendiente' | null): void {
+  try {
+    if (v) localStorage.setItem('jyb-face-id', v);
+    else localStorage.removeItem('jyb-face-id');
+  } catch { /* sin almacenamiento */ }
+}
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -22,11 +37,45 @@ export class LoginPage {
   /** La cuenta existe pero no ha confirmado el correo: se ofrece reenviarlo */
   sinConfirmar = false;
 
+  /** El celular tiene Face ID, Touch ID o lector de huella que sirva para entrar (llaves de acceso) */
+  puedeBio = false;
+  errorBio = '';
+
   constructor(
     private supabase: SupabaseService,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    const pk = (window as unknown as { PublicKeyCredential?: { isUserVerifyingPlatformAuthenticatorAvailable?: () => Promise<boolean> } }).PublicKeyCredential;
+    void pk?.isUserVerifyingPlatformAuthenticatorAvailable?.()
+      .then((si) => { this.puedeBio = !!si; this.cdr.detectChanges(); })
+      .catch(() => undefined);
+  }
+
+  /** Entrar con la llave de acceso guardada en el celular (Face ID, Touch ID o huella) */
+  async entrarBiometria() {
+    this.errorMsg = '';
+    this.errorBio = '';
+    this.loading = true;
+    const { error } = await this.supabase.client.auth.signInWithPasskey();
+    if (error) {
+      this.loading = false;
+      const code = (error as { code?: string }).code ?? '';
+      const msg = (error.message ?? '').toLowerCase();
+      if (code === 'passkey_disabled') this.errorBio = 'El inicio con Face ID todavía no está activado. Entra con tu contraseña.';
+      else if (code === 'webauthn_credential_not_found' || leerBio() !== 'si') {
+        // Este celular todavía no tiene Face ID: queda pedido y se activa solo al entrar una vez con la contraseña
+        guardarBio('pendiente');
+        this.errorBio = 'Para usar Face ID en este celular, entra una vez con tu correo y contraseña. Desde ahí entras siempre con Face ID.';
+      } else if (!(msg.includes('notallowed') || msg.includes('cancel') || msg.includes('abort'))) {
+        this.errorBio = 'No se pudo entrar con Face ID. Entra con tu contraseña.';
+      }
+      this.cdr.detectChanges();
+      return;
+    }
+    guardarBio('si');
+    await this.terminarEntrada();
+  }
 
   /** "¿Olvidaste tu contraseña?": manda el enlace para ponerse una nueva. */
   async onOlvideClave() {
@@ -93,6 +142,16 @@ export class LoginPage {
       return;
     }
 
+    // Pidió Face ID en este celular: se activa de una vez (el celular pide la cara o la huella)
+    if (this.puedeBio && leerBio() === 'pendiente') {
+      const r = await this.supabase.client.auth.registerPasskey();
+      const yaEstaba = (r.error as { code?: string } | null)?.code === 'webauthn_credential_exists';
+      guardarBio(!r.error || yaEstaba ? 'si' : null);
+    }
+    await this.terminarEntrada();
+  }
+
+  private async terminarEntrada() {
     const profile = await this.supabase.getCurrentProfile();
     this.loading = false;
 

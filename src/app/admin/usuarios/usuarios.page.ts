@@ -15,6 +15,9 @@ interface UsuarioFila {
   role: UserRole;
   roles: UserRole[];
   activo: boolean;
+  created_at: string;
+  /** Cuenta borrada: queda solo el nombre para el historial */
+  eliminado_at: string | null;
 }
 
 @Component({
@@ -30,6 +33,10 @@ export class UsuariosPage implements OnInit, OnDestroy {
   /** Activo, ausente o desconectado (punto en la inicial, como en Discord) */
   presencia = inject(PresenciaService);
   busqueda = '';
+  /** Solo las cuentas que no se usan (no entran hace más de 60 días) */
+  soloSinUsar = false;
+  /** Último ingreso de cada cuenta (id → fecha) */
+  ultimo: Record<string, string | null> = {};
   miId: string | null = null;
   guardandoId: string | null = null;
 
@@ -76,21 +83,54 @@ export class UsuariosPage implements OnInit, OnDestroy {
     this.loading = true;
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('id, nombre, email, telefono, role, roles, activo')
+      .select('id, nombre, email, telefono, role, roles, activo, created_at, eliminado_at')
       .order('nombre');
 
     if (!error && data) {
-      this.usuarios = data as UsuarioFila[];
+      this.usuarios = (data as UsuarioFila[]).filter((u) => !u.eliminado_at);
+      void this.supabase.client.rpc('usuarios_ultimo_ingreso').then(({ data: d }) => {
+        if (d) { this.ultimo = d as Record<string, string | null>; this.cdr.detectChanges(); }
+      });
       void this.presencia.cargarVistos(this.usuarios.map((u) => u.id));
     }
     this.loading = false;
     this.cdr.detectChanges();
   }
 
+  /** No ha entrado en 60 días (o nunca, y la cuenta tiene más de 60 días) */
+  sinUsar(u: UsuarioFila): boolean {
+    const limite = Date.now() - 60 * 86_400_000;
+    const f = this.ultimo[u.id];
+    return f ? new Date(f).getTime() < limite : new Date(u.created_at).getTime() < limite;
+  }
+
+  ultimoTexto(u: UsuarioFila): string {
+    const f = this.ultimo[u.id];
+    if (!f) return 'Nunca';
+    const dias = Math.floor((Date.now() - new Date(f).getTime()) / 86_400_000);
+    return dias <= 0 ? 'Hoy' : dias === 1 ? 'Ayer' : `Hace ${dias} días`;
+  }
+
+  async borrar(u: UsuarioFila): Promise<void> {
+    if (u.id === this.miId) return;
+    const t = prompt(`¿Borrar la cuenta de ${u.nombre}? Pierde el acceso a la app y se borran sus datos personales. No se puede deshacer.\n\nPara confirmar escribe BORRAR:`);
+    if (t?.trim().toUpperCase() !== 'BORRAR') return;
+    this.guardandoId = u.id;
+    const { data, error } = await this.supabase.client.rpc('eliminar_cuenta', { p_usuario: u.id });
+    this.guardandoId = null;
+    if (error) {
+      await avisar(error.message, 'No se pudo borrar');
+      return;
+    }
+    await avisar(data === 'borrada' ? `Cuenta de ${u.nombre} borrada.` : `Cuenta de ${u.nombre} borrada. Su nombre queda en sus pedidos y cuadres viejos.`);
+    await this.cargarUsuarios();
+  }
+
   get filtrados(): UsuarioFila[] {
-    if (!this.busqueda.trim()) return this.usuarios;
+    const base = this.soloSinUsar ? this.usuarios.filter((u) => this.sinUsar(u)) : this.usuarios;
+    if (!this.busqueda.trim()) return base;
     const q = this.busqueda.trim().toLowerCase();
-    return this.usuarios.filter(
+    return base.filter(
       (u) =>
         u.nombre.toLowerCase().includes(q) ||
         (u.email ?? '').toLowerCase().includes(q)

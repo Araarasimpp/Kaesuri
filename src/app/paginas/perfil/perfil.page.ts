@@ -88,6 +88,12 @@ const ETIQUETA_ROL: Record<string, string> = {
         <p class="ayuda">Si perdiste el celular o entraste en un computador ajeno, cierra la sesión en todos los dispositivos. Tendrás que volver a entrar.</p>
         <div><button class="b b-peligro" (click)="cerrarTodas()">Cerrar sesión en todos los dispositivos</button></div>
       </section>
+
+      <section class="panel">
+        <h2>Borrar mi cuenta</h2>
+        <p class="ayuda">Se borra tu acceso a la app (correo y contraseña) y tus datos personales: celular, foto, cédula y cuenta bancaria. Los pedidos, comisiones y cuadres en los que participaste quedan con tu nombre, porque son registros del negocio. No se puede deshacer.</p>
+        <div><button class="b b-peligro" [disabled]="borrando()" (click)="borrarCuenta()">{{ borrando() ? 'Borrando…' : 'Borrar mi cuenta' }}</button></div>
+      </section>
     </div>
   `,
 })
@@ -98,6 +104,19 @@ export class PerfilPage implements OnInit {
 
   nombre = '';
   telefono = '';
+  borrando = signal(false);
+
+  async borrarCuenta(): Promise<void> {
+    const t = prompt('Esto borra tu cuenta para siempre. Para confirmar escribe BORRAR:');
+    if (t?.trim().toUpperCase() !== 'BORRAR') return;
+    this.borrando.set(true);
+    const { error } = await this.sb.client.rpc('eliminar_mi_cuenta');
+    this.borrando.set(false);
+    if (error) return this.toast.error(mensajeError(error));
+    await this.sb.client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    this.toast.ok('Tu cuenta fue borrada');
+    void this.router.navigateByUrl('/auth/login');
+  }
   clave1 = '';
   clave2 = '';
   foto = signal<string | null>(null);

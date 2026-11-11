@@ -1,0 +1,11 @@
+-- ============================================================================
+--  Kaesuri · Borrar cuentas (como en Jasta). YA APLICADO.
+--  La persona borra la suya desde Mi perfil y el admin borra las que no se usan.
+--  Se borran los datos personales (cédula y cuenta, celulares para avisos, Telegram, avisos).
+--  Sin historial: se borra del todo (acceso y perfil). Con pedidos, comisiones, cuadres, etc.:
+--  queda solo el nombre (marcada como eliminada) y el acceso queda bloqueado para siempre.
+-- ============================================================================
+alter table public.profiles add column if not exists eliminado_at timestamptz;
+-- Funciones: borrar_cuenta_interno(uuid), ultimo_admin(uuid), eliminar_mi_cuenta(), eliminar_cuenta(uuid),
+-- usuarios_ultimo_ingreso(). Definición vigente:
+--   select pg_get_functiondef('public.borrar_cuenta_interno(uuid)'::regprocedure);
