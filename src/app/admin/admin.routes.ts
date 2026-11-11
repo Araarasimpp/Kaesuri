@@ -155,6 +155,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'calendario',
         loadComponent: () => import('../paginas/calendario/calendario.page').then((m) => m.CalendarioPage),
       },
+      {
+        path: 'quietos',
+        loadComponent: () => import('../paginas/quietos/quietos.page').then((m) => m.QuietosPage),
+      },
     ],
   },
 ];

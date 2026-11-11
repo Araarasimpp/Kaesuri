@@ -38,6 +38,7 @@ import {
   lockClosedOutline,
   swapHorizontalOutline,
   calendarOutline,
+  hourglassOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -84,6 +85,7 @@ export class AdminLayoutComponent {
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
     { label: 'Inventario', path: '/admin/inventario', icon: 'file-tray-stacked-outline' },
+    { label: 'Productos quietos', path: '/admin/quietos', icon: 'hourglass-outline' },
     { label: 'Catálogo', path: '/admin/catalogo', icon: 'book-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
     { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
@@ -105,6 +107,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      hourglassOutline,
       calendarOutline,
       swapHorizontalOutline,
       lockClosedOutline,
