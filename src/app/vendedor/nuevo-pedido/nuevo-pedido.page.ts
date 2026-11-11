@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { MetodoPago, Producto } from '../../shared/models/models';
+import { MetodoPago, Producto, ProductoColor } from '../../shared/models/models';
 import { urlMini } from '../../shared/formato';
 
 import { avisar, confirmar } from '../../shared/dialogo';
@@ -211,15 +211,18 @@ export class NuevoPedidoPage implements OnInit {
     const { data, error } = await this.supabase.client
       .from('productos')
       .select(
-        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, colores:producto_colores(id, nombre, hex, imagen_url, orden)'
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, tallas_agotadas, colores:producto_colores(id, nombre, hex, imagen_url, orden, disponible)'
       )
       .eq('activo', true)
       .order('nombre');
 
     if (!error && data) {
-      this.productos = (data as Producto[]).filter((p) => this.disponible(p) > 0).map((p) => ({
+      // Los colores y tallas marcados como agotados en Inventario no se pueden pedir
+      type ConAgotados = Producto & { tallas_agotadas?: string[] | null; colores?: (ProductoColor & { disponible?: boolean })[] };
+      this.productos = (data as ConAgotados[]).filter((p) => this.disponible(p) > 0).map((p) => ({
         ...p,
-        colores: [...(p.colores ?? [])].sort((a, b) => a.orden - b.orden || a.id - b.id),
+        tallas: (p.tallas ?? []).filter((t) => !(p.tallas_agotadas ?? []).includes(t)),
+        colores: [...(p.colores ?? [])].filter((c) => c.disponible !== false).sort((a, b) => a.orden - b.orden || a.id - b.id),
       }));
     }
     this.loadingProductos = false;

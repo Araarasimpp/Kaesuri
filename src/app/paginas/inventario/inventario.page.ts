@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { VariantesAgotadasComponent } from '../../shared/variantes-agotadas/variantes-agotadas.component';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { addCircleOutline, closeOutline, searchOutline, trashOutline } from 'ionicons/icons';
@@ -25,6 +26,9 @@ interface Prod {
   stock_minimo: number;
   costo: number | null;
   vendidos_30: number;
+  /** Cuántos colores y tallas tiene, y cuántos están agotados */
+  variantes?: number;
+  agotadas?: number;
 }
 interface Movimiento { id?: string; fecha: string; tipo: 'compra' | 'ajuste' | 'anulacion' | 'venta' | 'devolucion'; cantidad: number; detalle: string | null; autor: string | null; stock_despues: number | null }
 interface Compra {
@@ -52,7 +56,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
   selector: 'app-inventario',
   standalone: true,
   host: { class: 'jt' },
-  imports: [SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent],
+  imports: [SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, VariantesAgotadasComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -106,6 +110,8 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
       .total-compra strong { font-family: var(--mono-font); font-size: 20px; }
       .check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
       .b-peligro-txt { color: var(--danger); }
+      .acc { flex-wrap: wrap; }
+      .acc .b.con-agotadas { border-color: var(--danger); color: var(--danger); }
       .borrar-mov { margin-left: 8px; border: 0; background: none; padding: 0; color: var(--danger); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer; }
       .semanas { display: flex; gap: 6px; flex-wrap: wrap; }
       .semanas button { height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text-soft);
@@ -182,6 +188,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
                   <span class="acc">
                     <button class="b" (click)="abrirConteo(p)">Contar</button>
                     <button class="b" (click)="abrirHistorial(p)">Historial</button>
+                    @if (p.variantes) { <button class="b" [class.con-agotadas]="p.agotadas" (click)="variantesDe.set(p)">Colores/tallas{{ p.agotadas ? ' · ' + p.agotadas + ' agotad' + (p.agotadas === 1 ? 'o' : 'os') : '' }}</button> }
                   </span>
                 </li>
               }
@@ -357,6 +364,10 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
           <button class="b b-pri" (click)="guardarCompra()" [disabled]="ocupado()">{{ ocupado() ? 'Guardando…' : 'Registrar compra' }}</button>
         </div>
       </div>
+    }
+
+    @if (variantesDe(); as p) {
+      <app-variantes-agotadas [productoId]="p.id" [nombre]="p.nombre" (cerrar)="variantesDe.set(null)" (guardado)="alGuardarVariantes(p, $event)"></app-variantes-agotadas>
     }
   `,
 })
@@ -665,6 +676,15 @@ export class InventarioPage implements OnInit {
     const n = Number((data as { deudas?: number } | null)?.deudas) || 0;
     this.toast.ok(n ? 'Compra eliminada (y su deuda)' : 'Compra eliminada');
     await Promise.all([this.cargar(), this.cargarCompras()]);
+  }
+
+  // ---------- Colores y tallas agotados ----------
+  variantesDe = signal<Prod | null>(null);
+
+  alGuardarVariantes(p: Prod, agotadas: number): void {
+    this.variantesDe.set(null);
+    this.productos.update((l) => l.map((x) => (x.id === p.id ? { ...x, agotadas } : x)));
+    this.toast.ok(agotadas ? `${p.nombre}: ${agotadas} ${agotadas === 1 ? 'opción agotada' : 'opciones agotadas'}` : `${p.nombre}: todo disponible`);
   }
 
   async eliminarAjuste(p: Prod, m: Movimiento): Promise<void> {

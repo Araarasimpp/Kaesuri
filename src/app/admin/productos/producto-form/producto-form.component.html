@@ -72,6 +72,15 @@
         <app-tallas-producto [tallas]="form.tallas ?? []" (cambio)="form.tallas = $event"></app-tallas-producto>
       </section>
 
+      <section class="extra" *ngIf="form.id">
+        <h3>Agotados</h3>
+        <p class="nota-agotados">Marca los colores o tallas que ya no hay: no salen en la tienda y no se pueden pedir.</p>
+        <button type="button" class="btn-agotados" (click)="verAgotados = true">Marcar colores y tallas agotados</button>
+      </section>
+      <div class="jt" *ngIf="verAgotados && form.id">
+        <app-variantes-agotadas [productoId]="form.id" [nombre]="form.nombre" (cerrar)="verAgotados = false" (guardado)="verAgotados = false"></app-variantes-agotadas>
+      </div>
+
       <section class="extra">
         <h3>Videos</h3>
         <app-videos-producto [videos]="form.videos ?? []" (cambio)="form.videos = $event"></app-videos-producto>
