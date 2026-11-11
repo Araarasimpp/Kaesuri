@@ -70,9 +70,22 @@ export class NuevaVersionComponent implements OnInit, OnDestroy {
     if (document.visibilityState === 'visible') void this.revisar();
   };
 
+  /**
+   * Marca de la versión cargada: la última novedad (<meta name="jyb-aviso">, la pone
+   * scripts/marca-aviso.mjs al publicar). Así el aviso solo sale cuando hay novedades.
+   * Si la publicación no puso la marca, se usa el archivo principal (avisa en cada publicación).
+   */
   private static principalCargado(): string | null {
+    const marca = document.querySelector<HTMLMetaElement>('meta[name="jyb-aviso"]')?.content;
+    if (marca && marca !== 'dev') return 'aviso:' + marca;
     const s = document.querySelector<HTMLScriptElement>('script[src*="main-"]');
     return s?.getAttribute('src')?.match(/main-[\w-]+\.js/)?.[0] ?? null;
+  }
+
+  private static marcaDe(html: string): string | null {
+    const marca = html.match(/name="jyb-aviso" content="([^"]+)"/)?.[1];
+    if (marca && marca !== 'dev') return 'aviso:' + marca;
+    return html.match(/main-[\w-]+\.js/)?.[0] ?? null;
   }
 
   private async revisar(): Promise<void> {
@@ -80,7 +93,7 @@ export class NuevaVersionComponent implements OnInit, OnDestroy {
     try {
       const r = await fetch('/index.html?v=' + Date.now(), { cache: 'no-store' });
       const html = await r.text();
-      const nuevo = html.match(/main-[\w-]+\.js/)?.[0];
+      const nuevo = NuevaVersionComponent.marcaDe(html);
       if (nuevo && nuevo !== this.actual) this.hay.set(true);
     } catch {
       /* sin internet: se revisa la próxima vez */

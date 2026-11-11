@@ -24,4 +24,4 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npx ng build
+      - run: npm run build

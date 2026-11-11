@@ -484,3 +484,33 @@ body.dark app-tienda.tv2.tv2.tv2 .t-fotos img, body.dark app-tienda.tv2.tv2.tv2 
   app-tienda.tv2.tv2.tv2 .t-barra { max-width: 720px; width: 100%; margin: 0 auto; box-sizing: border-box; }
 }
 
+
+/*
+ * Seleccionar y copiar texto en el celular.
+ * Ionic apaga la selección en celulares (html.plt-mobile ion-app { user-select: none }) y en
+ * iPhone quita el menú de copiar (* { -webkit-touch-callout: none }). Aquí se vuelve a permitir en
+ * toda la app; solo los botones y la navegación siguen sin selección, para que al tocarlos no se
+ * marque el texto.
+ */
+html.plt-mobile body ion-app,
+html body {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+html body * {
+  -webkit-touch-callout: default;
+}
+
+html body button,
+html body .b,
+html body .btn,
+html body .tab,
+html body .chip,
+html body .footer-btn,
+html body [role='button'],
+html body ion-icon {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

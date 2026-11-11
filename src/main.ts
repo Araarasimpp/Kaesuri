@@ -1,5 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { RouteReuseStrategy, provideRouter, withComponentInputBinding, withPreloading, PreloadAllModules } from '@angular/router';
+import { RouteReuseStrategy, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
+import { PrecargaDiferida } from './app/core/precarga';
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 
 import { routes } from './app/app.routes';
@@ -14,7 +15,8 @@ bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
-    provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
+    // Precarga las pantallas de a una, cuando el celular está libre y solo las de sus roles (core/precarga.ts)
+    provideRouter(routes, withPreloading(PrecargaDiferida), withComponentInputBinding()),
   ],
 });
 

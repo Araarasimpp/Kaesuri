@@ -1,5 +1,5 @@
 -- ============================================================================
---  Kaesuri · Recolector como en Jasta. PENDIENTE: está en PENDIENTE_correr_en_supabase.sql (sección 15).
+--  Kaesuri · Recolector como en Jasta. YA APLICADO (sección 15 de PENDIENTE, corrida por el usuario).
 --   · Compra de un producto del inventario con lo que costó cada uno: el costo del producto se
 --     actualiza solo (y se le avisa al admin). Se puede quitar una compra (el recolector, solo las
 --     suyas de hoy; si era la última que cambió el costo, el costo vuelve al de antes).

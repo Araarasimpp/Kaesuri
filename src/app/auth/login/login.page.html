@@ -9,7 +9,7 @@
     <form class="auth-card" (ngSubmit)="onLogin()">
       <div class="field">
         <label for="email">Correo</label>
-        <input id="email" name="email" type="email" autocomplete="email" [(ngModel)]="email" placeholder="nombre@correo.com" />
+        <input id="email" name="email" type="email" autocomplete="username webauthn" [(ngModel)]="email" placeholder="nombre@correo.com" />
       </div>
 
       <div class="field">
@@ -26,6 +26,10 @@
       <button class="submit-btn" type="submit" [disabled]="loading">
         {{ loading ? 'Ingresando...' : 'Ingresar' }}
       </button>
+      <button class="bio-btn" type="button" *ngIf="puedeBio" (click)="entrarBiometria()" [disabled]="loading">
+        Entrar con Face ID o huella
+      </button>
+      <p class="error-msg" *ngIf="errorBio">{{ errorBio }}</p>
       <button class="olvide-link" type="button" (click)="onOlvideClave()" [disabled]="enviandoCorreo">
         {{ enviandoCorreo ? 'Enviando correo...' : '¿Olvidaste tu contraseña?' }}
       </button>

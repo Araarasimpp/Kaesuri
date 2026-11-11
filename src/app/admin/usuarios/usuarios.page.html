@@ -4,6 +4,7 @@
       <h1>Usuarios</h1>
     </div>
     <div class="header-actions">
+      <label class="sin-usar"><input type="checkbox" [(ngModel)]="soloSinUsar" /> Sin usar (+60 días)</label>
       <div class="search-box">
         <input
           type="text"
@@ -24,6 +25,7 @@
             <th>Teléfono</th>
             <th>Roles</th>
             <th>Estado</th>
+            <th>Último ingreso</th>
             <th></th>
           </tr>
         </thead>
@@ -56,6 +58,7 @@
             <td data-etq="Estado">
               <span class="badge" [class.activo]="u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
             </td>
+            <td class="text-soft" data-etq="Último ingreso">{{ ultimoTexto(u) }}</td>
             <td class="cel-accion">
               <button
                 class="btn-toggle"
@@ -65,6 +68,7 @@
               >
                 {{ u.activo ? 'Desactivar' : 'Reactivar' }}
               </button>
+              <button class="btn-toggle btn-borrar" *ngIf="u.id !== miId" (click)="borrar(u)" [disabled]="guardandoId === u.id">Borrar</button>
             </td>
           </tr>
         </tbody>

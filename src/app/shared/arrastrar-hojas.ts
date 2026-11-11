@@ -18,7 +18,8 @@ export function activarArrastreDeHojas(): () => void {
     const head = (e.target as Element | null)?.closest?.('.hoja-head');
     const h = head?.closest('.hoja') as HTMLElement | null;
     const v = h?.previousElementSibling as HTMLElement | null;
-    if (!h || !v?.classList.contains('velo')) return;
+    // El chat va a pantalla completa: no se cierra arrastrando
+    if (!h || !v?.classList.contains('velo') || h.classList.contains('hoja-chat')) return;
     hoja = h;
     velo = v;
     y0 = e.touches[0].clientY;
