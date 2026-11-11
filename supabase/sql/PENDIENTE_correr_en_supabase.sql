@@ -327,3 +327,18 @@ drop function if exists public.jasta_despachador(text);
 -- Al admin: deudas con proveedores que vencen en 3 días o ya vencieron. La función ya está creada.
 select cron.unschedule('recordar-deudas') where exists (select 1 from cron.job where jobname = 'recordar-deudas');
 select cron.schedule('recordar-deudas', '25 13 * * *', 'select public.recordar_deudas()');
+
+-- ============================================================ 12. Transferencias por revisar (triggers y recordatorio)
+-- Al entregar un pedido (o registrar una venta del local) pagado por transferencia, queda "por revisar"
+-- y se avisa al admin; recordatorio cada 30 minutos (7 a. m. a 10 p. m.) mientras quede alguna.
+-- Las funciones ya están creadas (transferencias_por_revisar.sql).
+drop trigger if exists pedidos_transferencia_por_revisar on public.pedidos;
+create trigger pedidos_transferencia_por_revisar
+  after insert or update of estado, metodo_pago, monto_transferencia on public.pedidos
+  for each row execute function public.marcar_transferencia();
+drop trigger if exists pedidos_transferencia_desmarcar on public.pedidos;
+create trigger pedidos_transferencia_desmarcar
+  before update of estado, metodo_pago, monto_transferencia on public.pedidos
+  for each row execute function public.desmarcar_transferencia();
+select cron.unschedule('recordar-transferencias') where exists (select 1 from cron.job where jobname = 'recordar-transferencias');
+select cron.schedule('recordar-transferencias', '*/30 * * * *', 'select public.recordar_transferencias()');
