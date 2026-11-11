@@ -33,6 +33,12 @@ import {
   cardOutline,
   trendingUpOutline,
   sparklesOutline,
+  documentTextOutline,
+  handLeftOutline,
+  lockClosedOutline,
+  swapHorizontalOutline,
+  calendarOutline,
+  hourglassOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -41,6 +47,7 @@ import { NotificacionesComponent } from '../../shared/notificaciones/notificacio
 import { CambiarAreaComponent } from '../../shared/cambiar-area/cambiar-area.component';
 import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.component';
 import { NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
+import { TransferenciasAlertaComponent } from '../../shared/transferencias-alerta/transferencias-alerta.component';
 interface MenuItem {
   label: string;
   path: string;
@@ -50,7 +57,7 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent, BarraMovilComponent, NavMovilComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, IonIcon, NotificacionesComponent, CambiarAreaComponent, BarraMovilComponent, NavMovilComponent, TransferenciasAlertaComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
 })
@@ -63,17 +70,22 @@ export class AdminLayoutComponent {
     { label: 'Ventas del local', path: '/admin/ventas-local', icon: 'storefront-outline' },
     { label: 'Devoluciones', path: '/admin/devoluciones', icon: 'return-down-back-outline' },
     { label: 'Clientes', path: '/admin/clientes', icon: 'people-circle-outline' },
+    { label: 'Transferencias', path: '/admin/transferencias', icon: 'swap-horizontal-outline' },
     { label: 'Cuadres', path: '/admin/cuadres', icon: 'wallet-outline' },
     { label: 'Novedades', path: '/admin/novedades', icon: 'alert-circle-outline' },
     { label: 'Domiciliarios', path: '/admin/resumen-domiciliarios', icon: 'stats-chart-outline' },
     { label: 'Recolector', path: '/admin/recolector', icon: 'bag-handle-outline' },
     { label: 'Comisiones', path: '/admin/comisiones', icon: 'cash-outline' },
     { label: 'Gastos', path: '/admin/gastos', icon: 'card-outline' },
+    { label: 'Deudas', path: '/admin/deudas', icon: 'document-text-outline' },
+    { label: 'Cuentas por cobrar', path: '/admin/cuentas', icon: 'hand-left-outline' },
+    { label: 'Gastos personales', path: '/admin/gastos-personales', icon: 'lock-closed-outline' },
     { label: 'Reportes', path: '/admin/reportes', icon: 'bar-chart-outline' },
     { label: 'Rentabilidad', path: '/admin/rentabilidad', icon: 'trending-up-outline' },
     { label: 'Ranking', path: '/admin/ranking', icon: 'trophy-outline' },
     { label: 'Productos', path: '/admin/productos', icon: 'cube-outline' },
     { label: 'Inventario', path: '/admin/inventario', icon: 'file-tray-stacked-outline' },
+    { label: 'Productos quietos', path: '/admin/quietos', icon: 'hourglass-outline' },
     { label: 'Catálogo', path: '/admin/catalogo', icon: 'book-outline' },
     { label: 'Usuarios', path: '/admin/usuarios', icon: 'people-outline' },
     { label: 'Actividad', path: '/admin/actividad', icon: 'time-outline' },
@@ -82,7 +94,8 @@ export class AdminLayoutComponent {
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
     { label: 'Pedidos de la tienda', path: '/admin/pedidos-web', icon: 'storefront-outline' },
     { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
-  { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
+    { label: 'Calendario', path: '/admin/calendario', icon: 'calendar-outline' },
+    { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
   ];
 
   /** Las que se ven siempre en la barra de abajo del celular (las demás, en "Más") */
@@ -94,6 +107,12 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      hourglassOutline,
+      calendarOutline,
+      swapHorizontalOutline,
+      lockClosedOutline,
+      handLeftOutline,
+      documentTextOutline,
       sparklesOutline,
       trendingUpOutline,
       cardOutline,

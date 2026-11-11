@@ -503,3 +503,6 @@
   .venta-txt { flex: 1 1 240px; min-width: 0; strong { display: block; font-size: 15px; } small { display: block; margin-top: 2px; font-size: 13px; color: var(--text-soft, #555); } }
   .venta-acc { flex: 1 1 260px; display: flex; gap: 8px; ::ng-deep .grupo { flex: 1 1 auto; } }
 }
+
+.envio-nacional { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0 10px; font-size: 14px; cursor: pointer; }
+.envio-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 12px; padding: 10px 12px 0; margin-bottom: 10px; border-radius: 10px; background: var(--k-surface-2, rgba(0, 0, 0, .04)); }

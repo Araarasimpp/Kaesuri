@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { VariantesAgotadasComponent } from '../../shared/variantes-agotadas/variantes-agotadas.component';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { addCircleOutline, closeOutline, searchOutline, trashOutline } from 'ionicons/icons';
@@ -14,6 +15,7 @@ import { urlsComprobantes } from '../../shared/comprobantes';
 import { confirmar } from '../../shared/dialogo';
 import { mensajeError, numero, pesos, urlMini } from '../../shared/formato';
 import { formatoFechaCO, formatoHoraCO, hoyColombiaISO } from '../../shared/fecha-colombia';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 interface Prod {
   id: string;
@@ -25,8 +27,11 @@ interface Prod {
   stock_minimo: number;
   costo: number | null;
   vendidos_30: number;
+  /** Cuántos colores y tallas tiene, y cuántos están agotados */
+  variantes?: number;
+  agotadas?: number;
 }
-interface Movimiento { fecha: string; tipo: 'compra' | 'ajuste' | 'anulacion' | 'venta' | 'devolucion'; cantidad: number; detalle: string | null; autor: string | null; stock_despues: number | null }
+interface Movimiento { id?: string; fecha: string; tipo: 'compra' | 'ajuste' | 'anulacion' | 'venta' | 'devolucion'; cantidad: number; detalle: string | null; autor: string | null; stock_despues: number | null }
 interface Compra {
   id: number;
   fecha: string;
@@ -52,7 +57,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
   selector: 'app-inventario',
   standalone: true,
   host: { class: 'jt' },
-  imports: [SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent],
+  imports: [PesosDirective, SkeletonComponent, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, VariantesAgotadasComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -105,6 +110,10 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
       .total-compra { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); }
       .total-compra strong { font-family: var(--mono-font); font-size: 20px; }
       .check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+      .b-peligro-txt { color: var(--danger); }
+      .acc { flex-wrap: wrap; }
+      .acc .b.con-agotadas { border-color: var(--danger); color: var(--danger); }
+      .borrar-mov { margin-left: 8px; border: 0; background: none; padding: 0; color: var(--danger); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer; }
       .semanas { display: flex; gap: 6px; flex-wrap: wrap; }
       .semanas button { height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text-soft);
         font: inherit; font-size: 13px; cursor: pointer; }
@@ -180,6 +189,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
                   <span class="acc">
                     <button class="b" (click)="abrirConteo(p)">Contar</button>
                     <button class="b" (click)="abrirHistorial(p)">Historial</button>
+                    @if (p.variantes) { <button class="b" [class.con-agotadas]="p.agotadas" (click)="variantesDe.set(p)">Colores/tallas{{ p.agotadas ? ' · ' + p.agotadas + ' agotad' + (p.agotadas === 1 ? 'o' : 'os') : '' }}</button> }
                   </span>
                 </li>
               }
@@ -243,6 +253,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
                   </button>
                 }
                 @if (esAdmin() && !c.anulada) { <button class="b" (click)="anular(c)">Anular</button> }
+                @if (esAdmin()) { <button class="b b-peligro-txt" (click)="eliminarCompra(c)">Eliminar</button> }
               </div>
             </div>
           } @empty {
@@ -289,7 +300,8 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
             @for (m of movimientos(); track $index) {
               <li>
                 <span>{{ tipoMov(m.tipo) }}@if (m.detalle) { · {{ m.detalle }} }<small>{{ cuando(m.fecha) }}{{ m.autor ? ' · ' + m.autor : '' }}{{ m.stock_despues !== null ? ' · quedaron ' + m.stock_despues : '' }}</small></span>
-                <span class="cant" [class.mas]="m.cantidad > 0" [class.menos]="m.cantidad < 0">{{ m.cantidad > 0 ? '+' : '' }}{{ m.cantidad }}</span>
+                <span class="cant" [class.mas]="m.cantidad > 0" [class.menos]="m.cantidad < 0">{{ m.cantidad > 0 ? '+' : '' }}{{ m.cantidad }}
+                  @if (esAdmin() && m.tipo === 'ajuste' && m.id) { <button type="button" class="borrar-mov" (click)="eliminarAjuste(p, m)" aria-label="Eliminar este conteo">Eliminar</button> }</span>
               </li>
             } @empty {
               <li>@if (cargandoMov()) { <app-skeleton variante="filas" [cantidad]="3"></app-skeleton> } @else { <span class="suave">Sin movimientos todavía.</span> }</li>
@@ -327,7 +339,7 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
                 <div class="linea" [class.sin-costo]="!esAdmin()">
                   <span class="nom">{{ l.producto.nombre }}</span>
                   <input class="num" type="number" inputmode="numeric" min="1" [(ngModel)]="l.cantidad" (ngModelChange)="tocar()" aria-label="Cantidad" placeholder="Cant." />
-                  @if (esAdmin()) { <input class="num" type="number" inputmode="numeric" min="0" [(ngModel)]="l.costo" (ngModelChange)="tocar()" aria-label="Costo por unidad" placeholder="Costo c/u" /> }
+                  @if (esAdmin()) { <input class="num" pesos min="0" [(ngModel)]="l.costo" (ngModelChange)="tocar()" aria-label="Costo por unidad" placeholder="Costo c/u" /> }
                   <button type="button" class="quitar" (click)="quitarLinea(i)" aria-label="Quitar"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>
               }
@@ -335,6 +347,10 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
             @if (esAdmin()) {
               <div class="total-compra"><span>{{ unidades() }} unidades</span><strong>{{ pesos(totalForm()) }}</strong></div>
               <label class="check"><input type="checkbox" [(ngModel)]="actualizarCosto" /> Actualizar el precio de compra de estos productos con este costo</label>
+              <label class="check"><input type="checkbox" [(ngModel)]="fiado" /> Fiado: queda como deuda con el proveedor (en Deudas)</label>
+              @if (fiado) {
+                <div class="campo"><label for="cvence">¿Para cuándo hay que pagarla? (opcional)</label><input id="cvence" type="date" [min]="hoy" [(ngModel)]="venceFiado" /></div>
+              }
             }
           }
           @if (esAdmin()) {
@@ -349,6 +365,10 @@ type Filtro = 'todos' | 'bajos' | 'agotados';
           <button class="b b-pri" (click)="guardarCompra()" [disabled]="ocupado()">{{ ocupado() ? 'Guardando…' : 'Registrar compra' }}</button>
         </div>
       </div>
+    }
+
+    @if (variantesDe(); as p) {
+      <app-variantes-agotadas [productoId]="p.id" [nombre]="p.nombre" (cerrar)="variantesDe.set(null)" (guardado)="alGuardarVariantes(p, $event)"></app-variantes-agotadas>
     }
   `,
 })
@@ -386,6 +406,9 @@ export class InventarioPage implements OnInit {
   formCompra = signal(false);
   proveedor = '';
   fechaCompra = hoyColombiaISO();
+  /** Mercancía fiada: la compra queda también como deuda con el proveedor */
+  fiado = false;
+  venceFiado = '';
   nota = '';
   actualizarCosto = true;
   facturas = signal<string[]>([]);
@@ -587,6 +610,8 @@ export class InventarioPage implements OnInit {
   abrirCompra(): void {
     this.proveedor = '';
     this.fechaCompra = this.hoy;
+    this.fiado = false;
+    this.venceFiado = '';
     this.nota = '';
     this.buscaS.set('');
     this.lineas.set([]);
@@ -615,7 +640,7 @@ export class InventarioPage implements OnInit {
     if (!lineas.length) return this.error.set('Agrega al menos un producto.');
     if (lineas.some((l) => !l.cantidad || l.cantidad <= 0)) return this.error.set('Escribe la cantidad de cada producto.');
     this.ocupado.set(true);
-    const { error } = await this.sb.client.rpc('registrar_compra', {
+    const { data: idCompra, error } = await this.sb.client.rpc('registrar_compra', {
       p_fecha: this.fechaCompra || this.hoy,
       p_proveedor: this.proveedor.trim(),
       p_nota: this.nota.trim(),
@@ -624,11 +649,55 @@ export class InventarioPage implements OnInit {
       p_comprobantes: this.facturas(),
       p_actualizar_costo: this.esAdmin() && this.actualizarCosto,
     });
+    if (error) {
+      this.ocupado.set(false);
+      return this.error.set(mensajeError(error));
+    }
+    if (this.fiado && idCompra) {
+      const d = await this.sb.client.rpc('crear_deuda', {
+        p_proveedor: this.proveedor.trim(), p_concepto: 'Mercancía fiada', p_total: 0, p_fecha: this.fechaCompra || this.hoy,
+        p_vence: this.venceFiado || null, p_compra: idCompra,
+      });
+      if (d.error) this.toast.error('La compra quedó registrada, pero no se pudo crear la deuda: ' + mensajeError(d.error) + '. Créala en Deudas.');
+    }
     this.ocupado.set(false);
-    if (error) return this.error.set(mensajeError(error));
-    this.toast.ok(`Compra registrada: +${this.unidades()} unidades`);
+    this.toast.ok(`Compra registrada: +${this.unidades()} unidades${this.fiado ? ' · quedó en Deudas' : ''}`);
     this.formCompra.set(false);
     await Promise.all([this.cargar(), this.cargarCompras()]);
+  }
+
+  /** Para compras subidas por error: se borra del todo (con su deuda) y se restan las unidades que sumó */
+  async eliminarCompra(c: Compra): Promise<void> {
+    const aviso = c.anulada ? '' : ' Se le restan al inventario las unidades que sumó.';
+    const ok = await confirmar(`¿Eliminar del todo la compra a ${c.proveedor}?${aviso} Si tiene una deuda en Deudas, también se borra con sus abonos. No se puede deshacer.`,
+      { titulo: 'Eliminar compra', aceptar: 'Eliminar', peligro: true });
+    if (!ok) return;
+    const { data, error } = await this.sb.client.rpc('eliminar_compra', { p_id: c.id });
+    if (error) return this.toast.error(mensajeError(error));
+    const n = Number((data as { deudas?: number } | null)?.deudas) || 0;
+    this.toast.ok(n ? 'Compra eliminada (y su deuda)' : 'Compra eliminada');
+    await Promise.all([this.cargar(), this.cargarCompras()]);
+  }
+
+  // ---------- Colores y tallas agotados ----------
+  variantesDe = signal<Prod | null>(null);
+
+  alGuardarVariantes(p: Prod, agotadas: number): void {
+    this.variantesDe.set(null);
+    this.productos.update((l) => l.map((x) => (x.id === p.id ? { ...x, agotadas } : x)));
+    this.toast.ok(agotadas ? `${p.nombre}: ${agotadas} ${agotadas === 1 ? 'opción agotada' : 'opciones agotadas'}` : `${p.nombre}: todo disponible`);
+  }
+
+  async eliminarAjuste(p: Prod, m: Movimiento): Promise<void> {
+    const ok = await confirmar(`¿Eliminar este conteo (${m.cantidad > 0 ? '+' : ''}${m.cantidad})? Se deshace esa diferencia en el inventario de ${p.nombre}.`,
+      { titulo: 'Eliminar conteo', aceptar: 'Eliminar', peligro: true });
+    if (!ok) return;
+    const { error } = await this.sb.client.rpc('eliminar_ajuste', { p_mov: m.id });
+    if (error) return this.toast.error(mensajeError(error));
+    this.toast.ok('Conteo eliminado');
+    await this.cargar();
+    const act = this.productos().find((x) => x.id === p.id);
+    if (act) await this.abrirHistorial(act);
   }
 
   async anular(c: Compra): Promise<void> {

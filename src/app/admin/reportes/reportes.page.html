@@ -24,6 +24,14 @@
         </select>
       </div>
       <div class="field">
+        <label>Tipo de venta</label>
+        <select [(ngModel)]="canal" (ngModelChange)="cargarReporte()">
+          <option value="todos">Todas</option>
+          <option value="domicilio">Domicilios</option>
+          <option value="local">Ventas del local</option>
+        </select>
+      </div>
+      <div class="field">
         <label>Estado</label>
         <select [(ngModel)]="estado" (ngModelChange)="cargarReporte()">
           <option *ngFor="let e of estados" [value]="e.valor">{{ e.etiqueta }}</option>
@@ -37,7 +45,16 @@
     </div>
   </div>
 
-  <div class="table-card">
+  <div class="pestanas" role="tablist">
+    <button type="button" role="tab" [class.on]="pestana === 'pedidos'" [attr.aria-selected]="pestana === 'pedidos'" (click)="pestana = 'pedidos'">Pedidos</button>
+    <button type="button" role="tab" [class.on]="pestana === 'horas'" [attr.aria-selected]="pestana === 'horas'" (click)="pestana = 'horas'">Horas y días</button>
+  </div>
+
+  <div class="table-card" *ngIf="pestana === 'horas'">
+    <app-horas-ventas [desde]="desdeConsultado" [hasta]="hastaConsultado"></app-horas-ventas>
+  </div>
+
+  <div class="table-card" *ngIf="pestana === 'pedidos'">
     <ng-container *ngIf="!loading; else cargando">
       <table class="tabla-cel" *ngIf="filas.length; else vacio">
         <thead>

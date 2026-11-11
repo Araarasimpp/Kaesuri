@@ -21,6 +21,10 @@
           <span class="stat-label">Domicilio</span>
           <span class="stat-valor">{{ formatoMoneda(totalDomicilios) }}</span>
         </div>
+        <div class="stat-card" *ngIf="totalPropinas">
+          <span class="stat-label">Propinas</span>
+          <span class="stat-valor">{{ formatoMoneda(totalPropinas) }}</span>
+        </div>
         <div class="stat-card destacada">
           <span class="stat-label">Cuadre</span>
           <span class="stat-valor">{{ formatoMoneda(totalCuadre) }}</span>
@@ -67,6 +71,10 @@
             <div class="mini-stat">
               <span class="mini-label">Domicilio</span>
               <span class="mini-valor">{{ formatoMoneda(p.valor_domicilio) }}</span>
+            </div>
+            <div class="mini-stat" *ngIf="p.propina">
+              <span class="mini-label">Propina</span>
+              <span class="mini-valor">{{ formatoMoneda(p.propina) }}</span>
             </div>
             <div class="mini-stat" [class.positivo]="cuadreDe(p) < 0" [class.negativo]="cuadreDe(p) >= 0">
               <span class="mini-label">Cuadre</span>

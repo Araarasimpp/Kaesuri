@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
-import { MetodoPago, Producto } from '../../shared/models/models';
+import { MetodoPago, Producto, ProductoColor } from '../../shared/models/models';
 import { urlMini } from '../../shared/formato';
 
 import { avisar, confirmar } from '../../shared/dialogo';
@@ -21,6 +21,7 @@ interface Riesgo {
 }
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { BotonTicketComponent } from '../../shared/ticket/boton-ticket.component';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 interface ItemCarrito {
   /** Cada línea es un producto con un color y una talla */
   key: number;
@@ -36,7 +37,7 @@ interface ItemCarrito {
 @Component({
   selector: 'app-nuevo-pedido',
   standalone: true,
-  imports: [SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
+  imports: [PesosDirective, SkeletonComponent, BotonTicketComponent, CommonModule, FormsModule],
   templateUrl: './nuevo-pedido.page.html',
   styleUrls: ['./nuevo-pedido.page.scss'],
 })
@@ -58,6 +59,11 @@ export class NuevoPedidoPage implements OnInit {
   riesgo: Riesgo | null = null;
   direccion = '';
   barrio = '';
+  /** Envío nacional por transportadora (otra ciudad, pago anticipado) */
+  envioNacional = false;
+  destinoCiudad = '';
+  destinoDepartamento = '';
+  destinatarioCedula = '';
   zonas: { id: string; nombre: string; valor: number }[] = [];
   valorDomicilio: number = 0;
   observaciones = '';
@@ -211,15 +217,18 @@ export class NuevoPedidoPage implements OnInit {
     const { data, error } = await this.supabase.client
       .from('productos')
       .select(
-        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, colores:producto_colores(id, nombre, hex, imagen_url, orden)'
+        'id, nombre, sku, descripcion, categoria, precio_base, precio_sugerido, costo, stock, imagen_url, activo, tallas, tallas_agotadas, colores:producto_colores(id, nombre, hex, imagen_url, orden, disponible)'
       )
       .eq('activo', true)
       .order('nombre');
 
     if (!error && data) {
-      this.productos = (data as Producto[]).filter((p) => this.disponible(p) > 0).map((p) => ({
+      // Los colores y tallas marcados como agotados en Inventario no se pueden pedir
+      type ConAgotados = Producto & { tallas_agotadas?: string[] | null; colores?: (ProductoColor & { disponible?: boolean })[] };
+      this.productos = (data as ConAgotados[]).filter((p) => this.disponible(p) > 0).map((p) => ({
         ...p,
-        colores: [...(p.colores ?? [])].sort((a, b) => a.orden - b.orden || a.id - b.id),
+        tallas: (p.tallas ?? []).filter((t) => !(p.tallas_agotadas ?? []).includes(t)),
+        colores: [...(p.colores ?? [])].filter((c) => c.disponible !== false).sort((a, b) => a.orden - b.orden || a.id - b.id),
       }));
     }
     this.loadingProductos = false;
@@ -403,6 +412,18 @@ export class NuevoPedidoPage implements OnInit {
       return;
     }
 
+    if (this.envioNacional && !this.editarId) {
+      if (this.destinoCiudad.trim().length < 3 || this.destinoDepartamento.trim().length < 3) {
+        this.errorMsg = 'Escribe la ciudad y el departamento de destino.';
+        return;
+      }
+      const cc = this.destinatarioCedula.replace(/[^0-9A-Za-z]/g, '');
+      if (cc.length < 5 || cc.length > 15) {
+        this.errorMsg = 'Revisa la cédula del destinatario (la pide la transportadora).';
+        return;
+      }
+    }
+
     this.guardando = true;
 
     const items = this.carrito.map((i) => ({
@@ -464,7 +485,19 @@ export class NuevoPedidoPage implements OnInit {
     }
 
     const numeroPedido = data as number;
-    avisar(`Pedido #${numeroPedido} creado con éxito.`);
+    if (this.envioNacional) {
+      const { data: ped } = await this.supabase.client.from('pedidos').select('id').eq('numero', numeroPedido).maybeSingle();
+      const { error: errEnvio } = ped
+        ? await this.supabase.client.rpc('marcar_envio_nacional', {
+            p_pedido: (ped as { id: string }).id, p_ciudad: this.destinoCiudad.trim(),
+            p_departamento: this.destinoDepartamento.trim(), p_cedula: this.destinatarioCedula.trim(),
+          })
+        : { error: { message: 'No se encontró el pedido' } };
+      if (errEnvio) avisar(`Pedido #${numeroPedido} creado, pero no quedó como envío nacional: ${errEnvio.message}`);
+      else avisar(`Pedido #${numeroPedido} creado como envío nacional a ${this.destinoCiudad.trim()}.`);
+    } else {
+      avisar(`Pedido #${numeroPedido} creado con éxito.`);
+    }
 
     const volverA = (this.route.snapshot.data['volverA'] as string) ?? '/vendedor';
     this.router.navigateByUrl(volverA);

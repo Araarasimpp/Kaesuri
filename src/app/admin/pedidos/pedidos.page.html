@@ -141,7 +141,7 @@
                 </div>
               </td>
               <td class="text-soft col-dato" data-etq="Vendedor">{{ nombreVendedor(p.vendedor_id) }}</td>
-              <td class="text-soft col-dato" data-etq="Barrio">{{ p.canal === 'local' ? 'En el local' : p.barrio || '—' }}</td>
+              <td class="text-soft col-dato" data-etq="Barrio">{{ p.canal === 'local' ? 'En el local' : p.envio_nacional ? '📦 ' + (p.destino_ciudad || p.barrio) + (p.guia ? ' · guía ' + p.guia : '') : p.barrio || '—' }}</td>
               <td class="num strong col-dato" data-etq="Total">{{ formatoMoneda(p.total) }}</td>
               <td class="col-dato" data-etq="Estado">
                 <span class="badge" [ngClass]="claseEstado(p)">{{ etiquetaEstado(p) }}</span>
@@ -184,6 +184,8 @@
                 </button>
                 <div class="menu-popover" *ngIf="menuAbiertoId === p.id">
                   <button (click)="abrirChat(p.id)">Chat del pedido</button>
+                  <button *ngIf="p.envio_nacional && (p.estado === 'pendiente' || p.estado === 'en_ruta')" (click)="abrirDespachoNacional(p)">Despachar por transportadora</button>
+                  <button *ngIf="p.envio_nacional && p.guia && p.cliente_telefono" (click)="enviarGuia(p)">Enviar guía por WhatsApp</button>
                   <button *ngIf="p.seguimiento && p.estado !== 'cancelado' && p.cliente_telefono" (click)="enviarSeguimiento(p)">Enviar seguimiento por WhatsApp</button>
                   <button *ngIf="p.seguimiento && p.estado !== 'cancelado'" (click)="copiarSeguimiento(p)">Copiar enlace de seguimiento</button>
                   <button *ngIf="p.estado === 'pendiente' || p.estado === 'en_ruta'" [routerLink]="rutaNuevo" [queryParams]="{ editar: p.id }">Editar pedido</button>
@@ -197,6 +199,7 @@
           </tbody>
         </table>
       </div>
+      <app-despachar-nacional *ngIf="despachando" [pedido]="despachando" (cerrar)="despachando = null" (despachado)="despachadoNacional()"></app-despachar-nacional>
       <app-chat-hoja *ngIf="chatId" [pedidoId]="chatId" (cerrar)="cerrarChat()"></app-chat-hoja>
 
       <div class="table-footer" *ngIf="filtrados.length">

@@ -135,6 +135,30 @@ export const ADMIN_ROUTES: Routes = [
         path: 'actualizaciones',
         loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
       },
+      {
+        path: 'deudas',
+        loadComponent: () => import('../paginas/deudas/deudas.page').then((m) => m.DeudasPage),
+      },
+      {
+        path: 'cuentas',
+        loadComponent: () => import('../paginas/cuentas/cuentas.page').then((m) => m.CuentasPage),
+      },
+      {
+        path: 'gastos-personales',
+        loadComponent: () => import('../paginas/gastos-personales/gastos-personales.page').then((m) => m.GastosPersonalesPage),
+      },
+      {
+        path: 'transferencias',
+        loadComponent: () => import('../paginas/transferencias/transferencias.page').then((m) => m.TransferenciasPage),
+      },
+      {
+        path: 'calendario',
+        loadComponent: () => import('../paginas/calendario/calendario.page').then((m) => m.CalendarioPage),
+      },
+      {
+        path: 'quietos',
+        loadComponent: () => import('../paginas/quietos/quietos.page').then((m) => m.QuietosPage),
+      },
     ],
   },
 ];

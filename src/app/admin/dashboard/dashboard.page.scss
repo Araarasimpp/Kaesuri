@@ -424,3 +424,10 @@
     grid-template-columns: 1fr;
   }
 }
+.local { margin: 0 0 20px; }
+.local-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.local-head h2 { margin: 0; font-size: 13px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted, #777); }
+.local-fechas { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+.local-fechas label { display: flex; align-items: center; gap: 6px; }
+.local-fechas input { height: 32px; padding: 0 8px; border: 1px solid var(--border-strong, #ccc); border-radius: 8px; background: var(--surface, #fff); color: inherit; font: inherit; }
+.local a.stat-card { text-decoration: none; color: inherit; }

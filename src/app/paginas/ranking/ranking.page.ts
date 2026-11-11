@@ -26,13 +26,13 @@ function rangoMes(mes: string): { desde: string; hasta: string } {
   return { desde: mes + '-01', hasta: fin };
 }
 
-/** Hoy, esta semana (desde el lunes) o el mes elegido */
+/** Hoy, esta semana (de sábado a viernes, como el pago) o el mes elegido */
 function rango(p: Periodo, mes: string): { desde: string; hasta: string } {
   const hoy = hoyColombiaISO();
   if (p === 'hoy') return { desde: hoy, hasta: hoy };
   if (p === 'semana') {
     const d = new Date(hoy + 'T12:00:00Z');
-    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7));
     return { desde: d.toISOString().slice(0, 10), hasta: hoy };
   }
   return rangoMes(mes);
@@ -249,7 +249,7 @@ export class RankingPage implements OnInit {
   metaTexto = '';
 
   esMesActual = computed(() => this.mes() === this.meses[0].id);
-  /** Las metas aplican a esta semana (de lunes a hoy) y al mes en curso */
+  /** Las metas aplican a esta semana (del sábado a hoy) y al mes en curso */
   conMeta = computed(() => this.periodo() === 'semana' || (this.periodo() === 'mes' && this.esMesActual()));
   nombreMeta = computed(() => (this.periodo() === 'semana' ? 'de la semana' : 'del mes'));
   yo = signal<string | null>(null);
@@ -257,7 +257,7 @@ export class RankingPage implements OnInit {
   subtitulo = computed(() => {
     const p = this.periodo();
     if (p === 'hoy') return 'Hoy';
-    if (p === 'semana') return 'Esta semana';
+    if (p === 'semana') return 'Esta semana (sábado a viernes)';
     return this.esMesActual() ? 'Este mes' : this.meses.find((m) => m.id === this.mes())?.label ?? '';
   });
   cuando = computed(() => {

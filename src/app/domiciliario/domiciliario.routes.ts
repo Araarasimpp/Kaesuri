@@ -39,6 +39,10 @@ export const DOMICILIARIO_ROUTES: Routes = [
         path: 'actualizaciones',
         loadComponent: () => import('../paginas/actualizaciones/actualizaciones.page').then((m) => m.ActualizacionesPage),
       },
+      {
+        path: 'calendario',
+        loadComponent: () => import('../paginas/calendario/calendario.page').then((m) => m.CalendarioPage),
+      },
     ],
   },
 ];

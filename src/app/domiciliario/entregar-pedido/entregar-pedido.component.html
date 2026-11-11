@@ -30,7 +30,7 @@
         <label class="mixto-campo">
           <span>Recibido en efectivo</span>
           <input
-            type="number"
+            pesos
             inputmode="numeric"
             min="0"
             [max]="pedido.total"
@@ -53,6 +53,13 @@
       <div class="jt comprobantes" *ngIf="llevaComprobante">
         <app-comprobantes-input [rutas]="comprobantes" (cambio)="cambiarComprobantes($event)"></app-comprobantes-input>
       </div>
+
+      <!-- Si el cliente transfirió de más, lo que sobra es propina: se te descuenta en el cuadre -->
+      <label class="mixto-campo propina" *ngIf="llevaComprobante && !alConfirmar">
+        <span>Propina por transferencia (opcional)</span>
+        <input pesos min="0" placeholder="0" [(ngModel)]="propina" />
+        <small>Si el cliente transfirió más del total. La propina en efectivo no se registra.</small>
+      </label>
 
       <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
     </div>

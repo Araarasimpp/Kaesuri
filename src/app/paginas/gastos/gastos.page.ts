@@ -13,6 +13,7 @@ import { urlsComprobantes } from '../../shared/comprobantes';
 import { confirmar } from '../../shared/dialogo';
 import { mensajeError, pesos } from '../../shared/formato';
 import { hoyColombiaISO } from '../../shared/fecha-colombia';
+import { PesosDirective } from '../../shared/pesos/pesos.directive';
 
 export const CATEGORIAS_GASTO = [
   { id: 'arriendo', label: 'Arriendo' },
@@ -39,6 +40,7 @@ interface Gasto {
 }
 interface Resumen {
   ganancia_tienda: number;
+  ganancia_cambios?: number;
   gastos: number;
   utilidad: number;
   por_categoria: { categoria: string; total: number; n: number }[];
@@ -54,7 +56,7 @@ interface Resumen {
   selector: 'app-gastos',
   standalone: true,
   host: { class: 'jt' },
-  imports: [FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, SkeletonComponent],
+  imports: [PesosDirective, FormsModule, IonIcon, ComprobantesInputComponent, RangoComponent, SkeletonComponent],
   styleUrls: ['../../shared/jasta-tablero.scss'],
   styles: [
     `
@@ -113,6 +115,10 @@ interface Resumen {
         <h2 id="t-res">Utilidad real</h2>
         <div class="renglon"><span class="lbl">Ganancia de la tienda<small>Pedidos entregados, sin la parte de los vendedores</small></span><span class="punteado"></span>
           <span class="val">{{ pesos(r()?.ganancia_tienda) }}</span></div>
+        @if (+(r()?.ganancia_cambios ?? 0)) {
+          <div class="renglon"><span class="lbl">Ganancia de cambios<small>Diferencias que pagaron los clientes al cambiar por otro producto</small></span><span class="punteado"></span>
+            <span class="val">{{ +(r()?.ganancia_cambios ?? 0) < 0 ? '−' : '+' }} {{ pesos(+(r()?.ganancia_cambios ?? 0) < 0 ? -(r()?.ganancia_cambios ?? 0) : r()?.ganancia_cambios) }}</span></div>
+        }
         <div class="renglon gastos"><span class="lbl">Gastos<small>{{ vigentes() }} {{ vigentes() === 1 ? 'gasto' : 'gastos' }}</small></span><span class="punteado"></span>
           <span class="val">− {{ pesos(r()?.gastos) }}</span></div>
         <div class="renglon total" [class.neg]="(r()?.utilidad ?? 0) < 0"><span class="lbl">Utilidad real<small>{{ (r()?.utilidad ?? 0) < 0 ? 'Se gastó más de lo que se ganó' : 'Lo que de verdad queda' }}</small></span>
@@ -171,7 +177,7 @@ interface Resumen {
           <button class="b b-icono" aria-label="Cerrar" (click)="form.set(false)"><ion-icon name="close-outline"></ion-icon></button></div>
         <div class="hoja-body">
           <div class="fila-campos">
-            <div class="campo"><label for="gv">Valor</label><input id="gv" class="num" type="number" inputmode="numeric" min="0" step="1000" [(ngModel)]="valor" /></div>
+            <div class="campo"><label for="gv">Valor</label><input id="gv" class="num" pesos min="0" [(ngModel)]="valor" /></div>
             <div class="campo"><label for="gf">Fecha</label><input id="gf" type="date" [max]="hoy" [(ngModel)]="fecha" /></div>
           </div>
           <div class="campo"><label for="gc">Categoría</label>

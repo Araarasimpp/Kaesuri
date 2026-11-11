@@ -184,3 +184,7 @@
   font-weight: 700;
   color: var(--k-text);
 }
+
+.nota-agotados { margin: 0 0 8px; font-size: 13px; color: var(--k-text-muted); }
+.btn-agotados { height: 38px; padding: 0 14px; border: 1px solid var(--k-border-strong, var(--k-border)); border-radius: 8px; background: transparent;
+  color: var(--k-text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }

@@ -3,7 +3,7 @@ import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.compon
 import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline, returnDownBackOutline, sparklesOutline } from 'ionicons/icons';
+import { bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline, returnDownBackOutline, sparklesOutline, calendarOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-local-layout',
@@ -19,6 +19,7 @@ export class LocalLayoutComponent {
     { label: 'Catálogo', path: '/local/catalogo', icon: 'book-outline' },
     { label: 'Clientes', path: '/local/clientes', icon: 'people-circle-outline' },
     { label: 'Devoluciones', path: '/local/devoluciones', icon: 'return-down-back-outline' },
+    { label: 'Calendario', path: '/local/calendario', icon: 'calendar-outline' },
     { label: 'Actualizaciones', path: '/local/actualizaciones', icon: 'sparkles-outline' },
     { label: 'Mi perfil', path: '/local/perfil', icon: 'person-circle-outline' },
   ];
@@ -26,6 +27,6 @@ export class LocalLayoutComponent {
   readonly principales = this.secciones.slice(0, 3);
 
   constructor() {
-    addIcons({ sparklesOutline, returnDownBackOutline, bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline });
+    addIcons({ calendarOutline, sparklesOutline, returnDownBackOutline, bookOutline, peopleCircleOutline, personCircleOutline, receiptOutline });
   }
 }

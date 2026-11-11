@@ -15,10 +15,12 @@ import { VideosProductoComponent } from '../../../shared/videos-producto/videos-
 // como tipos distintos).
 type ProductoForm = Omit<Producto, 'id'> & { id?: string };
 
+import { VariantesAgotadasComponent } from '../../../shared/variantes-agotadas/variantes-agotadas.component';
+import { PesosDirective } from '../../../shared/pesos/pesos.directive';
 @Component({
   selector: 'app-producto-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ColoresProductoComponent, TallasProductoComponent, FotosProductoComponent, VideosProductoComponent],
+  imports: [PesosDirective, CommonModule, FormsModule, ColoresProductoComponent, TallasProductoComponent, FotosProductoComponent, VideosProductoComponent, VariantesAgotadasComponent],
   templateUrl: './producto-form.component.html',
   styleUrls: ['./producto-form.component.scss'],
 })
@@ -34,6 +36,8 @@ export class ProductoFormComponent implements OnChanges {
 
   guardando = false;
   errorMsg = '';
+  /** Atajo para marcar colores y tallas agotados (como en Jasta) */
+  verAgotados = false;
 
   constructor(private supabase: SupabaseService, private zone: NgZone) {}
 
