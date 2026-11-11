@@ -309,3 +309,33 @@
 .fila .salir {
   color: var(--k-coral);
 }
+
+.buscar {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: 42px;
+  margin: 0 0 12px;
+  padding: 0 14px;
+  border: 1px solid var(--k-border, rgba(0, 0, 0, .12));
+  border-radius: 999px;
+  background: var(--k-surface-2, rgba(0, 0, 0, .04));
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+}
+.titulo-sec {
+  margin: 4px 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .6;
+}
+.sin {
+  grid-column: 1 / -1;
+  margin: 8px 0;
+  font-size: 14px;
+  opacity: .7;
+  text-align: center;
+}

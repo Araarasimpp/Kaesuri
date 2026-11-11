@@ -8,6 +8,8 @@ interface Seccion { titulo: string; texto?: string; pasos?: string[]; puntos?: s
 interface Novedad {
   id: string;
   fecha: string;
+  /** Hora de Colombia en que se publicó (HH:MM) */
+  hora?: string;
   titulo: string;
   cuerpo: string;
   roles?: UserRole[];
@@ -53,7 +55,7 @@ interface Novedad {
           @for (n of visibles(); track n.id) {
             <article class="nov" [id]="'n-' + n.id" [class.sel]="n.id === elegida()">
               <div class="cab">
-                <span>{{ fecha(n.fecha) }}</span>
+                <span>{{ fecha(n.fecha) }}{{ n.hora ? ' · ' + hora(n.hora) : '' }}</span>
                 @if (esNueva(n)) { <span class="nuevo">Nuevo</span> }
                 @if (n.roles?.length) { <span>· Para {{ para(n) }}</span> }
               </div>
@@ -106,7 +108,7 @@ export class ActualizacionesPage implements OnInit {
   }
 
   esNueva(n: Novedad): boolean {
-    return Date.now() - new Date(n.fecha + 'T12:00:00-05:00').getTime() < 7 * 864e5;
+    return Date.now() - new Date(`${n.fecha}T${n.hora ?? '12:00'}:00-05:00`).getTime() < 7 * 864e5;
   }
 
   para(n: Novedad): string {
@@ -115,6 +117,13 @@ export class ActualizacionesPage implements OnInit {
       venta_local: 'venta en local', recolector: 'recolectores',
     };
     return (n.roles ?? []).map((r) => nombres[r] ?? r).join(', ');
+  }
+
+  /** "14:05" → "2:05 p. m." */
+  hora(h: string): string {
+    const [hh, mm] = h.split(':').map(Number);
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return '';
+    return `${hh % 12 || 12}:${String(mm).padStart(2, '0')} ${hh < 12 ? 'a. m.' : 'p. m.'}`;
   }
 
   fecha(f: string): string {

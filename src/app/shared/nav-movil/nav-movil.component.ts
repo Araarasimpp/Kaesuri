@@ -41,6 +41,8 @@ export interface ItemNav {
   icon: string;
 }
 
+const normal = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
 @Component({
   selector: 'app-nav-movil',
   standalone: true,
@@ -74,12 +76,27 @@ export interface ItemNav {
           <strong>Menú</strong>
           <button type="button" class="cerrar" (click)="abierto.set(false)" aria-label="Cerrar"><ion-icon name="close-outline"></ion-icon></button>
         </div>
+        <input class="buscar" type="search" [value]="busca()" (input)="busca.set($any($event.target).value)" placeholder="Buscar sección…" aria-label="Buscar sección" />
+        @if (!busca().trim() && masUsados().length) {
+          <p class="titulo-sec">Lo que más usas</p>
+          <div class="grilla">
+            @for (it of masUsados(); track it.path) {
+              <a [routerLink]="it.path" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: it.path === raiz }" class="opcion">
+                <span class="icono"><ion-icon [name]="it.icon" aria-hidden="true"></ion-icon></span>
+                <span class="nombre">{{ it.label }}</span>
+              </a>
+            }
+          </div>
+          <p class="titulo-sec">Todo</p>
+        }
         <div class="grilla">
-          @for (it of todos; track it.path) {
+          @for (it of filtrados(); track it.path) {
             <a [routerLink]="it.path" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: it.path === raiz }" class="opcion">
               <span class="icono"><ion-icon [name]="it.icon" aria-hidden="true"></ion-icon></span>
               <span class="nombre">{{ it.label }}</span>
             </a>
+          } @empty {
+            <p class="sin">No hay ninguna sección con ese nombre.</p>
           }
         </div>
         @if (areas().length > 1) {
@@ -122,6 +139,39 @@ export class NavMovilComponent {
   @Input() @HostBinding('class.siempre') siempre = false;
 
   abierto = signal(false);
+  /** Buscador del menú */
+  busca = signal('');
+  /** Cuántas veces se ha entrado a cada sección (en este celular) */
+  private usos = signal<Record<string, number>>(NavMovilComponent.leerUsos());
+  filtrados = computed(() => {
+    const q = normal(this.busca());
+    return q ? this.todos.filter((it) => normal(it.label).includes(q)) : this.todos;
+  });
+  /** Las 4 secciones a las que más se entra (fuera de la barra de abajo) */
+  masUsados = computed(() => {
+    const u = this.usos();
+    const enBarra = new Set(this.principales.map((p) => p.path));
+    return this.todos.filter((it) => !enBarra.has(it.path) && (u[it.path] ?? 0) >= 2)
+      .sort((a, b) => (u[b.path] ?? 0) - (u[a.path] ?? 0)).slice(0, 4);
+  });
+
+  private static leerUsos(): Record<string, number> {
+    try {
+      return JSON.parse(localStorage.getItem('menu-usos') ?? '{}') as Record<string, number>;
+    } catch {
+      return {};
+    }
+  }
+
+  private contarUso(url: string): void {
+    const u = url.split(/[?#]/)[0];
+    const it = this.todos.filter((x) => (x.path === this.raiz ? u === x.path : u === x.path || u.startsWith(x.path + '/')))
+      .sort((a, b) => b.path.length - a.path.length)[0];
+    if (!it) return;
+    const n = { ...this.usos(), [it.path]: (this.usos()[it.path] ?? 0) + 1 };
+    this.usos.set(n);
+    try { localStorage.setItem('menu-usos', JSON.stringify(n)); } catch { /* sin almacenamiento */ }
+  }
   private url = signal('');
   /** Áreas de la persona (si tiene varios roles, se puede pasar de una a otra) */
   areas = computed(() => {
@@ -157,7 +207,9 @@ export class NavMovilComponent {
     this.url.set(this.router.url);
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
       this.url.set((e as NavigationEnd).urlAfterRedirects);
+      this.contarUso((e as NavigationEnd).urlAfterRedirects);
       this.abierto.set(false);
+      this.busca.set('');
     });
   }
 
