@@ -342,3 +342,8 @@ create trigger pedidos_transferencia_desmarcar
   for each row execute function public.desmarcar_transferencia();
 select cron.unschedule('recordar-transferencias') where exists (select 1 from cron.job where jobname = 'recordar-transferencias');
 select cron.schedule('recordar-transferencias', '*/30 * * * *', 'select public.recordar_transferencias()');
+
+-- ============================================================ 13. Recordatorios del calendario (cada 5 minutos)
+-- Avisa al celular los recordatorios de hoy (a la hora puesta, o a las 7 a. m.). La función ya está creada.
+select cron.unschedule('recordatorios') where exists (select 1 from cron.job where jobname = 'recordatorios');
+select cron.schedule('recordatorios', '*/5 * * * *', 'select public.avisar_recordatorios()');

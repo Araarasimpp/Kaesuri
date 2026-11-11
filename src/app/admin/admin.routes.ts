@@ -151,6 +151,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'transferencias',
         loadComponent: () => import('../paginas/transferencias/transferencias.page').then((m) => m.TransferenciasPage),
       },
+      {
+        path: 'calendario',
+        loadComponent: () => import('../paginas/calendario/calendario.page').then((m) => m.CalendarioPage),
+      },
     ],
   },
 ];

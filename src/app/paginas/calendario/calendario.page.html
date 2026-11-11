@@ -1,0 +1,143 @@
+<div class="lg-fondo" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+
+<div class="lg-page">
+  <header class="lg-cab vidrio">
+    <button type="button" class="lg-circ" (click)="mover(-1)" aria-label="Mes anterior">‹</button>
+    <div class="lg-titulo"><small>Calendario</small><h1>{{ titulo() }}</h1></div>
+    <button type="button" class="lg-hoy" (click)="irHoy()">Hoy</button>
+    <button type="button" class="lg-circ" (click)="mover(1)" aria-label="Mes siguiente">›</button>
+  </header>
+
+  <!-- Lo que viene -->
+  @if (proximas().length || recHoy().length || (datos()?.pendientes && (datos()!.pendientes!.comisiones || datos()!.pendientes!.deudas_vencidas || datos()!.pendientes!.por_cobrar))) {
+    <section class="lg-viene vidrio" aria-label="Lo que viene">
+      @for (f of proximas(); track f.dia + f.nombre) {
+        <div class="lg-aviso especial"><b>{{ f.nombre }} · {{ faltanTxt(f.faltan) }}</b><span>{{ f.consejo }}</span></div>
+      }
+      @if (recHoy().length) {
+        <div class="lg-aviso rec"><b>Hoy tienes {{ recHoy().length }} {{ recHoy().length === 1 ? 'recordatorio' : 'recordatorios' }}</b><span>{{ recHoy()[0].titulo }}{{ recHoy().length > 1 ? '…' : '' }}</span></div>
+      }
+      @if (datos()?.pendientes; as p) {
+        @if (+p.deudas_vencidas) { <a class="lg-aviso pago" [routerLink]="ruta('deudas')"><b>{{ p.deudas_vencidas }} {{ +p.deudas_vencidas === 1 ? 'deuda vencida' : 'deudas vencidas' }}</b><span>Revísalas en Deudas</span></a> }
+        @if (+p.comisiones) { <a class="lg-aviso pago" [routerLink]="ruta('comisiones')"><b>Comisiones por pagar · {{ pesos(p.comisiones) }}</b><span>{{ p.vendedores }} {{ +p.vendedores === 1 ? 'vendedor' : 'vendedores' }}</span></a> }
+        @if (+p.por_cobrar) { <a class="lg-aviso cobro" [routerLink]="ruta('cuentas')"><b>Te deben · {{ pesos(p.por_cobrar) }}</b><span>Cuentas por cobrar</span></a> }
+      }
+    </section>
+  }
+
+  <!-- Mes -->
+  <section class="lg-mes vidrio" [attr.aria-busy]="cargando()">
+    <div class="lg-semana" aria-hidden="true">@for (s of semana; track $index) { <span>{{ s }}</span> }</div>
+    <div class="lg-grilla" role="grid" [attr.aria-label]="titulo()">
+      @for (c of celdas(); track c.dia) {
+        <button type="button" role="gridcell" class="lg-dia" [class.fuera]="!c.delMes" [class.hoy]="c.hoy" [class.sel]="sel() === c.dia"
+          [attr.data-v]="nivel(c.dia)" (click)="elegir(c)" [attr.aria-pressed]="sel() === c.dia" [attr.aria-label]="c.dia">
+          <span class="n" [class.rojo]="festivo(c.dia)">{{ c.num }}</span>
+          @if (estadoCaja(c.dia); as e) { <span class="caja" [class]="'caja ' + e">{{ e === 'ok' ? '✓' : '!' }}</span> }
+          <span class="puntos">
+            @if (comercial(c.dia)) { <i class="p-esp"></i> }
+            @if (quincena(c.dia)) { <i class="p-quin"></i> }
+            @if (hayPago(c.dia); as t) { <i [class]="'p-' + t"></i> }
+            @if (hayRec(c.dia)) { <i class="p-rec"></i> }
+          </span>
+        </button>
+      }
+    </div>
+    <div class="lg-leyenda">
+      @if (datos()?.admin || datos()?.caja) { <span><i class="l-venta"></i>Ventas</span> }
+      @if (datos()?.caja) { <span><i class="l-caja"></i>Caja</span> }
+      @if (datos()?.admin) { <span><i class="p-vence"></i>Pago</span> }
+      <span><i class="p-esp"></i>Fecha especial</span>
+      <span><i class="p-quin"></i>Quincena</span>
+      <span><i class="p-rec"></i>Recordatorio</span>
+      <span><b class="rojo">17</b>Festivo</span>
+    </div>
+    @if (error()) { <p class="lg-error" role="alert">{{ error() }}</p> }
+  </section>
+
+  <!-- Día elegido -->
+  <section class="lg-detalle vidrio" id="cal-dia" aria-live="polite">
+    <div class="lg-det-cab">
+      <h2>{{ selTitulo() }}</h2>
+      <button type="button" class="lg-mas" (click)="nuevo()">+ Recordatorio</button>
+    </div>
+
+    @for (f of selEspeciales(); track f.nombre) {
+      <div class="lg-item" [class]="'lg-item t-' + f.tipo">
+        <span class="ico">{{ f.tipo === 'festivo' ? '🇨🇴' : f.tipo === 'pago' ? '💵' : '🎉' }}</span>
+        <div><b>{{ f.nombre }}{{ f.tipo === 'festivo' ? ' · festivo' : '' }}</b>@if (f.consejo) { <small>{{ f.consejo }}</small> }</div>
+      </div>
+    }
+
+    @if (selVenta(); as v) {
+      <div class="lg-item t-venta">
+        <span class="ico">🛍️</span>
+        <div><b>Vendido {{ pesos(v.vendido) }}</b>
+          <small>{{ v.pedidos }} {{ +v.pedidos === 1 ? 'venta' : 'ventas' }}{{ datos()?.admin ? ' · ' + v.local + ' en el local' : '' }}{{ v.ganancia !== null ? ' · ganancia ' + pesos(v.ganancia) : '' }}</small></div>
+      </div>
+    } @else if ((datos()?.admin || datos()?.caja) && sel() <= hoy) {
+      <div class="lg-item vacio"><span class="ico">🛍️</span><div><small>Sin ventas entregadas este día</small></div></div>
+    }
+
+    @if (selCaja(); as k) {
+      <a class="lg-item t-caja" [routerLink]="ruta('ventas-local')">
+        <span class="ico" [class]="'ico ' + estadoCaja(sel())">{{ k.diferencia === 0 ? '✓' : '!' }}</span>
+        <div><b>{{ k.diferencia === 0 ? 'Caja cuadrada' : k.diferencia < 0 ? 'Faltaron ' + pesos(-k.diferencia) : 'Sobraron ' + pesos(k.diferencia) }}</b>
+          <small>{{ k.quien || 'Alguien' }} contó {{ pesos(k.contado) }} · {{ k.recibido ? 'recibido ' + pesos(k.recoger) : k.entregado ? 'entregado, falta confirmar' : 'por entregar ' + pesos(k.recoger) }}</small></div>
+      </a>
+    } @else if (datos()?.caja && sel() < hoy && selVenta()?.local) {
+      <a class="lg-item t-caja" [routerLink]="ruta('ventas-local')"><span class="ico falta">?</span><div><b>La caja no se contó</b><small>Ese día hubo ventas en el local</small></div></a>
+    }
+
+    @for (p of selPagos(); track $index) {
+      <a class="lg-item" [class]="'lg-item t-' + p.tipo" [routerLink]="ruta(p.url)">
+        <span class="ico">{{ p.tipo === 'vence' ? '⏰' : p.tipo === 'cobrado' ? '📥' : '📤' }}</span>
+        <div><b>{{ p.titulo }} · {{ pesos(p.valor) }}</b>@if (p.detalle) { <small>{{ p.detalle }}</small> }</div>
+      </a>
+    }
+
+    @for (r of selRec(); track r.id) {
+      <div class="lg-item t-rec" [class.hecho]="r.hecho">
+        <button type="button" class="check" [class.on]="r.hecho" (click)="marcar(r)" [attr.aria-pressed]="r.hecho" [attr.aria-label]="r.hecho ? 'Marcar como pendiente' : 'Marcar como hecho'">{{ r.hecho ? '✓' : '' }}</button>
+        <div><b>{{ r.titulo }}</b>
+          <small>{{ r.hora ? horaTxt(r.hora) : 'Todo el día' }}{{ repetirTxt(r) ? ' · ' + repetirTxt(r) : '' }}{{ r.equipo ? ' · Para todo el equipo' : '' }}{{ r.de ? ' · de ' + r.de : '' }}{{ r.nota ? ' · ' + r.nota : '' }}</small></div>
+        @if (r.mio || datos()?.admin) { <button type="button" class="lg-link" (click)="editar(r)">Editar</button> }
+      </div>
+    }
+
+    @if (!selEspeciales().length && !selVenta() && !selCaja() && !selPagos().length && !selRec().length && !((datos()?.admin || datos()?.caja) && sel() <= hoy)) {
+      <p class="lg-nada">Nada para este día. Toca "+ Recordatorio" para agregar algo.</p>
+    }
+  </section>
+</div>
+
+<!-- Formulario de recordatorio -->
+@if (form(); as f) {
+  <button class="lg-velo" aria-label="Cerrar" (click)="form.set(null)"></button>
+  <div class="lg-hoja vidrio" role="dialog" aria-labelledby="t-rec">
+    <div class="lg-asa" aria-hidden="true"></div>
+    <h2 id="t-rec">{{ f.id ? 'Editar recordatorio' : 'Nuevo recordatorio' }}</h2>
+    <label class="lg-campo">¿Qué hay que recordar?<input maxlength="120" [(ngModel)]="fTitulo" placeholder="Ej: Pagar el arriendo" /></label>
+    <div class="lg-dos">
+      <label class="lg-campo">Día<input type="date" [(ngModel)]="fFecha" /></label>
+      <label class="lg-campo">Hora (opcional)<input type="time" [(ngModel)]="fHora" /></label>
+    </div>
+    <div class="lg-campo">Se repite
+      <div class="lg-seg" role="radiogroup">
+        @for (o of [['no', 'Una vez'], ['semanal', 'Semanal'], ['mensual', 'Mensual'], ['anual', 'Anual']]; track o[0]) {
+          <button type="button" role="radio" [class.on]="fRepetir === o[0]" [attr.aria-checked]="fRepetir === o[0]" (click)="fRepetir = $any(o[0])">{{ o[1] }}</button>
+        }
+      </div>
+    </div>
+    <label class="lg-campo">Nota (opcional)<input maxlength="400" [(ngModel)]="fNota" placeholder="Ej: $1.200.000 a la cuenta del dueño" /></label>
+    @if (datos()?.admin) {
+      <label class="lg-check"><input type="checkbox" [(ngModel)]="fEquipo" /> Para todo el equipo (les avisa a todos)</label>
+    }
+    <p class="lg-pista">Te llega un aviso al celular ese día{{ fHora ? ' a esa hora' : ' a las 7 a. m.' }}.</p>
+    <div class="lg-acciones">
+      @if (f.id) { <button type="button" class="lg-btn peligro" (click)="borrar($any({ id: f.id, titulo: fTitulo, repetir: fRepetir }))">Borrar</button> }
+      <button type="button" class="lg-btn" (click)="form.set(null)">Cancelar</button>
+      <button type="button" class="lg-btn pri" [disabled]="guardando()" (click)="guardar()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
+    </div>
+  </div>
+}

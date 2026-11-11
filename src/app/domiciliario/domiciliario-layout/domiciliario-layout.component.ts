@@ -3,7 +3,7 @@ import { BarraMovilComponent } from '../../shared/barra-movil/barra-movil.compon
 import { ItemNav, NavMovilComponent } from '../../shared/nav-movil/nav-movil.component';
 import { RouterOutlet } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { homeOutline, personCircleOutline, trophyOutline, walletOutline, alertCircleOutline, statsChartOutline, sparklesOutline } from 'ionicons/icons';
+import { homeOutline, personCircleOutline, trophyOutline, walletOutline, alertCircleOutline, statsChartOutline, sparklesOutline, calendarOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-domiciliario-layout',
@@ -20,6 +20,7 @@ export class DomiciliarioLayoutComponent {
     { label: 'Ranking', path: '/domiciliario/ranking', icon: 'trophy-outline' },
     { label: 'Novedades', path: '/domiciliario/novedades', icon: 'alert-circle-outline' },
     { label: 'Mi resumen', path: '/domiciliario/mi-resumen', icon: 'stats-chart-outline' },
+    { label: 'Calendario', path: '/domiciliario/calendario', icon: 'calendar-outline' },
     { label: 'Actualizaciones', path: '/domiciliario/actualizaciones', icon: 'sparkles-outline' },
     { label: 'Mi perfil', path: '/domiciliario/perfil', icon: 'person-circle-outline' },
   ];
@@ -27,6 +28,6 @@ export class DomiciliarioLayoutComponent {
   readonly principales = this.secciones.slice(0, 3);
 
   constructor() {
-    addIcons({ sparklesOutline, statsChartOutline, alertCircleOutline, homeOutline, personCircleOutline, trophyOutline, walletOutline });
+    addIcons({ calendarOutline, sparklesOutline, statsChartOutline, alertCircleOutline, homeOutline, personCircleOutline, trophyOutline, walletOutline });
   }
 }

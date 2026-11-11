@@ -37,6 +37,7 @@ import {
   handLeftOutline,
   lockClosedOutline,
   swapHorizontalOutline,
+  calendarOutline,
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -91,6 +92,7 @@ export class AdminLayoutComponent {
     { label: 'Tablero', path: '/admin/tablero', icon: 'grid-outline' },
     { label: 'Pedidos de la tienda', path: '/admin/pedidos-web', icon: 'storefront-outline' },
     { label: 'Recontactar', path: '/admin/recontactar', icon: 'people-outline' },
+    { label: 'Calendario', path: '/admin/calendario', icon: 'calendar-outline' },
     { label: 'Actualizaciones', path: '/admin/actualizaciones', icon: 'sparkles-outline' },
   ];
 
@@ -103,6 +105,7 @@ export class AdminLayoutComponent {
     private router: Router
   ) {
     addIcons({
+      calendarOutline,
       swapHorizontalOutline,
       lockClosedOutline,
       handLeftOutline,
